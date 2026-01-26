@@ -1,7 +1,10 @@
 /**
  * @file MutationObserver setup for content and attribute changes.
  * Observes DOM mutations and triggers re-renders when content changes.
+ * Handles ALL attribute reactivity (no observedAttributes needed).
  */
+
+import { hyperHTML } from '../core/uhtml.js';
 
 /**
  * Sets up a MutationObserver to watch for content and attribute changes.
@@ -13,6 +16,9 @@
  */
 export function observer(ref) {
   const that = ref.this;
+  // Capture element reference - 'this' is not available inside the callback
+  const element = this;
+
   const mutationObserver = new MutationObserver((mutations) => {
     if (!ref.observe) return;
 
@@ -20,27 +26,27 @@ export function observer(ref) {
     const attrMutations = mutations.filter((m) => m.type === 'attributes');
     if (attrMutations.length > 0) {
       // Re-attach attrs to pick up new shared attr values
-      that.attrs = this.attachAttrs(this.attributes) || {};
-      this.render();
+      that.attrs = element.attachAttrs(element.attributes) || {};
+      element.render();
       return;
     }
 
     // Handle content changes
-    let textContent = this.textContent;
+    let textContent = element.textContent;
 
-    ref.innerHTML = this.innerHTML;
+    ref.innerHTML = element.innerHTML;
     if (that.attrs.template) {
-      that.attrs = this.attachAttrs(this.attributes) || {};
+      that.attrs = element.attachAttrs(element.attributes) || {};
     }
 
     // Reset the element
     hyperHTML.bind(ref.shadow)``;
 
     that.wrappedContent = textContent;
-    this.render();
+    element.render();
   });
 
-  mutationObserver.observe(this, {
+  mutationObserver.observe(element, {
     // Watch attribute changes to trigger re-renders
     attributes: true,
 

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Observed Attributes - hyper-element Kitchen Sink</title>
+    <title>Attribute Reactivity - hyper-element Kitchen Sink</title>
     <script src="test-loader.js"></script>
     <style>
       body {
@@ -37,51 +37,43 @@
     </style>
   </head>
   <body>
-    <h1>Observed Attributes Tests</h1>
-    <p>Tests for static observedAttributes behavior.</p>
+    <h1>Attribute Reactivity Tests</h1>
+    <p>
+      Tests for automatic attribute reactivity (no observedAttributes needed).
+    </p>
 
-    <!-- Test: Basic observed attribute -->
-    <section data-test="basic-observed" data-test-result="pending">
-      <h2>Basic Observed Attribute</h2>
-      <p>Tests that observed attributes trigger attributeChangedCallback.</p>
-      <div id="basic-observed-output"></div>
+    <!-- Test: Basic attribute reactivity -->
+    <section data-test="basic-reactive" data-test-result="pending">
+      <h2>Basic Attribute Reactivity</h2>
+      <p>
+        Tests that attributes trigger re-render WITHOUT declaring
+        observedAttributes.
+      </p>
+      <div id="basic-reactive-output"></div>
       <script>
         (function () {
-          const section = document.querySelector(
-            '[data-test="basic-observed"]'
-          );
-          let callbackCount = 0;
+          const section = document.querySelector('[data-test="basic-reactive"]');
 
           customElements.define(
-            'basic-observed-elem',
+            'basic-reactive-elem',
             class extends hyperElement {
-              static get observedAttributes() {
-                return ['name'];
-              }
-              attributeChangedCallback(name, oldVal, newVal) {
-                callbackCount++;
-                super.attributeChangedCallback(name, oldVal, newVal);
-              }
+              // NO observedAttributes needed!
               render(Html) {
-                Html`<div id="basic-observed-result">name=${this.attrs.name} callbacks=${callbackCount}</div>`;
+                Html`<div id="basic-reactive-result">name=${this.attrs.name}</div>`;
               }
             }
           );
 
-          const elem = document.createElement('basic-observed-elem');
+          const elem = document.createElement('basic-reactive-elem');
           elem.setAttribute('name', 'initial');
-          document.getElementById('basic-observed-output').appendChild(elem);
+          document.getElementById('basic-reactive-output').appendChild(elem);
 
           requestAnimationFrame(() => {
             elem.setAttribute('name', 'updated');
 
             requestAnimationFrame(() => {
-              const result = document.getElementById('basic-observed-result');
-              // callback called twice: once for initial, once for update
-              if (
-                callbackCount === 2 &&
-                result?.textContent === 'name=updated callbacks=2'
-              ) {
+              const result = document.getElementById('basic-reactive-result');
+              if (result?.textContent === 'name=updated') {
                 section.dataset.testResult = 'pass';
               } else {
                 section.dataset.testResult = 'fail';
@@ -92,86 +84,73 @@
       </script>
     </section>
 
-    <!-- Test: Non-observed attribute doesn't trigger callback -->
-    <section data-test="non-observed" data-test-result="pending">
-      <h2>Non-Observed Attribute</h2>
-      <p>
-        Tests that non-observed attributes don't trigger
-        attributeChangedCallback.
-      </p>
-      <div id="non-observed-output"></div>
-      <script>
-        (function () {
-          const section = document.querySelector('[data-test="non-observed"]');
-          let callbackCount = 0;
-
-          customElements.define(
-            'non-observed-elem',
-            class extends hyperElement {
-              static get observedAttributes() {
-                return ['watched'];
-              }
-              attributeChangedCallback(name, oldVal, newVal) {
-                callbackCount++;
-                super.attributeChangedCallback(name, oldVal, newVal);
-              }
-              render(Html) {
-                Html`<div id="non-observed-result">callbacks=${callbackCount}</div>`;
-              }
-            }
-          );
-
-          const elem = document.createElement('non-observed-elem');
-          document.getElementById('non-observed-output').appendChild(elem);
-
-          requestAnimationFrame(() => {
-            // This should NOT trigger callback
-            elem.setAttribute('unwatched', 'value');
-
-            requestAnimationFrame(() => {
-              // Callback should be 0 (only called for observed attributes)
-              if (callbackCount === 0) {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            });
-          });
-        })();
-      </script>
-    </section>
-
-    <!-- Test: Multiple observed attributes -->
-    <section data-test="multiple-observed" data-test-result="pending">
-      <h2>Multiple Observed Attributes</h2>
-      <p>Tests observing multiple attributes at once.</p>
-      <div id="multiple-observed-output"></div>
+    <!-- Test: Any attribute is reactive -->
+    <section data-test="any-attr-reactive" data-test-result="pending">
+      <h2>Any Attribute is Reactive</h2>
+      <p>Tests that ANY attribute triggers re-render automatically.</p>
+      <div id="any-attr-output"></div>
       <script>
         (function () {
           const section = document.querySelector(
-            '[data-test="multiple-observed"]'
+            '[data-test="any-attr-reactive"]'
           );
 
           customElements.define(
-            'multiple-observed-elem',
+            'any-attr-elem',
             class extends hyperElement {
-              static get observedAttributes() {
-                return ['first', 'second', 'third'];
-              }
               render(Html) {
-                Html`<div id="multiple-observed-result">first=${this.attrs.first} second=${this.attrs.second} third=${this.attrs.third}</div>`;
+                Html`<div id="any-attr-result">foo=${this.attrs.foo} bar=${this.attrs.bar} random=${this.attrs.random}</div>`;
               }
             }
           );
 
-          const elem = document.createElement('multiple-observed-elem');
+          const elem = document.createElement('any-attr-elem');
+          document.getElementById('any-attr-output').appendChild(elem);
+
+          requestAnimationFrame(() => {
+            elem.setAttribute('foo', 'a');
+            elem.setAttribute('bar', 'b');
+            elem.setAttribute('random', 'c');
+
+            requestAnimationFrame(() => {
+              const result = document.getElementById('any-attr-result');
+              if (result?.textContent === 'foo=a bar=b random=c') {
+                section.dataset.testResult = 'pass';
+              } else {
+                section.dataset.testResult = 'fail';
+              }
+            });
+          });
+        })();
+      </script>
+    </section>
+
+    <!-- Test: Multiple attributes -->
+    <section data-test="multiple-attrs" data-test-result="pending">
+      <h2>Multiple Attributes</h2>
+      <p>Tests multiple attributes at once.</p>
+      <div id="multiple-attrs-output"></div>
+      <script>
+        (function () {
+          const section = document.querySelector('[data-test="multiple-attrs"]');
+
+          customElements.define(
+            'multiple-attrs-elem',
+            class extends hyperElement {
+              render(Html) {
+                Html`<div id="multiple-attrs-result">first=${this.attrs.first} second=${this.attrs.second} third=${this.attrs.third}</div>`;
+              }
+            }
+          );
+
+          const elem = document.createElement('multiple-attrs-elem');
           elem.setAttribute('first', 'a');
           elem.setAttribute('second', 'b');
           elem.setAttribute('third', 'c');
-          document.getElementById('multiple-observed-output').appendChild(elem);
+          document.getElementById('multiple-attrs-output').appendChild(elem);
 
           requestAnimationFrame(() => {
-            const result = document.getElementById('multiple-observed-result');
+            const result = document.getElementById('multiple-attrs-result');
             if (result?.textContent === 'first=a second=b third=c') {
               section.dataset.testResult = 'pass';
             } else {
@@ -185,7 +164,7 @@
     <!-- Test: Attribute removal -->
     <section data-test="attr-removal" data-test-result="pending">
       <h2>Attribute Removal</h2>
-      <p>Tests that removing an observed attribute updates correctly.</p>
+      <p>Tests that removing an attribute updates correctly.</p>
       <div id="attr-removal-output"></div>
       <script>
         (function () {
@@ -194,9 +173,6 @@
           customElements.define(
             'attr-removal-elem',
             class extends hyperElement {
-              static get observedAttributes() {
-                return ['removable'];
-              }
               render(Html) {
                 const has = this.attrs.removable !== undefined;
                 Html`<div id="attr-removal-result">has=${has} value=${this.attrs.removable}</div>`;
@@ -225,23 +201,20 @@
       </script>
     </section>
 
-    <!-- Test: data-* observed attribute -->
-    <section data-test="data-attr-observed" data-test-result="pending">
-      <h2>data-* Observed Attribute</h2>
-      <p>Tests that data-* attributes work with observedAttributes.</p>
+    <!-- Test: data-* attribute -->
+    <section data-test="data-attr-reactive" data-test-result="pending">
+      <h2>data-* Attribute Reactivity</h2>
+      <p>Tests that data-* attributes work automatically.</p>
       <div id="data-attr-output"></div>
       <script>
         (function () {
           const section = document.querySelector(
-            '[data-test="data-attr-observed"]'
+            '[data-test="data-attr-reactive"]'
           );
 
           customElements.define(
             'data-attr-elem',
             class extends hyperElement {
-              static get observedAttributes() {
-                return ['data-value'];
-              }
               render(Html) {
                 // Access via dataset (parsed value)
                 Html`<div id="data-attr-result">dataset.value=${this.dataset.value}</div>`;
@@ -280,9 +253,6 @@
           customElements.define(
             'attr-before-elem',
             class extends hyperElement {
-              static get observedAttributes() {
-                return ['preset'];
-              }
               render(Html) {
                 Html`<div id="attr-before-result">preset=${this.attrs.preset}</div>`;
               }
@@ -320,9 +290,6 @@
           customElements.define(
             'rapid-changes-elem',
             class extends hyperElement {
-              static get observedAttributes() {
-                return ['value'];
-              }
               render(Html) {
                 renderCount++;
                 Html`<div id="rapid-changes-result">value=${this.attrs.value} renders=${renderCount}</div>`;
@@ -368,9 +335,6 @@
           customElements.define(
             'special-char-elem',
             class extends hyperElement {
-              static get observedAttributes() {
-                return ['content'];
-              }
               render(Html) {
                 Html`<div id="special-char-result">${this.attrs.content}</div>`;
               }
@@ -397,49 +361,39 @@
       </script>
     </section>
 
-    <!-- Test: Empty observed attributes array -->
-    <section data-test="empty-observed" data-test-result="pending">
-      <h2>Empty observedAttributes Array</h2>
-      <p>Tests element with empty observedAttributes array.</p>
-      <div id="empty-observed-output"></div>
+    <!-- Test: Numeric string coercion -->
+    <section data-test="numeric-coercion" data-test-result="pending">
+      <h2>Numeric String Coercion</h2>
+      <p>Tests that numeric strings are converted to numbers.</p>
+      <div id="numeric-output"></div>
       <script>
         (function () {
           const section = document.querySelector(
-            '[data-test="empty-observed"]'
+            '[data-test="numeric-coercion"]'
           );
-          let callbackCount = 0;
 
           customElements.define(
-            'empty-observed-elem',
+            'numeric-coerce-elem',
             class extends hyperElement {
-              static get observedAttributes() {
-                return [];
-              }
-              attributeChangedCallback(name, oldVal, newVal) {
-                callbackCount++;
-                super.attributeChangedCallback(name, oldVal, newVal);
-              }
               render(Html) {
-                Html`<div id="empty-observed-result">callbacks=${callbackCount}</div>`;
+                const count = this.attrs.count;
+                const isNumber = typeof count === 'number';
+                Html`<div id="numeric-result">count=${count} isNumber=${isNumber}</div>`;
               }
             }
           );
 
-          const elem = document.createElement('empty-observed-elem');
-          elem.setAttribute('any', 'value');
-          document.getElementById('empty-observed-output').appendChild(elem);
+          const elem = document.createElement('numeric-coerce-elem');
+          elem.setAttribute('count', '42');
+          document.getElementById('numeric-output').appendChild(elem);
 
           requestAnimationFrame(() => {
-            elem.setAttribute('any', 'changed');
-
-            requestAnimationFrame(() => {
-              // With empty array, callback should never be called
-              if (callbackCount === 0) {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            });
+            const result = document.getElementById('numeric-result');
+            if (result?.textContent === 'count=42 isNumber=true') {
+              section.dataset.testResult = 'pass';
+            } else {
+              section.dataset.testResult = 'fail';
+            }
           });
         })();
       </script>
@@ -457,9 +411,6 @@
           customElements.define(
             'boolean-attr-elem',
             class extends hyperElement {
-              static get observedAttributes() {
-                return ['disabled'];
-              }
               render(Html) {
                 const isDisabled = this.attrs.disabled !== undefined;
                 Html`<div id="boolean-attr-result">disabled=${isDisabled}</div>`;
@@ -479,6 +430,44 @@
             } else {
               section.dataset.testResult = 'fail';
             }
+          });
+        })();
+      </script>
+    </section>
+
+    <!-- Test: Functional API without observedAttributes -->
+    <section data-test="functional-no-observed" data-test-result="pending">
+      <h2>Functional API (No observedAttributes)</h2>
+      <p>Tests functional API works without declaring observedAttributes.</p>
+      <div id="functional-output"></div>
+      <script>
+        (function () {
+          const section = document.querySelector(
+            '[data-test="functional-no-observed"]'
+          );
+
+          hyperElement('functional-reactive-elem', {
+            render: (Html, ctx) => {
+              Html`<div id="functional-result">name=${ctx.attrs.name} count=${ctx.attrs.count}</div>`;
+            },
+          });
+
+          const elem = document.createElement('functional-reactive-elem');
+          elem.setAttribute('name', 'test');
+          elem.setAttribute('count', '5');
+          document.getElementById('functional-output').appendChild(elem);
+
+          requestAnimationFrame(() => {
+            elem.setAttribute('name', 'updated');
+
+            requestAnimationFrame(() => {
+              const result = document.getElementById('functional-result');
+              if (result?.textContent === 'name=updated count=5') {
+                section.dataset.testResult = 'pass';
+              } else {
+                section.dataset.testResult = 'fail';
+              }
+            });
           });
         })();
       </script>

@@ -48,13 +48,11 @@
       <h2>1. Definition with Tag (auto-registers)</h2>
       <p>Full definition object with automatic registration.</p>
       <pre><code>hyperElement('func-counter', {
-  observedAttributes: ['count'],
   render: (Html, ctx) => Html`Count: ${ctx.attrs.count || 0}`
 });</code></pre>
       <div id="output-1"></div>
       <script>
         hyperElement('func-counter', {
-          observedAttributes: ['count'],
           render: (Html, ctx) => Html`Count: ${ctx.attrs.count || 0}`,
         });
 
@@ -306,33 +304,78 @@ customElements.define('func-classic', ClassicElement);</code></pre>
       </script>
     </section>
 
-    <!-- Test 8: Observed attributes with functional API -->
+    <!-- Test 8: Automatic attribute reactivity -->
     <section data-test="observed-attrs" data-test-result="pending">
-      <h2>8. Observed Attributes</h2>
-      <p>observedAttributes triggers re-render on attribute change.</p>
-      <pre><code>hyperElement('func-observed', {
-  observedAttributes: ['value'],
+      <h2>8. Automatic Attribute Reactivity</h2>
+      <p>All attributes are reactive - no observedAttributes needed!</p>
+      <pre><code>hyperElement('func-reactive', {
   render: (Html, ctx) => Html`Value: ${ctx.attrs.value}`
 });</code></pre>
       <div id="output-8"></div>
       <script>
-        hyperElement('func-observed', {
-          observedAttributes: ['value'],
+        hyperElement('func-reactive', {
           render: (Html, ctx) => Html`Value: ${ctx.attrs.value}`,
         });
 
-        const elem8 = document.createElement('func-observed');
+        const elem8 = document.createElement('func-reactive');
         elem8.setAttribute('value', 'initial');
         document.getElementById('output-8').appendChild(elem8);
 
         requestAnimationFrame(() => {
           elem8.setAttribute('value', 'updated');
 
-          requestAnimationFrame(() => {
+          // Use setTimeout to ensure MutationObserver microtask completes
+          setTimeout(() => {
             const section = document.querySelector(
               '[data-test="observed-attrs"]'
             );
             if (elem8.textContent.includes('Value: updated')) {
+              section.dataset.testResult = 'pass';
+            } else {
+              section.dataset.testResult = 'fail';
+            }
+          }, 0);
+        });
+      </script>
+    </section>
+
+    <!-- Test 9: Setup cleanup verification -->
+    <section data-test="setup-cleanup-verify" data-test-result="pending">
+      <h2>9. Setup Cleanup Verification</h2>
+      <p>Verifies the teardown function returned from setup() is called on disconnect.</p>
+      <pre><code>hyperElement('func-cleanup-test', {
+  setup: (ctx, onNext) => {
+    onNext();
+    return () => { window.cleanupTestCalled = true; };
+  },
+  render: (Html, ctx) => Html`Cleanup Test`
+});</code></pre>
+      <div id="output-9"></div>
+      <script>
+        window.cleanupTestCalled = false;
+
+        hyperElement('func-cleanup-test', {
+          setup: (ctx, onNext) => {
+            onNext();
+            return () => {
+              window.cleanupTestCalled = true;
+            };
+          },
+          render: (Html, ctx) => Html`Cleanup Test`,
+        });
+
+        const elem9 = document.createElement('func-cleanup-test');
+        document.getElementById('output-9').appendChild(elem9);
+
+        requestAnimationFrame(() => {
+          // Remove element to trigger cleanup
+          elem9.remove();
+
+          requestAnimationFrame(() => {
+            const section = document.querySelector(
+              '[data-test="setup-cleanup-verify"]'
+            );
+            if (window.cleanupTestCalled === true) {
               section.dataset.testResult = 'pass';
             } else {
               section.dataset.testResult = 'fail';

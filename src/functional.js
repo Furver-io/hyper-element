@@ -15,7 +15,6 @@ import { hyperElement } from './hyperElement.js';
  * @example
  * // Full definition with tag (auto-registers)
  * hyperElement('my-counter', {
- *   observedAttributes: ['count'],
  *   setup: (ctx, onNext) => { ... },
  *   render: (Html, ctx) => Html`...`
  * });
@@ -56,23 +55,15 @@ export function createFunctionalElement(tagOrDef, definition) {
     );
   }
 
-  const {
-    observedAttributes: observed = [],
-    setup: setupFn,
-    render: renderFn,
-    ...methods
-  } = definition;
+  const { setup: setupFn, render: renderFn, ...methods } = definition;
 
   if (!renderFn || typeof renderFn !== 'function') {
     throw new Error('hyperElement: render function is required');
   }
 
   // Generate class dynamically
-  class FunctionalElement extends hyperElement {
-    static get observedAttributes() {
-      return observed;
-    }
-  }
+  // Note: observedAttributes not needed - MutationObserver handles all attribute reactivity
+  class FunctionalElement extends hyperElement {}
 
   // Add setup if provided (passes context explicitly)
   if (setupFn) {

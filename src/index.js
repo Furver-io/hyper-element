@@ -7,6 +7,7 @@
 
 import { hyperElement as HyperElementClass } from './hyperElement.js';
 import { createFunctionalElement } from './functional.js';
+import { signal, computed, effect, batch, untracked } from './signals/index.js';
 
 /**
  * Dual-purpose hyperElement export:
@@ -54,5 +55,5 @@ const hyperElement = new Proxy(HyperElementClass, {
   },
 });
 
-export { hyperElement };
+export { hyperElement, signal, computed, effect, batch, untracked };
 export default hyperElement;

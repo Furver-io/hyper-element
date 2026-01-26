@@ -85,52 +85,16 @@ export class hyperElement extends HTMLElement {
 
   /**
    * Called when an observed attribute changes.
-   * Updates the context and triggers re-render if needed.
+   * Note: hyper-element uses MutationObserver for attribute reactivity,
+   * so observedAttributes is not required. This callback is kept for
+   * backwards compatibility with subclasses that override it.
    *
    * @param {string} name - The attribute name
    * @param {string|null} oldVal - The previous value
    * @param {string|null} newVal - The new value
    * @returns {void}
    */
-  attributeChangedCallback(name, oldVal, newVal) {
-    // Guard: attributeChangedCallback can fire before connectedCallback
-    // when observedAttributes is defined and attributes are set before DOM insertion
-    const ref = manager[this.identifier];
-    if (!ref) return;
-
-    if (newVal !== null && +newVal + '' === newVal.trim()) {
-      newVal = +newVal; // to number
-    }
-    const { attrsToIgnore } = ref;
-    const that = ref.this;
-    if (0 <= name.indexOf('data-')) {
-      // we have data
-      const dataSetName = name.slice('data-'.length);
-      if (null === oldVal) {
-        this.addDataset(that.dataset, dataSetName);
-      } else if (null === newVal) {
-        const camel_key = dataSetName.replace(/-([a-z])/g, (g) =>
-          g[1].toUpperCase()
-        );
-        delete that.dataset[camel_key];
-      }
-    }
-
-    if (newVal === that.attrs[name]) {
-      return;
-    }
-    if (null === newVal) {
-      delete that.attrs[name];
-    } else {
-      that.attrs[name] = newVal;
-    }
-    if (attrsToIgnore[name]) {
-      delete attrsToIgnore[name];
-      return;
-    } else {
-      this.render();
-    }
-  }
+  attributeChangedCallback(name, oldVal, newVal) {} // eslint-disable-line no-unused-vars
 
   /**
    * Called when the element is removed from the document.
