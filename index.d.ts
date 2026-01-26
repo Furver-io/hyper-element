@@ -135,21 +135,15 @@ export type MethodFunction = (ctx: ElementContext, ...args: any[]) => any;
 
 /**
  * Functional component definition object.
+ * Note: observedAttributes is not needed - all attributes are automatically reactive via MutationObserver.
  */
 export interface FunctionalDefinition {
-  /** Attributes to observe for changes */
-  observedAttributes?: string[];
   /** Setup lifecycle function */
   setup?: SetupFunction;
   /** Render function (required) */
   render: RenderFunction;
   /** Additional methods */
-  [key: string]:
-    | string[]
-    | SetupFunction
-    | RenderFunction
-    | MethodFunction
-    | undefined;
+  [key: string]: SetupFunction | RenderFunction | MethodFunction | undefined;
 }
 
 /**
@@ -294,3 +288,116 @@ declare global {
 
 export { hyperElement };
 export default hyperElement;
+
+// ============================================================================
+// Signals API - Fine-grained reactivity primitives
+// ============================================================================
+
+/**
+ * A reactive signal that holds a value and notifies subscribers when it changes.
+ */
+export interface Signal<T> {
+  /** Get or set the current value. Reading tracks dependencies. */
+  value: T;
+  /** Read the current value without tracking dependencies. */
+  peek(): T;
+  /** Subscribe to value changes. Returns an unsubscribe function. */
+  subscribe(fn: () => void): () => void;
+}
+
+/**
+ * A computed signal that derives its value from other signals.
+ */
+export interface Computed<T> {
+  /** Get the computed value. Automatically tracks dependencies and recomputes when they change. */
+  readonly value: T;
+  /** Read the computed value without tracking dependencies. */
+  peek(): T;
+}
+
+/**
+ * Creates a reactive signal.
+ * @param initialValue - The initial value of the signal
+ * @returns A signal object with value getter/setter, peek(), and subscribe()
+ *
+ * @example
+ * ```javascript
+ * const count = signal(0);
+ * count.value; // 0
+ * count.value = 1; // Updates and notifies subscribers
+ * count.peek(); // Read without tracking
+ * ```
+ */
+export function signal<T>(initialValue: T): Signal<T>;
+
+/**
+ * Creates a computed signal that derives from other signals.
+ * The computation is lazy and cached until dependencies change.
+ * @param fn - Computation function that reads other signals
+ * @returns A computed signal object with value getter and peek()
+ *
+ * @example
+ * ```javascript
+ * const count = signal(0);
+ * const doubled = computed(() => count.value * 2);
+ * doubled.value; // 0
+ * count.value = 5;
+ * doubled.value; // 10
+ * ```
+ */
+export function computed<T>(fn: () => T): Computed<T>;
+
+/**
+ * Creates an effect that runs when its dependencies change.
+ * The effect runs immediately and re-runs whenever any signal it reads changes.
+ * @param fn - Effect function. Can return a cleanup function.
+ * @returns Cleanup function to stop the effect
+ *
+ * @example
+ * ```javascript
+ * const count = signal(0);
+ * const cleanup = effect(() => {
+ *   console.log('Count:', count.value);
+ *   return () => console.log('Cleanup');
+ * });
+ * // Logs: "Count: 0"
+ * count.value = 1;
+ * // Logs: "Cleanup", then "Count: 1"
+ * cleanup(); // Stop the effect
+ * ```
+ */
+export function effect(fn: () => void | (() => void)): () => void;
+
+/**
+ * Batches multiple signal updates into a single notification.
+ * Effects are deferred until the batch completes.
+ * @param fn - Function containing signal updates
+ *
+ * @example
+ * ```javascript
+ * const a = signal(0);
+ * const b = signal(0);
+ * batch(() => {
+ *   a.value = 1;
+ *   b.value = 2;
+ * }); // Effects run once after both updates
+ * ```
+ */
+export function batch(fn: () => void): void;
+
+/**
+ * Runs a function without tracking signal dependencies.
+ * Useful for reading signals without creating subscriptions.
+ * @param fn - Function to run untracked
+ * @returns The return value of fn
+ *
+ * @example
+ * ```javascript
+ * const count = signal(0);
+ * effect(() => {
+ *   const val = untracked(() => count.value);
+ *   // This effect won't re-run when count changes
+ * });
+ * ```
+ */
+export function untracked<T>(fn: () => T): T;

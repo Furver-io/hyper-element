@@ -24,14 +24,7 @@ npm install hyper-element
 ```js
 import hyperElement from 'hyper-element';
 
-customElements.define(
-  'my-elem',
-  class extends hyperElement {
-    render(Html) {
-      Html`Hello ${this.attrs.who}!`;
-    }
-  }
-);
+hyperElement('my-elem', (Html, ctx) => Html`Hello ${ctx.attrs.who}!`);
 ```
 
 ### CommonJS
@@ -39,14 +32,7 @@ customElements.define(
 ```js
 const hyperElement = require('hyper-element');
 
-customElements.define(
-  'my-elem',
-  class extends hyperElement {
-    render(Html) {
-      Html`Hello ${this.attrs.who}!`;
-    }
-  }
-);
+hyperElement('my-elem', (Html, ctx) => Html`Hello ${ctx.attrs.who}!`);
 ```
 
 ## CDN (Browser)
@@ -65,10 +51,10 @@ hyper-element requires native ES6 class support and the Custom Elements v1 API:
 
 | Browser | Version |
 | ------- | ------- |
-| Chrome  | 67+     |
-| Firefox | 63+     |
-| Safari  | 10.1+   |
-| Edge    | 79+     |
+| Chrome  | 86+     |
+| Firefox | 78+     |
+| Safari  | 14.1+   |
+| Edge    | 86+     |
 
 For older browsers, a [Custom Elements polyfill](https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements) may be required.
 
@@ -122,6 +108,12 @@ For older browsers, a [Custom Elements polyfill](https://github.com/webcomponent
   - [Backbone](#backbone)
   - [MobX](#mobx)
   - [Redux](#redux)
+- [Signals](#signals)
+  - [signal](#signal)
+  - [computed](#computed-1)
+  - [effect](#effect)
+  - [batch](#batch)
+  - [untracked](#untracked)
 - [Best Practices](#best-practices)
 - [Development](#development)
 
@@ -170,7 +162,6 @@ In addition to class-based components, hyper-element supports a functional API t
 ```js
 // 1. Full definition with tag (auto-registers)
 hyperElement('my-counter', {
-  observedAttributes: ['count'],
   setup: (ctx, onNext) => {
     /* ... */
   },
@@ -488,6 +479,33 @@ The `once: true` option ensures the fragment is only generated once, preventing 
 
 ---
 
+## Html.raw
+
+Mark a string as trusted HTML that should not be escaped. Use this when you have HTML from a trusted source that you need to render directly.
+
+**Warning:** Only use with trusted content. Never use with user-provided input as it bypasses XSS protection.
+
+```js
+render(Html) {
+  const trustedHtml = '<strong>Bold</strong> and <em>italic</em>';
+  Html`<div>${Html.raw(trustedHtml)}</div>`;
+}
+```
+
+Output:
+
+```html
+<div><strong>Bold</strong> and <em>italic</em></div>
+```
+
+Without `Html.raw()`, the HTML would be escaped:
+
+```html
+<div>&lt;strong&gt;Bold&lt;/strong&gt; and &lt;em&gt;italic&lt;/em&gt;</div>
+```
+
+---
+
 ## setup
 
 The `setup` function wires up an external data-source. This is done with the `attachStore` argument that binds a data source to your renderer.
@@ -573,6 +591,7 @@ Available properties and methods on `this`:
 | `this.wrappedContent` | Text content between your tags. `<my-elem>Hi!</my-elem>` = `"Hi!"`          |
 | `this.element`        | Reference to your created DOM element                                       |
 | `this.dataset`        | Read/write access to all `data-*` attributes                                |
+| `this.innerShadow`    | Get the innerHTML of the element's rendered content                         |
 
 ### this.attrs
 
@@ -955,6 +974,156 @@ customElements.define(
     }
   }
 );
+```
+
+---
+
+# Signals
+
+hyper-element includes a built-in signals API for fine-grained reactivity, similar to Solid.js or Preact Signals. Signals provide automatic dependency tracking and efficient updates.
+
+```js
+import { signal, computed, effect, batch, untracked } from 'hyper-element';
+```
+
+## signal
+
+Creates a reactive signal that holds a value and notifies subscribers when it changes.
+
+```js
+const count = signal(0);
+
+// Read value (tracks dependencies in effects/computed)
+console.log(count.value); // 0
+
+// Write value (notifies subscribers)
+count.value = 1;
+
+// Read without tracking
+count.peek(); // 1
+
+// Subscribe to changes
+const unsubscribe = count.subscribe(() => {
+  console.log('Count changed:', count.peek());
+});
+```
+
+## computed
+
+Creates a derived signal that automatically recomputes when its dependencies change. Computation is lazy and cached.
+
+```js
+const count = signal(0);
+const doubled = computed(() => count.value * 2);
+
+console.log(doubled.value); // 0
+
+count.value = 5;
+console.log(doubled.value); // 10
+
+// Read without tracking
+doubled.peek(); // 10
+```
+
+## effect
+
+Creates a side effect that runs immediately and re-runs whenever its dependencies change. Can return a cleanup function.
+
+```js
+const count = signal(0);
+
+// Effect runs immediately, then on every change
+const cleanup = effect(() => {
+  console.log('Count is:', count.value);
+
+  // Optional cleanup function
+  return () => {
+    console.log('Cleaning up previous effect');
+  };
+});
+
+count.value = 1;
+// Logs: "Cleaning up previous effect"
+// Logs: "Count is: 1"
+
+// Stop the effect
+cleanup();
+```
+
+## batch
+
+Batches multiple signal updates so effects only run once after all updates complete.
+
+```js
+const firstName = signal('John');
+const lastName = signal('Doe');
+
+effect(() => {
+  console.log(`${firstName.value} ${lastName.value}`);
+});
+// Logs: "John Doe"
+
+// Without batch: effect would run twice
+// With batch: effect runs once after both updates
+batch(() => {
+  firstName.value = 'Jane';
+  lastName.value = 'Smith';
+});
+// Logs: "Jane Smith" (only once)
+```
+
+## untracked
+
+Reads signals without creating dependencies. Useful for reading values in effects without subscribing to changes.
+
+```js
+const count = signal(0);
+const other = signal('hello');
+
+effect(() => {
+  // This dependency IS tracked
+  console.log('Count:', count.value);
+
+  // This read is NOT tracked - effect won't re-run when 'other' changes
+  const otherValue = untracked(() => other.value);
+  console.log('Other:', otherValue);
+});
+
+count.value = 1; // Effect re-runs
+other.value = 'world'; // Effect does NOT re-run
+```
+
+## Using Signals with hyper-element
+
+Signals integrate naturally with hyper-element's setup/render lifecycle:
+
+```js
+import hyperElement, { signal, effect } from 'hyper-element';
+
+hyperElement('counter-app', {
+  setup: (ctx, onNext) => {
+    const count = signal(0);
+
+    // Trigger re-render when count changes
+    const stopEffect = effect(() => {
+      onNext(() => ({ count: count.value }))();
+    });
+
+    // Expose increment method
+    ctx.increment = () => count.value++;
+
+    // Cleanup effect on disconnect
+    return stopEffect;
+  },
+
+  handleClick: (ctx) => ctx.increment(),
+
+  render: (Html, ctx, store) => Html`
+    <button onclick=${ctx.handleClick}>
+      Count: ${store?.count ?? 0}
+    </button>
+  `,
+});
 ```
 
 ---
