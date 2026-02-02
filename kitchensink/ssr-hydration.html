@@ -1,7 +1,9 @@
 <!doctype html>
-<html>
+<html lang="en">
+  <!-- webhint-disable no-inline-styles -->
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SSR Hydration - hyper-element Kitchen Sink</title>
     <script src="test-loader.js"></script>
     <style>
@@ -102,7 +104,7 @@
       <h2>Input Event Replay</h2>
       <p>Input events are replayed, restoring user input after hydration.</p>
       <ssr-input>
-        <input type="text" id="ssr-input-1" value="" />
+        <input type="text" id="ssr-input-1" value="" aria-label="test input" />
         <span id="ssr-echo-1"></span>
       </ssr-input>
       <script type="module">
@@ -351,7 +353,7 @@
       <h2>Checkbox State Restoration</h2>
       <p>Checkbox checked state is captured and restored after hydration.</p>
       <ssr-checkbox>
-        <input type="checkbox" id="ssr-checkbox-1" />
+        <input type="checkbox" id="ssr-checkbox-1" aria-label="test checkbox" />
         <label>Check me</label>
       </ssr-checkbox>
       <script type="module">
@@ -452,7 +454,7 @@
       <h2>Keyboard Event Replay</h2>
       <p>Keyboard events are captured and replayed with key details preserved.</p>
       <ssr-keyboard>
-        <input type="text" id="ssr-keyboard-input" />
+        <input type="text" id="ssr-keyboard-input" aria-label="keyboard test input" />
         <span id="ssr-keyboard-result"></span>
       </ssr-keyboard>
       <script type="module">
@@ -566,7 +568,7 @@
       <h2>Multiple Event Types</h2>
       <p>Different event types on the same element are all captured.</p>
       <ssr-multi-events>
-        <input type="text" id="ssr-multi-input" value="" />
+        <input type="text" id="ssr-multi-input" value="" aria-label="multi-event test input" />
         <span id="ssr-multi-log"></span>
       </ssr-multi-events>
       <script type="module">
@@ -838,8 +840,8 @@
         when events are filtered in onBeforeHydrate.
       </p>
       <ssr-checked-restore>
-        <input type="checkbox" id="ssr-restore-checkbox" />
-        <input type="radio" name="ssr-radio" id="ssr-restore-radio" value="a" />
+        <input type="checkbox" id="ssr-restore-checkbox" aria-label="restore test checkbox" />
+        <input type="radio" name="ssr-radio" id="ssr-restore-radio" value="a" aria-label="restore test radio" />
         <label>Check me</label>
       </ssr-checked-restore>
       <script type="module">
