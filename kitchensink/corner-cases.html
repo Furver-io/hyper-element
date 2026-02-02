@@ -914,6 +914,59 @@
       </script>
     </section>
 
+    <section data-test="dom-rerender-same-hole" data-test-result="pending">
+      <h2>dom() Re-render Same Hole</h2>
+      <p>
+        Tests calling <code>dom(hole)</code> twice on the same Hole instance.
+        The second call should hit the <code>hole.n</code> truthy branch in
+        <code>hole.js:16</code>, calling <code>hole.update(hole)</code>.
+      </p>
+      <div id="dom-rerender-container"></div>
+      <script type="module">
+        import { html, dom } from 'hyper-element/render/index.js';
+
+        requestAnimationFrame(async () => {
+          const section = document.querySelector(
+            '[data-test="dom-rerender-same-hole"]'
+          );
+          const container = document.getElementById('dom-rerender-container');
+          const errors = [];
+
+          // Create a Hole
+          const hole = html`<span class="dom-test">Hello ${42}</span>`;
+
+          // First render - sets hole.n
+          const node1 = dom(hole);
+          container.appendChild(node1);
+
+          if (!hole.n) {
+            errors.push('After first dom(), hole.n should be set');
+          }
+          if (node1.textContent !== 'Hello 42') {
+            errors.push('First render content wrong: ' + node1.textContent);
+          }
+
+          // Second render on SAME hole - should hit hole.n truthy branch
+          const node2 = dom(hole);
+
+          // Should return the same node (no replacement needed)
+          if (node2 !== hole.n) {
+            errors.push('Second dom() should return same node as hole.n');
+          }
+          if (node2.textContent !== 'Hello 42') {
+            errors.push('Second render content wrong: ' + node2.textContent);
+          }
+
+          if (errors.length === 0) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('dom-rerender-same-hole errors:', errors);
+          }
+        });
+      </script>
+    </section>
+
     <a href="index.html">&larr; Back to Kitchen Sink</a>
   </body>
 </html>
