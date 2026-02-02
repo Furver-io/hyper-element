@@ -44,7 +44,8 @@ module.exports = defineConfig({
   ],
 
   webServer: {
-    command: 'npx serve . -l 5555',
+    // http-server doesn't respect .gitignore, so build/ is accessible
+    command: 'npx http-server . -p 5555 -c-1',
     url: 'http://localhost:5555',
     reuseExistingServer: false,
     timeout: 30000,
