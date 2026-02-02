@@ -3,25 +3,19 @@
  * Creates DOM fragments from HTML strings using template element.
  */
 
-let _creatorTpl = document.createElement('template');
-let _creatorRange;
+// Lazy-initialized to support server-side environments
+let _creatorTpl = null;
 
 /**
  * Creates a DocumentFragment from an HTML string.
- * Uses template.innerHTML for HTML, Range API for SVG.
- * @param {string} content - The HTML/SVG string to parse
- * @param {boolean} [xml=false] - Whether to use SVG context
+ * Uses template.innerHTML - SVG namespacing is handled automatically
+ * by the HTML parser when it encounters <svg> tags.
+ * @param {string} content - The HTML string to parse
  * @returns {DocumentFragment} The parsed fragment
  */
-export function createFragment(content, xml = false) {
-  if (xml) {
-    if (!_creatorRange) {
-      _creatorRange = document.createRange();
-      _creatorRange.selectNodeContents(
-        document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-      );
-    }
-    return _creatorRange.createContextualFragment(content);
+export function createFragment(content) {
+  if (!_creatorTpl) {
+    _creatorTpl = document.createElement('template');
   }
   _creatorTpl.innerHTML = content;
   const fragment = _creatorTpl.content;

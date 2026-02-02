@@ -50,7 +50,7 @@
         observedAttributes.
       </p>
       <div id="basic-reactive-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="basic-reactive"]');
 
@@ -89,7 +89,7 @@
       <h2>Any Attribute is Reactive</h2>
       <p>Tests that ANY attribute triggers re-render automatically.</p>
       <div id="any-attr-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="any-attr-reactive"]'
@@ -130,7 +130,7 @@
       <h2>Multiple Attributes</h2>
       <p>Tests multiple attributes at once.</p>
       <div id="multiple-attrs-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="multiple-attrs"]');
 
@@ -166,7 +166,7 @@
       <h2>Attribute Removal</h2>
       <p>Tests that removing an attribute updates correctly.</p>
       <div id="attr-removal-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="attr-removal"]');
 
@@ -206,7 +206,7 @@
       <h2>data-* Attribute Reactivity</h2>
       <p>Tests that data-* attributes work automatically.</p>
       <div id="data-attr-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="data-attr-reactive"]'
@@ -244,7 +244,7 @@
       <h2>Attribute Set Before Insert</h2>
       <p>Tests attributes set before element is in DOM.</p>
       <div id="attr-before-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="attr-before-insert"]'
@@ -282,7 +282,7 @@
       <h2>Rapid Attribute Changes</h2>
       <p>Tests handling multiple rapid attribute changes.</p>
       <div id="rapid-changes-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="rapid-changes"]');
           let renderCount = 0;
@@ -326,7 +326,7 @@
       <h2>Attribute with Special Characters</h2>
       <p>Tests attribute values containing special characters.</p>
       <div id="special-char-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="special-char-attr"]'
@@ -366,7 +366,7 @@
       <h2>Numeric String Coercion</h2>
       <p>Tests that numeric strings are converted to numbers.</p>
       <div id="numeric-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="numeric-coercion"]'
@@ -404,7 +404,7 @@
       <h2>Boolean Attribute (Presence)</h2>
       <p>Tests boolean attributes that use presence (disabled, hidden).</p>
       <div id="boolean-attr-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="boolean-attr"]');
 
@@ -440,7 +440,7 @@
       <h2>Functional API (No observedAttributes)</h2>
       <p>Tests functional API works without declaring observedAttributes.</p>
       <div id="functional-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="functional-no-observed"]'

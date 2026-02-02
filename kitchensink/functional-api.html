@@ -51,7 +51,7 @@
   render: (Html, ctx) => Html`Count: ${ctx.attrs.count || 0}`
 });</code></pre>
       <div id="output-1"></div>
-      <script>
+      <script type="module">
         hyperElement('func-counter', {
           render: (Html, ctx) => Html`Count: ${ctx.attrs.count || 0}`,
         });
@@ -81,7 +81,7 @@
   Html`Hello, ${ctx.attrs.name || 'World'}!`
 );</code></pre>
       <div id="output-2"></div>
-      <script>
+      <script type="module">
         hyperElement(
           'func-hello',
           (Html, ctx) => Html`Hello, ${ctx.attrs.name || 'World'}!`
@@ -113,7 +113,7 @@
 });
 customElements.define('func-manual', ManualElem);</code></pre>
       <div id="output-3"></div>
-      <script>
+      <script type="module">
         const ManualElem = hyperElement({
           render: (Html, ctx) => Html`Manual: ${ctx.attrs.value}`,
         });
@@ -145,7 +145,7 @@ customElements.define('func-manual', ManualElem);</code></pre>
 );
 customElements.define('func-simple', SimpleElem);</code></pre>
       <div id="output-4"></div>
-      <script>
+      <script type="module">
         const SimpleElem = hyperElement(
           (Html, ctx) => Html`Simple: ${ctx.attrs.msg}`
         );
@@ -182,7 +182,7 @@ customElements.define('func-simple', SimpleElem);</code></pre>
   render: (Html, ctx, store) => Html`Timer: ${store?.count || 0}`
 });</code></pre>
       <div id="output-5"></div>
-      <script>
+      <script type="module">
         hyperElement('func-timer', {
           setup: (ctx, onNext) => {
             let count = 0;
@@ -233,7 +233,7 @@ customElements.define('func-simple', SimpleElem);</code></pre>
     Html`<button onclick=${ctx.handleClick}>Clicks: ${store?.clicks || 0}</button>`
 });</code></pre>
       <div id="output-6"></div>
-      <script>
+      <script type="module">
         hyperElement('func-clicker', {
           setup: (ctx, onNext) => {
             const store = { clicks: 0 };
@@ -281,7 +281,7 @@ customElements.define('func-simple', SimpleElem);</code></pre>
 }
 customElements.define('func-classic', ClassicElement);</code></pre>
       <div id="output-7"></div>
-      <script>
+      <script type="module">
         class ClassicElement extends hyperElement {
           render(Html) {
             Html`Classic: ${this.attrs.msg}`;
@@ -312,7 +312,7 @@ customElements.define('func-classic', ClassicElement);</code></pre>
   render: (Html, ctx) => Html`Value: ${ctx.attrs.value}`
 });</code></pre>
       <div id="output-8"></div>
-      <script>
+      <script type="module">
         hyperElement('func-reactive', {
           render: (Html, ctx) => Html`Value: ${ctx.attrs.value}`,
         });
@@ -351,7 +351,7 @@ customElements.define('func-classic', ClassicElement);</code></pre>
   render: (Html, ctx) => Html`Cleanup Test`
 });</code></pre>
       <div id="output-9"></div>
-      <script>
+      <script type="module">
         window.cleanupTestCalled = false;
 
         hyperElement('func-cleanup-test', {

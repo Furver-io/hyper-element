@@ -40,7 +40,7 @@
       <h2>setup() Called Before render()</h2>
       <p>Tests that setup() executes before the first render().</p>
       <div id="setup-order-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="setup-before-render"]'
@@ -86,7 +86,7 @@
       <h2>render() Called Once on Init</h2>
       <p>Tests that render() is called exactly once during initialization.</p>
       <div id="render-once-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="render-once-init"]'
@@ -123,7 +123,7 @@
       <h2>Teardown Called on Disconnect</h2>
       <p>Tests that teardown function is called when element is removed.</p>
       <div id="teardown-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="teardown-disconnect"]'
@@ -174,7 +174,7 @@
       <h2>Re-render on Attribute Change</h2>
       <p>Tests that changing an observed attribute triggers re-render.</p>
       <div id="attr-change-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="rerender-attr-change"]'
@@ -184,9 +184,6 @@
           customElements.define(
             'attr-change-elem',
             class extends hyperElement {
-              static get observedAttributes() {
-                return ['message'];
-              }
               render(Html) {
                 renderCount++;
                 Html`<div id="attr-change-result">${this.attrs.message} (renders: ${renderCount})</div>`;
@@ -223,7 +220,7 @@
       <h2>Different Attribute Value Triggers Re-render</h2>
       <p>Tests that setting a different value triggers re-render.</p>
       <div id="same-attr-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="same-attr-no-render"]'
@@ -233,9 +230,6 @@
           customElements.define(
             'same-attr-elem',
             class extends hyperElement {
-              static get observedAttributes() {
-                return ['value'];
-              }
               render(Html) {
                 renderCount++;
                 Html`<div id="same-attr-result">value=${this.attrs.value} renders=${renderCount}</div>`;
@@ -274,7 +268,7 @@
       <h2>onNext() Triggers Re-render</h2>
       <p>Tests that calling onNext() triggers a new render with store data.</p>
       <div id="onnext-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="onnext-rerender"]'
@@ -326,7 +320,7 @@
       <h2>Manual render() Call</h2>
       <p>Tests that manually calling render() updates the DOM.</p>
       <div id="manual-render-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="manual-render"]');
           let renderCount = 0;
@@ -377,7 +371,7 @@
         Tests that element works correctly after being removed and re-added.
       </p>
       <div id="reconnect-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="reconnection"]');
           let setupCount = 0;
@@ -438,7 +432,7 @@
       <div id="initial-content-output">
         <initial-content-elem>Original Content</initial-content-elem>
       </div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="initial-content"]'
@@ -470,7 +464,7 @@
       <h2>this.element Reference</h2>
       <p>Tests that this.element refers to the DOM element.</p>
       <div id="element-ref-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="element-ref"]');
 
@@ -507,7 +501,7 @@
       <h2>innerShadow Getter</h2>
       <p>Tests that innerShadow returns rendered HTML.</p>
       <div id="inner-shadow-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="inner-shadow"]');
           let elemRef;

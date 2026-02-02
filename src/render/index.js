@@ -1,6 +1,6 @@
 /**
  * @file Public API for the render core.
- * Exports: html, svg, bind, wire
+ * Exports: html, bind, wire
  */
 
 import { createFragment } from './creator.js';
@@ -18,41 +18,30 @@ const rendered = new WeakMap();
 // WeakMap for wire() caching - maps objects to Map<id, {hole, template}>
 const wireCache = new WeakMap();
 
-/**
- * Creates a tagged template function for HTML or SVG.
- * @param {boolean} xml - Whether this is SVG context
- * @param {WeakMap} [cache] - Template cache
- * @returns {Function} Tagged template function
- */
-const create =
-  (xml, cache = new WeakMap()) =>
-  (template, ...values) => {
-    let parsed = cache.get(template);
-    if (!parsed) {
-      // Parse and cache template
-      parsed = _parseTemplate(template, values, xml);
-      // Add keyed tracker if template uses key attribute
-      parsed.push(isKeyed() ? new Keyed() : null);
-      // Convert abstract tree to DOM fragment
-      parsed[0] = createFragment(parsed[0].toString(), xml);
-      cache.set(template, parsed);
-    }
-    return new Hole(parsed, values);
-  };
+// Template cache for html function
+const _htmlCache = new WeakMap();
 
 /**
  * HTML tagged template function.
+ * SVG namespacing is handled automatically by the HTML parser
+ * when it encounters <svg> tags.
  * @example
  * html`<div class=${cls}>${content}</div>`
+ * html`<svg><circle cx=${x} cy=${y} r=${r}/></svg>`
  */
-export const html = create(false);
-
-/**
- * SVG tagged template function.
- * @example
- * svg`<circle cx=${x} cy=${y} r=${r} />`
- */
-export const svg = create(true);
+export function html(template, ...values) {
+  let parsed = _htmlCache.get(template);
+  if (!parsed) {
+    // Parse and cache template (xml=false, auto-detected inside <svg>)
+    parsed = _parseTemplate(template, values, false);
+    // Add keyed tracker if template uses key attribute
+    parsed.push(isKeyed() ? new Keyed() : null);
+    // Convert abstract tree to DOM fragment
+    parsed[0] = createFragment(parsed[0].toString());
+    _htmlCache.set(template, parsed);
+  }
+  return new Hole(parsed, values);
+}
 
 /**
  * Binds an html function to an element for rendering.

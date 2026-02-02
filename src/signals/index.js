@@ -7,6 +7,10 @@
 let currentEffect = null;
 const effectStack = [];
 
+// Batching state
+let batchDepth = 0;
+let batchedEffects = new Set();
+
 /**
  * Creates a reactive signal.
  * @template T
@@ -28,9 +32,13 @@ export function signal(initialValue) {
     set value(newValue) {
       if (value !== newValue) {
         value = newValue;
-        // Notify subscribers
+        // Notify subscribers (defer if batching)
         for (const fn of subscribers) {
-          fn();
+          if (batchDepth > 0) {
+            batchedEffects.add(fn);
+          } else {
+            fn();
+          }
         }
       }
     },
@@ -175,9 +183,6 @@ export function untracked(fn) {
  * Batches multiple signal updates.
  * @param {Function} fn - Function containing updates
  */
-let batchDepth = 0;
-let batchedEffects = new Set();
-
 export function batch(fn) {
   batchDepth++;
   try {

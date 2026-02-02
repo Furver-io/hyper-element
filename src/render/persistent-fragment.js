@@ -75,20 +75,6 @@ const replaceWith = {
 };
 
 /**
- * Property descriptor for remove method.
- * @type {PropertyDescriptor}
- */
-const remove = {
-  /**
-   * Removes the fragment from the DOM.
-   * @this {DocumentFragment}
-   */
-  value() {
-    drop(this).remove();
-  },
-};
-
-/**
  * Property descriptor for valueOf method.
  * @type {PropertyDescriptor}
  */
@@ -133,8 +119,10 @@ export function PersistentFragment(fragment) {
     parentNode,
     valueOf,
     replaceWith,
-    remove,
   });
 }
 
-PersistentFragment.prototype = DocumentFragment.prototype;
+// Set prototype only in browser environments (DocumentFragment not available in Node.js)
+if (typeof DocumentFragment !== 'undefined') {
+  PersistentFragment.prototype = DocumentFragment.prototype;
+}

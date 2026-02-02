@@ -167,26 +167,31 @@ const event = (type, at, array) =>
 /**
  * Converts array items to DOM nodes for diffing.
  * @param {Array} arr - Array of values
+ * @param {boolean} xml - Whether in SVG/XML context
  * @returns {Array} Array of DOM nodes
  */
-const toNodes = (arr) =>
+const toNodes = (arr, xml) =>
   arr.map((item) => {
     // Strings become text nodes (auto-escaped by the browser)
     if (typeof item === 'string' || typeof item === 'number') {
       return document.createTextNode(String(item));
+    }
+    // Handle __unsafe objects - render as raw HTML fragment
+    if (item && typeof item === 'object' && item.__unsafe) {
+      return PersistentFragment(createFragment(item.value, xml));
     }
     // Already a node or has nodes property
     return item;
   });
 
 /**
- * Updates array of nodes using diff.
- * @param {Node} node - Comment node placeholder
- * @param {Array} value - Array of values to render
+ * Creates an array update handler.
+ * @param {boolean} xml - Whether in SVG/XML context
+ * @returns {Function} Array update function
  */
-const commentArray = (node, value) => {
-  // Convert strings/numbers to text nodes
-  const nodeValue = toNodes(value);
+const commentArrayFactory = (xml) => (node, value) => {
+  // Convert strings/numbers to text nodes, handle __unsafe objects
+  const nodeValue = toNodes(value, xml);
   node[nodes] = diff(node[nodes] || children, nodeValue, diffFragment, node);
 };
 
@@ -251,7 +256,8 @@ const commentUnsafe = (xml) => (node, value) => {
 export function update(node, type, path, name, hint) {
   switch (type) {
     case COMMENT_TYPE: {
-      if (Array.isArray(hint)) return [path, commentArray, COMMENT_ARRAY];
+      if (Array.isArray(hint))
+        return [path, commentArrayFactory(node.xml), COMMENT_ARRAY];
       if (hint && typeof hint === 'object' && hint.__unsafe) {
         return [path, commentUnsafe(node.xml), UNSAFE];
       }

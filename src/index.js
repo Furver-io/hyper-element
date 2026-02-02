@@ -8,6 +8,18 @@
 import { hyperElement as HyperElementClass } from './hyperElement.js';
 import { createFunctionalElement } from './functional.js';
 import { signal, computed, effect, batch, untracked } from './signals/index.js';
+import { configureSSR } from './ssr/index.js';
+
+/**
+ * Throws error when hyperElement is instantiated directly.
+ * Extracted to helper so V8 can properly track branch coverage.
+ * (V8 profiler doesn't count throw statements as branches taken)
+ */
+function rejectDirectInstantiation() {
+  throw new Error(
+    'hyperElement cannot be instantiated directly. Use class extension or functional API.'
+  );
+}
 
 /**
  * Dual-purpose hyperElement export:
@@ -49,11 +61,17 @@ const hyperElement = new Proxy(HyperElementClass, {
     if (newTarget !== hyperElement) {
       return Reflect.construct(target, args, newTarget);
     }
-    throw new Error(
-      'hyperElement cannot be instantiated directly. Use class extension or functional API.'
-    );
+    rejectDirectInstantiation();
   },
 });
 
-export { hyperElement, signal, computed, effect, batch, untracked };
+export {
+  hyperElement,
+  signal,
+  computed,
+  effect,
+  batch,
+  untracked,
+  configureSSR,
+};
 export default hyperElement;

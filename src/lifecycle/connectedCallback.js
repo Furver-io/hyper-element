@@ -9,6 +9,12 @@ import { onNext } from './onNext.js';
 import { buildTemplate } from '../template/buildTemplate.js';
 import { createHtml, Hole, dom } from '../html/createHtml.js';
 import { addDataset } from '../attributes/dataset.js';
+import {
+  ssrState,
+  replayEvents,
+  markTagRegistered,
+  initSSR,
+} from '../ssr/index.js';
 
 /**
  * Result object returned from fragment methods (methods starting with capital letter).
@@ -82,19 +88,15 @@ function processFragmentResult(result, data, templatestrings, onResolve) {
             if (item && item.html) {
               return item.html;
             }
-            if (item instanceof Hole) {
-              // Render Hole to DOM and extract HTML
-              const node = dom(item);
-              // Handle both single nodes and fragments
-              if (node.nodeType === 11) {
-                // DocumentFragment - create temp container
-                const div = document.createElement('div');
-                div.appendChild(node.cloneNode(true));
-                return div.innerHTML;
-              }
-              return node.outerHTML || node.textContent;
+            // Default: Hole from simple templates - render to DOM and extract HTML
+            const node = dom(item);
+            if (node.nodeType === 11) {
+              // DocumentFragment - create temp container
+              const div = document.createElement('div');
+              div.appendChild(node.cloneNode(true));
+              return div.innerHTML;
             }
-            return String(item);
+            return node.outerHTML || node.textContent;
           })
           .join('');
         return { __unsafe: true, value: combined };
@@ -166,6 +168,9 @@ function processFragmentResult(result, data, templatestrings, onResolve) {
  * @returns {void}
  */
 export function createdCallback() {
+  // Initialize SSR capture on first element connection
+  initSSR();
+
   // Create unique identifier for this instance
   this.identifier = Symbol(this.localName);
   const ref = (manager[this.identifier] = { attrsToIgnore: {} });
@@ -176,6 +181,9 @@ export function createdCallback() {
   // Fragment method cache
   const fragmentCache = {};
 
+  // Initialize ref.observe to true so MutationObserver callbacks can run
+  // The render wrapper sets it to false during render to prevent infinite loops
+  ref.observe = true;
   observer.call(this, ref); // observer change to innerHTML
 
   Object.getOwnPropertyNames(this.__proto__)
@@ -283,11 +291,13 @@ export function createdCallback() {
   const render = this.render;
   this.render = (...data) => {
     ref.observe = false;
-    setTimeout(() => {
-      ref.observe = true;
-    }, 0);
 
     render.call(that, ref.Html, ...data);
+
+    // Clear any pending mutations caused by our render to prevent infinite loops
+    // Then immediately re-enable observation for external changes
+    ref.mutationObserver?.takeRecords();
+    ref.observe = true;
 
     // After render check if dataset has changed
     Object.getOwnPropertyNames(that.dataset)
@@ -307,5 +317,16 @@ export function createdCallback() {
     ref.teardown = this.setup.call(that, onNext.bind(this, that));
   }
 
+  markTagRegistered(this.localName);
+
   this.render();
+
+  queueMicrotask(() => {
+    replayEvents(
+      this,
+      ssrState,
+      this.onBeforeHydrate?.bind(that),
+      this.onAfterHydrate?.bind(that)
+    );
+  });
 }

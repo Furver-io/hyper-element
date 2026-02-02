@@ -40,7 +40,7 @@
       <h2>Conditional Inside {+each} (via wire)</h2>
       <p>Tests conditional rendering inside loops using Html.wire().</p>
       <div id="nested-if-each-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="nested-if-each"]'
@@ -97,7 +97,7 @@
       <h2>Multiple {+if} Blocks</h2>
       <p>Tests multiple independent {+if} blocks.</p>
       <div id="multiple-if-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="multiple-if"]');
 
@@ -136,7 +136,7 @@
       <h2>Multiple {+each} Blocks</h2>
       <p>Tests multiple independent {+each} blocks.</p>
       <div id="multiple-each-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="multiple-each"]');
 
@@ -180,7 +180,7 @@
       <h2>{+each} with null Array</h2>
       <p>Tests {+each} when array is null.</p>
       <div id="each-null-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="each-null"]');
 
@@ -218,7 +218,7 @@
       <h2>{+each} with undefined Array</h2>
       <p>Tests {+each} when array is undefined.</p>
       <div id="each-undefined-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="each-undefined"]'
@@ -257,7 +257,7 @@
       <h2>{+if} with {else} Branch</h2>
       <p>Tests {+if}...{else}...{-if} with both branches.</p>
       <div id="if-else-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="if-else-branch"]'
@@ -301,7 +301,7 @@
       <h2>{+unless} with Truthy Value</h2>
       <p>Tests {+unless} hides content when true.</p>
       <div id="unless-truthy-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="unless-truthy"]');
 
@@ -350,7 +350,7 @@
       <h2>{+each} with Nested Property Access</h2>
       <p>Tests accessing nested properties like {address.city}.</p>
       <div id="each-nested-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="each-nested-prop"]'
@@ -396,7 +396,7 @@
       <h2>{@} Index in {+each}</h2>
       <p>Tests {@} for current iteration index.</p>
       <div id="each-index-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="each-index"]');
 
@@ -433,7 +433,7 @@
       <h2>{...} Spread with Primitives</h2>
       <p>Tests {...} showing primitive values directly.</p>
       <div id="each-spread-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="each-spread-obj"]'
@@ -473,7 +473,7 @@
       <h2>{+if} with 0 (Falsy)</h2>
       <p>Tests {+if} correctly treats 0 as falsy.</p>
       <div id="if-zero-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="if-zero-falsy"]');
 
@@ -515,7 +515,7 @@
       <h2>{+if} with Empty String (Falsy)</h2>
       <p>Tests {+if} correctly treats '' as falsy.</p>
       <div id="if-empty-str-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="if-empty-str"]');
 
@@ -557,7 +557,7 @@
       <h2>{+each} with Primitive Array</h2>
       <p>Tests {+each} with array of strings/numbers.</p>
       <div id="each-primitives-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="each-primitives"]'
@@ -604,7 +604,7 @@
       <h2>Complex Nesting (wire + conditional)</h2>
       <p>Tests nested structures using Html.wire() with JS conditionals.</p>
       <div id="complex-nesting-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="complex-nesting"]'
@@ -661,7 +661,7 @@
       <h2>Block Whitespace Handling</h2>
       <p>Tests that whitespace around blocks is handled correctly.</p>
       <div id="block-whitespace-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="block-whitespace"]'

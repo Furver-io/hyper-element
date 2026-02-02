@@ -6,13 +6,17 @@
 src/
 ├── attributes/
 ├── core/
-├── functional.js
 ├── html/
+├── lifecycle/
+├── render/
+├── signals/
+├── ssr/
+├── template/
+├── utils/
+├── functional.js
 ├── hyperElement.js
 ├── index.js
-├── lifecycle/
-├── template/
-└── utils/
+└── package.json
 ```
 
 ## Files
@@ -28,3 +32,7 @@ Factory function `createFunctionalElement()` that generates hyperElement classes
 ### `index.js`
 
 Module entry point. Wraps `hyperElement` class in a Proxy to support dual-purpose usage: as a class base for inheritance (`class X extends hyperElement`) or as a factory function (`hyperElement('tag', {...})`) for the functional API.
+
+### `package.json`
+
+ESM module configuration for the src/ directory. Enables `"type": "module"` for direct ESM imports from source files during development.

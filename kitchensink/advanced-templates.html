@@ -48,7 +48,7 @@
       <h2>Simple Variable Substitution</h2>
       <p>Basic {variable} substitution should still work.</p>
       <simple-template-elem template>Hello {name}!</simple-template-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'simple-template-elem',
           class extends hyperElement {
@@ -78,7 +78,7 @@
       <if-truthy-elem template
         >{+if show}Message: {message}{-if}</if-truthy-elem
       >
-      <script>
+      <script type="module">
         customElements.define(
           'if-truthy-elem',
           class extends hyperElement {
@@ -113,7 +113,7 @@
       <if-falsy-elem template
         >Before{+if show}SHOULD_NOT_APPEAR{-if}After</if-falsy-elem
       >
-      <script>
+      <script type="module">
         customElements.define(
           'if-falsy-elem',
           class extends hyperElement {
@@ -148,7 +148,7 @@
       <if-else-elem template
         >{+if active}ACTIVE{else}INACTIVE{-if}</if-else-elem
       >
-      <script>
+      <script type="module">
         customElements.define(
           'if-else-elem',
           class extends hyperElement {
@@ -181,7 +181,7 @@
         item.
       </p>
       <each-elem template>{+each items}{...},{-each}</each-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'each-elem',
           class extends hyperElement {
@@ -210,7 +210,7 @@
         {#each items}{name}{/each} should access object properties in the loop.
       </p>
       <each-obj-elem template>{+each users}{name} {-each}</each-obj-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'each-obj-elem',
           class extends hyperElement {
@@ -243,7 +243,7 @@
         (opposite of #if).
       </p>
       <unless-elem template>{+unless hidden}SHOWN{-unless}</unless-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'unless-elem',
           class extends hyperElement {

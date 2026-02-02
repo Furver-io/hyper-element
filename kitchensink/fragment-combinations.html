@@ -40,7 +40,7 @@
       <h2>Fragment { text: string }</h2>
       <p>Tests fragment returning { text: 'string' }.</p>
       <div id="frag-text-string-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-text-string"]'
@@ -78,7 +78,7 @@
       <h2>Fragment { text: html } - Escaped</h2>
       <p>Tests that text property escapes HTML.</p>
       <div id="frag-text-escaped-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-text-escaped"]'
@@ -121,7 +121,7 @@
       <h2>Fragment { html: string } - Raw HTML</h2>
       <p>Tests that html property renders as raw HTML.</p>
       <div id="frag-html-raw-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="frag-html-raw"]');
 
@@ -164,7 +164,7 @@
       <h2>Fragment { any: string }</h2>
       <p>Tests fragment returning { any: 'string' }.</p>
       <div id="frag-any-string-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-any-string"]'
@@ -202,7 +202,7 @@
       <h2>Fragment { any: number }</h2>
       <p>Tests fragment returning { any: 42 }.</p>
       <div id="frag-any-number-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-any-number"]'
@@ -240,7 +240,7 @@
       <h2>Fragment { any: boolean }</h2>
       <p>Tests fragment returning { any: true }.</p>
       <div id="frag-any-bool-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="frag-any-bool"]');
 
@@ -276,7 +276,7 @@
       <h2>Fragment { template, values } - Simple</h2>
       <p>Tests fragment with template string and values object.</p>
       <div id="frag-template-simple-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-template-simple"]'
@@ -323,7 +323,7 @@
       <h2>Fragment { template, values: array }</h2>
       <p>Tests template mapped over array of values.</p>
       <div id="frag-template-array-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-template-array"]'
@@ -382,7 +382,7 @@
       <h2>Fragment { once: true } - Caching</h2>
       <p>Tests that once:true fragments only execute once.</p>
       <div id="frag-once-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-once-true"]'
@@ -437,7 +437,7 @@
       <h2>Fragment { text: Promise, placeholder }</h2>
       <p>Tests placeholder shown while async resolves.</p>
       <div id="frag-placeholder-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-placeholder"]'
@@ -490,7 +490,7 @@
       <h2>Fragment { html: Promise }</h2>
       <p>Tests async raw HTML fragment.</p>
       <div id="frag-async-html-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-async-html"]'
@@ -534,7 +534,7 @@
       <h2>Fragment { any: Promise }</h2>
       <p>Tests async any value fragment.</p>
       <div id="frag-async-any-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-async-any"]'
@@ -577,7 +577,7 @@
       <h2>Fragment with Data Parameter</h2>
       <p>Tests fragment receiving data from render call.</p>
       <div id="frag-data-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-with-data"]'
@@ -619,7 +619,7 @@
       <h2>Multiple Fragments</h2>
       <p>Tests using multiple different fragments in one element.</p>
       <div id="frag-multiple-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="frag-multiple"]');
 
@@ -671,7 +671,7 @@
       <h2>Fragment Returning Empty Object</h2>
       <p>Tests fragment that returns {}.</p>
       <div id="frag-empty-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-empty-obj"]'
@@ -711,7 +711,7 @@
       <h2>Fragment with Advanced Template</h2>
       <p>Tests fragment using {+if} in template.</p>
       <div id="frag-advanced-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-advanced-template"]'
@@ -759,7 +759,7 @@
       <h2>Fragment with {+each} Template</h2>
       <p>Tests fragment using {+each} in template.</p>
       <div id="frag-each-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="frag-each-template"]'

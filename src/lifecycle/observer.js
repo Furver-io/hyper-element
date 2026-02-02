@@ -4,7 +4,7 @@
  * Handles ALL attribute reactivity (no observedAttributes needed).
  */
 
-import { hyperHTML } from '../core/uhtml.js';
+import { bind } from '../render/index.js';
 
 /**
  * Sets up a MutationObserver to watch for content and attribute changes.
@@ -25,6 +25,27 @@ export function observer(ref) {
     // Check for attribute changes
     const attrMutations = mutations.filter((m) => m.type === 'attributes');
     if (attrMutations.length > 0) {
+      // Handle data-* attribute additions and removals
+      attrMutations.forEach((m) => {
+        const name = m.attributeName;
+        if (name.startsWith('data-')) {
+          const dataSetName = name.slice(5); // Remove 'data-' prefix
+          const camelKey = dataSetName.replace(/-([a-z])/g, (g) =>
+            g[1].toUpperCase()
+          );
+          // Check if attribute was added or removed
+          if (element.hasAttribute(name)) {
+            // Attribute was added - add property to dataset if not already present
+            if (!(camelKey in that.dataset)) {
+              element.addDataset(that.dataset, dataSetName);
+            }
+          } else {
+            // Attribute was removed - delete property from dataset
+            delete that.dataset[camelKey];
+          }
+        }
+      });
+
       // Re-attach attrs to pick up new shared attr values
       that.attrs = element.attachAttrs(element.attributes) || {};
       element.render();
@@ -40,11 +61,14 @@ export function observer(ref) {
     }
 
     // Reset the element
-    hyperHTML.bind(ref.shadow)``;
+    bind(ref.shadow)``;
 
     that.wrappedContent = textContent;
     element.render();
   });
+
+  // Store observer on ref so render can call takeRecords() to clear internal mutations
+  ref.mutationObserver = mutationObserver;
 
   mutationObserver.observe(element, {
     // Watch attribute changes to trigger re-renders

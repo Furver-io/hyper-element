@@ -1,6 +1,6 @@
 /**
  * @file Key tracking for efficient array reconciliation.
- * Uses WeakMap and FinalizationRegistry for memory-safe keying.
+ * Uses WeakMap and WeakRef for memory-safe keying.
  */
 
 /** @type {WeakMap<Node, import('./hole.js').Hole>} */
@@ -9,17 +9,9 @@ export const keyedHoles = new WeakMap();
 /**
  * Tracks keyedHoles holes for efficient array updates.
  * Keys are stored as WeakRefs to allow garbage collection.
+ * Note: Map entries persist until keys are overwritten.
  */
 export class Keyed extends Map {
-  /**
-   * Creates a new Keyed map for tracking holes by key.
-   */
-  constructor() {
-    super();
-    /** @type {FinalizationRegistry} */
-    this._ = new FinalizationRegistry((key) => this.delete(key));
-  }
-
   /**
    * Gets a hole by its key value.
    * @param {any} key - The key value
@@ -38,7 +30,6 @@ export class Keyed extends Map {
    */
   set(key, node, hole) {
     keyedHoles.set(node, hole);
-    this._.register(node, key);
     super.set(key, new WeakRef(node));
   }
 }

@@ -1,9 +1,14 @@
 /**
  * @file Playwright configuration for hyper-element tests.
- * Configures test runner, web server, and browser settings.
+ * Supports two test modes:
+ * - source-coverage: Tests against src/ via ESM for coverage collection
+ * - bundle-verify: Tests against built bundle to verify build integrity
  */
 
 const { defineConfig, devices } = require('@playwright/test');
+
+// Determine test mode from environment
+const testMode = process.env.TEST_MODE || 'source';
 
 module.exports = defineConfig({
   testDir: './kitchensink',
@@ -21,18 +26,27 @@ module.exports = defineConfig({
 
   projects: [
     {
-      name: 'chromium',
+      name: 'source-coverage',
       use: {
         ...devices['Desktop Chrome'],
-        channel: 'chrome', // Use system Chrome instead of headless shell
+        channel: 'chrome',
       },
+      metadata: { testMode: 'src' },
+    },
+    {
+      name: 'bundle-verify',
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: 'chrome',
+      },
+      metadata: { testMode: 'bundle' },
     },
   ],
 
   webServer: {
     command: 'npx serve . -l 5555',
     url: 'http://localhost:5555',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 30000,
   },
 });

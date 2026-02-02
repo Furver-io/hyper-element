@@ -45,7 +45,7 @@
       <h2>Basic List Rendering</h2>
       <p>Renders a simple list with {+each} syntax.</p>
       <div id="basic-list-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'each-basic-elem',
           class extends hyperElement {
@@ -87,7 +87,7 @@
       <h2>Multiple Properties</h2>
       <p>Renders items with multiple property references.</p>
       <div id="multiple-props-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'each-multi-elem',
           class extends hyperElement {
@@ -129,7 +129,7 @@
       <h2>Nested Property Access</h2>
       <p>Accesses nested object properties with dot notation.</p>
       <div id="nested-props-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'each-nested-elem',
           class extends hyperElement {
@@ -169,7 +169,7 @@
       <h2>Primitive Arrays with {...}</h2>
       <p>Uses {...} to reference current item in primitive arrays.</p>
       <div id="primitive-array-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'each-primitive-elem',
           class extends hyperElement {
@@ -209,7 +209,7 @@
       <h2>{@index} Reference</h2>
       <p>Uses {@index} to show the current array index.</p>
       <div id="index-ref-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'each-index-elem',
           class extends hyperElement {
@@ -246,7 +246,7 @@
       <h2>Empty Array</h2>
       <p>Renders nothing for an empty array.</p>
       <div id="empty-array-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'each-empty-elem',
           class extends hyperElement {
@@ -285,7 +285,7 @@
       <h2>XSS Prevention</h2>
       <p>Property values should be escaped to prevent XSS.</p>
       <div id="xss-prevention-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'each-xss-elem',
           class extends hyperElement {
@@ -327,7 +327,7 @@
       <h2>DOM Reuse (Wire)</h2>
       <p>Verifies that DOM nodes are reused on re-render (via wire).</p>
       <div id="dom-reuse-output"></div>
-      <script>
+      <script type="module">
         // Keep the same object references across renders
         const reuseUsers = [{ name: 'Alice' }, { name: 'Bob' }];
 
@@ -378,7 +378,7 @@
       <h2>Nested Each Blocks</h2>
       <p>Renders nested lists using {+each {property}} syntax.</p>
       <div id="nested-each-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'each-nested-list-elem',
           class extends hyperElement {
@@ -424,7 +424,7 @@
       </script>
     </section>
 
-    <script>
+    <script type="module">
       // Summary at the end
       window.addEventListener('load', () => {
         setTimeout(() => {

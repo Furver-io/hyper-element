@@ -45,7 +45,7 @@
       <h2>Plain String Interpolation Escaped</h2>
       <p>Plain strings containing HTML should be escaped.</p>
       <div id="string-escaped-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'xss-string-elem',
           class extends hyperElement {
@@ -85,7 +85,7 @@
       <h2>Html.raw() Bypasses Escaping</h2>
       <p>Content marked with Html.raw() should render as HTML.</p>
       <div id="raw-not-escaped-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'xss-raw-elem',
           class extends hyperElement {
@@ -122,7 +122,7 @@
       <h2>Array of Strings Escaped</h2>
       <p>Arrays containing strings with HTML should have each item escaped.</p>
       <div id="array-escaped-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'xss-array-elem',
           class extends hyperElement {
@@ -153,12 +153,55 @@
       </script>
     </section>
 
+    <!-- Test: Array of Html.raw() items renders as HTML -->
+    <section data-test="array-raw-not-escaped" data-test-result="pending">
+      <h2>Array of Html.raw() Items Renders as HTML</h2>
+      <p>Arrays containing Html.raw() items should render each as HTML.</p>
+      <div id="array-raw-output"></div>
+      <script type="module">
+        customElements.define(
+          'xss-array-raw-elem',
+          class extends hyperElement {
+            render(Html) {
+              const items = [
+                Html.raw('<em>italic</em>'),
+                Html.raw('<strong>bold</strong>'),
+              ];
+              Html`<div id="xss-array-raw-result">${items}</div>`;
+            }
+          }
+        );
+
+        const elemArrayRaw = document.createElement('xss-array-raw-elem');
+        document.getElementById('array-raw-output').appendChild(elemArrayRaw);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="array-raw-not-escaped"]'
+          );
+          const result = document.getElementById('xss-array-raw-result');
+          // Check that both items were rendered as HTML (not escaped)
+          if (
+            result &&
+            result.innerHTML.includes('<em>italic</em>') &&
+            result.innerHTML.includes('<strong>bold</strong>') &&
+            result.querySelector('em') &&
+            result.querySelector('strong')
+          ) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+          }
+        });
+      </script>
+    </section>
+
     <!-- Test: Template {var} interpolation is escaped -->
     <section data-test="template-var-escaped" data-test-result="pending">
       <h2>Template {var} Interpolation Escaped</h2>
       <p>Template variables should be escaped.</p>
       <div id="template-var-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'xss-template-var-elem',
           class extends hyperElement {
@@ -205,7 +248,7 @@
       <h2>Template {.} in #each Escaped</h2>
       <p>Items in #each loops should be escaped.</p>
       <div id="template-each-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'xss-template-each-elem',
           class extends hyperElement {
@@ -252,7 +295,7 @@
       <h2>Fragment text Type Escaped</h2>
       <p>Fragments returning { text: ... } should be escaped.</p>
       <div id="fragment-text-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'xss-fragment-text-elem',
           class extends hyperElement {
@@ -294,7 +337,7 @@
       <h2>Fragment html Type NOT Escaped</h2>
       <p>Fragments returning { html: ... } should render as HTML.</p>
       <div id="fragment-html-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'xss-fragment-html-elem',
           class extends hyperElement {
@@ -336,7 +379,7 @@
       <h2>Html.wire Still Works</h2>
       <p>Html.wire should continue to render list items correctly.</p>
       <div id="wire-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'xss-wire-elem',
           class extends hyperElement {
@@ -380,7 +423,7 @@
       <h2>Special Characters Escaped</h2>
       <p>All HTML special characters should be escaped.</p>
       <div id="special-chars-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'xss-special-chars-elem',
           class extends hyperElement {
@@ -419,7 +462,7 @@
       <h2>Non-Strings Unchanged</h2>
       <p>Numbers and booleans should pass through without modification.</p>
       <div id="non-strings-output"></div>
-      <script>
+      <script type="module">
         customElements.define(
           'xss-non-strings-elem',
           class extends hyperElement {

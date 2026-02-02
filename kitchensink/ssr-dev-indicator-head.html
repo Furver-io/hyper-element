@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SSR Dev Indicator (Head Script) - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>SSR Dev Indicator Tests</h1>
+    <p>Tests the devMode indicator functionality including edge cases.</p>
+
+    <!-- Test 1: Basic show/hide indicator -->
+    <section data-test="dev-indicator-basic" data-test-result="pending">
+      <h2>Basic Dev Indicator Show/Hide</h2>
+      <p>Tests that configureSSR with devMode shows and hides the indicator.</p>
+      <script type="module">
+        setTimeout(() => {
+          const section = document.querySelector(
+            '[data-test="dev-indicator-basic"]'
+          );
+
+          if (
+            typeof hyperElement !== 'undefined' &&
+            hyperElement.configureSSR
+          ) {
+            // Show indicator
+            hyperElement.configureSSR({ devMode: true });
+
+            setTimeout(() => {
+              const indicator = document.getElementById(
+                'hyper-element-ssr-indicator'
+              );
+              const shown =
+                indicator !== null &&
+                (indicator.textContent.includes('SSR') ||
+                  indicator.innerHTML.includes('SSR'));
+
+              // Hide indicator
+              hyperElement.configureSSR({ devMode: false });
+
+              setTimeout(() => {
+                const indicatorHidden =
+                  document.getElementById('hyper-element-ssr-indicator') ===
+                  null;
+                section.dataset.testResult =
+                  shown && indicatorHidden ? 'pass' : 'fail';
+              }, 50);
+            }, 50);
+          } else {
+            section.dataset.testResult = 'fail';
+          }
+        }, 50);
+      </script>
+    </section>
+
+    <!-- Test 2: DOMContentLoaded fallback simulation -->
+    <section data-test="dev-indicator-dcl-fallback" data-test-result="pending">
+      <h2>DOMContentLoaded Fallback</h2>
+      <p>
+        Tests the fallback path when document.body is temporarily null. This
+        simulates the scenario when configureSSR is called in &lt;head&gt;
+        before body exists.
+      </p>
+      <script type="module">
+        setTimeout(() => {
+          const section = document.querySelector(
+            '[data-test="dev-indicator-dcl-fallback"]'
+          );
+
+          if (
+            typeof hyperElement !== 'undefined' &&
+            hyperElement.configureSSR
+          ) {
+            // First, ensure any existing indicator is removed
+            hyperElement.configureSSR({ devMode: false });
+
+            // Mock document.body being null temporarily
+            const originalBody = document.body;
+            const listeners = [];
+            const originalAddEventListener = document.addEventListener;
+
+            // Override addEventListener to capture DOMContentLoaded callbacks
+            document.addEventListener = function (type, callback, options) {
+              if (type === 'DOMContentLoaded') {
+                listeners.push(callback);
+              }
+              return originalAddEventListener.call(
+                this,
+                type,
+                callback,
+                options
+              );
+            };
+
+            // Temporarily hide body to trigger fallback
+            Object.defineProperty(document, 'body', {
+              get: function () {
+                return null;
+              },
+              configurable: true,
+            });
+
+            try {
+              // This should add a DOMContentLoaded listener since body is "null"
+              hyperElement.configureSSR({ devMode: true });
+            } finally {
+              // Restore body
+              Object.defineProperty(document, 'body', {
+                get: function () {
+                  return originalBody;
+                },
+                configurable: true,
+              });
+              document.addEventListener = originalAddEventListener;
+            }
+
+            // Manually trigger the captured callback to simulate DOMContentLoaded
+            setTimeout(() => {
+              listeners.forEach((cb) => cb());
+
+              setTimeout(() => {
+                const indicator = document.getElementById(
+                  'hyper-element-ssr-indicator'
+                );
+                const indicatorShown = indicator !== null;
+
+                // Clean up
+                hyperElement.configureSSR({ devMode: false });
+
+                section.dataset.testResult = indicatorShown ? 'pass' : 'fail';
+              }, 50);
+            }, 50);
+          } else {
+            section.dataset.testResult = 'fail';
+          }
+        }, 150);
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

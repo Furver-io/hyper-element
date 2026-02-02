@@ -54,7 +54,7 @@ Html\`&lt;child-elem data=${{a:2}} name="test"/&gt;\`
 // Currently only works when a function is also passed:
 Html\`&lt;child-elem fn=${this.fn} data=${{a:2}} name="test"/&gt;\`</code></pre>
       <parent-obj-elem></parent-obj-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'child-obj-elem',
           class extends hyperElement {
@@ -103,7 +103,7 @@ Html\`&lt;child-elem fn=${this.fn} data=${{a:2}} name="test"/&gt;\`</code></pre>
       <pre><code>// Should work but currently fails:
 Html\`&lt;span&gt;text&lt;/span&gt;&lt;child-elem fn=${this.fn} data=${{a:2}}/&gt;\`</code></pre>
       <parent-preceding-elem></parent-preceding-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'child-preceding-elem',
           class extends hyperElement {
@@ -152,7 +152,7 @@ Html\`&lt;span&gt;text&lt;/span&gt;&lt;child-elem fn=${this.fn} data=${{a:2}}/&g
       <h2>Combined: Object Only + Preceding Element</h2>
       <p>Passing only an object after a preceding element should work.</p>
       <parent-combo-elem></parent-combo-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'child-combo-elem',
           class extends hyperElement {
@@ -198,7 +198,7 @@ Html\`&lt;span&gt;text&lt;/span&gt;&lt;child-elem fn=${this.fn} data=${{a:2}}/&g
 // Child receives: this.attrs.enabled === true (boolean)
 // Child receives: this.attrs.disabled === false (boolean)</code></pre>
       <parent-bool-elem></parent-bool-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'child-bool-elem',
           class extends hyperElement {
@@ -246,7 +246,7 @@ Html\`&lt;span&gt;text&lt;/span&gt;&lt;child-elem fn=${this.fn} data=${{a:2}}/&g
 // Child receives: this.attrs.count === 42 (number)
 // Child receives: this.attrs.pi === 3.14 (number)</code></pre>
       <parent-num-elem></parent-num-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'child-num-elem',
           class extends hyperElement {
@@ -294,7 +294,7 @@ Html\`&lt;child-elem
   config=${{ a: 1 }}
 &gt;\`</code></pre>
       <parent-multiline-elem></parent-multiline-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'child-multiline-elem',
           class extends hyperElement {

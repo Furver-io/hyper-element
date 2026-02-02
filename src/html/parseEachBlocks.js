@@ -74,7 +74,7 @@ function findMatchingClose(strings, startIdx, startPos, openTag, closeTag) {
       } else break;
     }
   }
-  throw new Error(`Unclosed ${openTag}} block. Missing ${closeTag}.`);
+  throw new Error(`Unclosed ${openTag} block. Missing ${closeTag}.`);
 }
 
 /**

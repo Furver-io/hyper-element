@@ -53,7 +53,7 @@ Html\`&lt;child-elem style=${{color:"red"}}&gt;&lt;/child-elem&gt;\`
 
 // Child should render with red text</code></pre>
       <parent-style-elem></parent-style-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'child-style-elem',
           class extends hyperElement {
@@ -92,7 +92,7 @@ Html\`&lt;child-elem style=${{color:"red"}}&gt;&lt;/child-elem&gt;\`
       <h2>Style Object Combined with Function</h2>
       <p>Passing both a style object and a callback function should work.</p>
       <parent-style-fn-elem></parent-style-fn-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'child-style-fn-elem',
           class extends hyperElement {

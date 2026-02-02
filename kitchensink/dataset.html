@@ -50,7 +50,7 @@
   }
 }
 // &lt;data-set-element data-users='["ann","bob"]'&gt;</code></pre>
-      <script>
+      <script type="module">
         customElements.define(
           'data-set-element',
           class extends hyperElement {
@@ -93,7 +93,7 @@
       <pre><code>// this.attrs["data-json"] === "[1,2,3]" (string)
 // this.dataset.json === [1,2,3] (parsed array)</code></pre>
       <dataset-check-element data-json="[1,2,3]"></dataset-check-element>
-      <script>
+      <script type="module">
         customElements.define(
           'dataset-check-element',
           class extends hyperElement {

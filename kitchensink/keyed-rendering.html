@@ -40,7 +40,7 @@
       <h2>Basic Wire Keyed List</h2>
       <p>Tests that Html.wire() renders a list with keyed items.</p>
       <div id="wire-basic-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="wire-basic-list"]'
@@ -90,7 +90,7 @@
       <h2>Wire Item Update</h2>
       <p>Tests that updating item properties re-renders correctly.</p>
       <div id="wire-update-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="wire-item-update"]'
@@ -147,7 +147,7 @@
       <h2>Wire Renders Filtered List</h2>
       <p>Tests that filtering and re-rendering shows correct items.</p>
       <div id="wire-remove-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="wire-remove"]');
 
@@ -197,7 +197,7 @@
       <h2>Wire Item Addition</h2>
       <p>Tests that adding items to a wired list works correctly.</p>
       <div id="wire-add-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="wire-add"]');
 
@@ -254,7 +254,7 @@
       <h2>Wire Empty List</h2>
       <p>Tests that an empty wired list renders correctly.</p>
       <div id="wire-empty-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="wire-empty"]');
 
@@ -294,7 +294,7 @@
       <h2>Wire Multiple IDs per Object</h2>
       <p>Tests using different wire IDs for the same object.</p>
       <div id="wire-ids-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="wire-multiple-ids"]'

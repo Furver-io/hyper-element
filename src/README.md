@@ -11,6 +11,7 @@ This module provides the `hyperElement` base class that extends `HTMLElement` to
 - Dataset proxy with JSON serialization
 - Handlebars-like template syntax (`{#each}`, `{#if}`, `{#unless}`)
 - Shared attribute passing between parent/child custom elements
+- Server-side rendering with progressive hydration
 
 ## Usage
 
@@ -28,3 +29,7 @@ customElements.define('my-element', MyElement);
 ## Exports
 
 - `hyperElement` - Base class for custom elements
+- `ssr/` - Server-side rendering modules:
+  - `renderElement`, `renderElements`, `createRenderer` - Component rendering
+  - `ssrHtml` - Tagged template literal for server (SVG auto-detected via `<svg>` tags)
+  - `configureSSR`, `markTagRegistered` - Client-side hydration setup

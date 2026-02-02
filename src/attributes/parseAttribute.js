@@ -17,6 +17,12 @@
  * parseAttribute('template', '');       // Returns true (special case)
  */
 export function parseAttribute(key, value) {
+  // Handle null/undefined values
+  /* IS DEAD CODE ??
+  if (value == null) {
+    return value;
+  }*/
+
   if ('template' === key && '' === value) {
     return true;
   }

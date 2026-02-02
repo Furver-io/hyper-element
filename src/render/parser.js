@@ -78,21 +78,11 @@ const parent = (node, ignore) => {
 };
 
 /**
- * Default update function - returns [type, path, name].
- * @param {import('./nodes.js').Node} _node - Parser node (unused)
- * @param {number} type - Update type
- * @param {number[]} nodePath - Path to node
- * @param {string} name - Attribute name
- * @returns {[number, number[], string]} Update tuple
- */
-const defaultUpdate = (_node, type, nodePath, name) => [type, nodePath, name];
-
-/**
  * Creates a parser with custom update handler.
- * @param {Function} [update=defaultUpdate] - Update handler
+ * @param {Function} update - Update handler (required)
  * @returns {Function} Parser function
  */
-export function createParser(update = defaultUpdate) {
+export function createParser(update) {
   /**
    * Parses a template into an abstract tree and update instructions.
    * @param {TemplateStringsArray|string[]} template

@@ -5,6 +5,7 @@
 [![CI](https://github.com/codemeasandwich/hyper-element/actions/workflows/publish.yml/badge.svg)](https://github.com/codemeasandwich/hyper-element/actions/workflows/publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/codemeasandwich/hyper-element)
+[![XSS Protected](https://img.shields.io/badge/XSS-Protected-blue.svg)](https://github.com/codemeasandwich/hyper-element)
 [![ES6+](https://img.shields.io/badge/ES6+-supported-blue.svg)](https://caniuse.com/es6)
 
 A lightweight [Custom Elements] library with a fast, built-in render core. Your custom-element will react to tag attribute and store changes with efficient DOM updates.
@@ -67,6 +68,7 @@ For older browsers, a [Custom Elements polyfill](https://github.com/webcomponent
 - Built in [template](#templates) system to customise the rendered output
 - Inline style objects supported (similar to React)
 - First class support for [data stores](#connecting-to-a-data-store)
+- [Server-side rendering](#server-side-rendering-ssr) with progressive hydration
 - Pass `function` to other custom hyper-elements via there tag attribute
 
 # [Live Demo](https://jsfiddle.net/codemeasandwich/k25e6ufv/)
@@ -114,6 +116,10 @@ For older browsers, a [Custom Elements polyfill](https://github.com/webcomponent
   - [effect](#effect)
   - [batch](#batch)
   - [untracked](#untracked)
+- [Server-Side Rendering (SSR)](#server-side-rendering-ssr)
+  - [Server-Side API](#server-side-api)
+  - [Client-Side Hydration](#client-side-hydration)
+  - [SSR Configuration](#ssr-configuration)
 - [Best Practices](#best-practices)
 - [Development](#development)
 
@@ -1128,6 +1134,322 @@ hyperElement('counter-app', {
 
 ---
 
+# Server-Side Rendering (SSR)
+
+hyper-element supports server-side rendering for faster initial page loads and SEO. The SSR system has two parts:
+
+1. **Server-side API** - Render components to HTML strings in Node.js/Deno/Bun
+2. **Client-side hydration** - Capture user interactions during page load and replay them after components register
+
+## Server-Side API
+
+Import SSR functions from the dedicated server entry point:
+
+```js
+// Node.js / Bun / Deno
+import {
+  renderElement,
+  renderElements,
+  createRenderer,
+  ssrHtml,
+  escapeHtml,
+  safeHtml,
+} from 'hyper-element/ssr/server';
+```
+
+### renderElement
+
+Render a single component to an HTML string:
+
+```js
+const html = await renderElement('user-card', {
+  attrs: { name: 'Alice', role: 'Admin' },
+  store: { lastLogin: '2024-01-15' },
+  render: (Html, ctx) => Html`
+    <div class="card">
+      <h2>${ctx.attrs.name}</h2>
+      <span>${ctx.attrs.role}</span>
+      <small>Last login: ${ctx.store.lastLogin}</small>
+    </div>
+  `,
+});
+
+// Result: <user-card name="Alice" role="Admin"><div class="card">...</div></user-card>
+```
+
+**Options:**
+
+| Option      | Type       | Description                                           |
+| ----------- | ---------- | ----------------------------------------------------- |
+| `attrs`     | `object`   | Attributes to pass to the component                   |
+| `store`     | `object`   | Store data available in render                        |
+| `render`    | `function` | Required render function `(Html, ctx) => Html\`...\`` |
+| `shadowDOM` | `boolean`  | Wrap output in Declarative Shadow DOM template        |
+| `fragments` | `object`   | Fragment functions for async content                  |
+
+### createRenderer
+
+Create a reusable renderer for a component:
+
+```js
+const renderUserCard = createRenderer(
+  'user-card',
+  (Html, ctx) => Html`
+    <div class="card">
+      <h2>${ctx.attrs.name}</h2>
+    </div>
+  `,
+  { shadowDOM: false } // default options
+);
+
+// Use it multiple times
+const html1 = await renderUserCard({ name: 'Alice' });
+const html2 = await renderUserCard({ name: 'Bob' });
+```
+
+### renderElements
+
+Render multiple components in parallel:
+
+```js
+const results = await renderElements([
+  { tagName: 'user-card', attrs: { name: 'Alice' }, render: renderFn },
+  { tagName: 'user-card', attrs: { name: 'Bob' }, render: renderFn },
+]);
+// Returns array of HTML strings
+```
+
+### ssrHtml
+
+Tagged template literal for rendering HTML strings directly. SVG content is auto-detected when using `<svg>` tags:
+
+```js
+const header = ssrHtml`<header><h1>${title}</h1></header>`;
+const icon = ssrHtml`<svg viewBox="0 0 24 24"><path d="${pathData}"/></svg>`;
+```
+
+### escapeHtml / safeHtml
+
+Utility functions for HTML escaping:
+
+```js
+// Escape user input
+const safe = escapeHtml('<script>alert("xss")</script>');
+// Result: &lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;
+
+// Mark trusted HTML as safe (bypasses escaping)
+const trusted = safeHtml('<strong>Bold</strong>');
+```
+
+### Fragments in SSR
+
+Fragments work on the server too for async content:
+
+```js
+const html = await renderElement('user-profile', {
+  attrs: { userId: '123' },
+  fragments: {
+    FriendCount: async (userId) => {
+      const count = await fetchFriendCount(userId);
+      return { text: `${count} friends` };
+    },
+  },
+  render: (Html, ctx) => Html`
+    <div>
+      <h1>Profile</h1>
+      <p>${{ FriendCount: ctx.attrs.userId }}</p>
+    </div>
+  `,
+});
+```
+
+---
+
+## Client-Side Hydration
+
+When SSR HTML arrives in the browser, users can interact with elements before JavaScript loads and components register. hyper-element captures these interactions and replays them after hydration.
+
+### How It Works
+
+```
+1. CAPTURE - hyper-element loads in <head>, starts listening for events
+2. BUFFER  - User interacts with SSR markup, events are stored
+3. REPLAY  - After customElements.define() + first render, events replay
+```
+
+### configureSSR
+
+Configure which events to capture (call before components register):
+
+```js
+import { configureSSR } from 'hyper-element';
+
+configureSSR({
+  events: ['click', 'input', 'change', 'submit'], // Events to capture
+  devMode: true, // Show visual indicator during capture (dev only)
+});
+```
+
+**Default captured events:** `click`, `dblclick`, `input`, `change`, `submit`, `keydown`, `keyup`, `keypress`, `focus`, `blur`, `focusin`, `focusout`, `touchstart`, `touchend`, `touchmove`, `touchcancel`
+
+### Lifecycle Hooks
+
+Components can hook into the hydration process:
+
+```js
+customElements.define(
+  'my-component',
+  class extends hyperElement {
+    // Called before events are replayed
+    // Return filtered/modified events array
+    onBeforeHydrate(bufferedEvents) {
+      console.log('Events captured:', bufferedEvents.length);
+      // Filter out old events
+      return bufferedEvents.filter((e) => Date.now() - e.timestamp < 5000);
+    }
+
+    // Called after all events have been replayed
+    onAfterHydrate() {
+      console.log('Hydration complete!');
+    }
+
+    render(Html) {
+      Html`<button>Click me</button>`;
+    }
+  }
+);
+```
+
+### BufferedEvent Structure
+
+Each captured event contains:
+
+```ts
+interface BufferedEvent {
+  type: string; // 'click', 'input', etc.
+  timestamp: number; // When event occurred
+  targetPath: string; // DOM path like 'DIV:0/BUTTON:1'
+  detail: object; // Event-specific properties
+}
+```
+
+### State Preservation
+
+The hydration system automatically preserves:
+
+- **Form values** - Input, textarea, select values via `input` events
+- **Checkbox/radio state** - Checked state captured and restored
+- **Scroll position** - Scroll positions within components
+
+---
+
+## SSR Configuration
+
+### Full Configuration Reference
+
+```js
+import { configureSSR } from 'hyper-element';
+
+configureSSR({
+  // Events to capture during SSR hydration
+  events: [
+    'click',
+    'dblclick',
+    'input',
+    'change',
+    'submit',
+    'keydown',
+    'keyup',
+    'keypress',
+    'focus',
+    'blur',
+    'focusin',
+    'focusout',
+    'touchstart',
+    'touchend',
+    'touchmove',
+    'touchcancel',
+  ],
+
+  // Show orange "SSR Capture Active" badge (development only)
+  devMode: false,
+});
+```
+
+---
+
+## Complete SSR Example
+
+**Server (Node.js):**
+
+```js
+import { renderElement } from 'hyper-element/ssr/server';
+
+const html = await renderElement('todo-list', {
+  attrs: { title: 'My Tasks' },
+  store: {
+    items: [
+      { id: 1, text: 'Learn SSR', done: false },
+      { id: 2, text: 'Build app', done: false },
+    ],
+  },
+  render: (Html, ctx) => Html`
+    <h1>${ctx.attrs.title}</h1>
+    <ul>
+      {+each ${ctx.store.items}}
+        <li data-id="{id}">{text}</li>
+      {-each}
+    </ul>
+  `,
+});
+
+// Serve full HTML page
+res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="/hyper-element.min.js"></script>
+</head>
+<body>
+  ${html}
+  <script src="/app.js"></script>
+</body>
+</html>
+`);
+```
+
+**Client (app.js):**
+
+```js
+import hyperElement, { configureSSR } from 'hyper-element';
+
+// Optional: configure before components register
+configureSSR({ devMode: true });
+
+// Register the component - hydration happens automatically
+hyperElement('todo-list', {
+  onBeforeHydrate(events) {
+    console.log('Replaying', events.length, 'events');
+    return events;
+  },
+
+  onAfterHydrate() {
+    console.log('Todo list hydrated!');
+  },
+
+  render: (Html, ctx, store) => Html`
+    <h1>${ctx.attrs.title}</h1>
+    <ul>
+      {+each ${store.items}}
+        <li data-id="{id}">{text}</li>
+      {-each}
+    </ul>
+  `,
+});
+```
+
+---
+
 # Best Practices
 
 ## Always Use Html.wire for Lists
@@ -1289,6 +1611,54 @@ npm run format:fix
 ```
 
 ## Testing
+
+hyper-element uses a **two-phase test workflow** to ensure both source quality and build integrity:
+
+### Phase 1: Source Coverage
+
+```bash
+npm run test:src
+```
+
+- Loads `src/` directly via ES modules + import maps
+- Collects V8 coverage on source files
+- Generates HTML report at `coverage/index.html`
+- Runs SSR tests with coverage
+- **Requires 100% coverage** on all metrics
+
+### Phase 2: Bundle Verification
+
+```bash
+npm run test:bundle
+```
+
+- Loads built `build/hyperElement.min.js`
+- Verifies nothing broke during bundling
+- No coverage collected (just verification)
+
+### Full Test Suite
+
+```bash
+npm test
+```
+
+Runs both phases sequentially: source coverage first, then bundle verification.
+
+### Viewing Coverage Report
+
+After running tests, open the HTML coverage report:
+
+```bash
+open coverage/index.html
+```
+
+This shows:
+
+- File-by-file coverage breakdown
+- Line-by-line highlighting of covered/uncovered code
+- Statement, branch, and function metrics
+
+### Test Files
 
 Tests are located in `kitchensink/` and run via Playwright. See `kitchensink/kitchensink.spec.js` for the test suite.
 

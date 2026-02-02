@@ -123,6 +123,33 @@ export class hyperElement extends HTMLElement {
   setup(onNext) {} // eslint-disable-line no-unused-vars
 
   /**
+   * SSR hydration lifecycle hook. Called before buffered events are replayed.
+   * Override to filter or modify events before replay.
+   *
+   * @param {Array} events - Buffered events captured during SSR
+   * @returns {Array} Filtered events to replay
+   *
+   * @example
+   * onBeforeHydrate(events) {
+   *   return events.filter(e => e.type !== 'focus');
+   * }
+   */
+  onBeforeHydrate(events) {
+    return events;
+  }
+
+  /**
+   * SSR hydration lifecycle hook. Called after event replay completes.
+   * Override to perform post-hydration setup.
+   *
+   * @example
+   * onAfterHydrate() {
+   *   console.log('Component hydrated');
+   * }
+   */
+  onAfterHydrate() {}
+
+  /**
    * Required render lifecycle method. Called on every render cycle.
    * Use the Html template tag to render content to the element.
    *

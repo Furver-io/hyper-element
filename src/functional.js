@@ -55,7 +55,13 @@ export function createFunctionalElement(tagOrDef, definition) {
     );
   }
 
-  const { setup: setupFn, render: renderFn, ...methods } = definition;
+  const {
+    setup: setupFn,
+    render: renderFn,
+    onBeforeHydrate: beforeHydrateFn,
+    onAfterHydrate: afterHydrateFn,
+    ...methods
+  } = definition;
 
   if (!renderFn || typeof renderFn !== 'function') {
     throw new Error('hyperElement: render function is required');
@@ -76,6 +82,19 @@ export function createFunctionalElement(tagOrDef, definition) {
   FunctionalElement.prototype.render = function (Html, ...data) {
     return renderFn(Html, this, ...data);
   };
+
+  // Add SSR hydration lifecycle hooks if provided
+  if (beforeHydrateFn) {
+    FunctionalElement.prototype.onBeforeHydrate = function (events) {
+      return beforeHydrateFn(this, events);
+    };
+  }
+
+  if (afterHydrateFn) {
+    FunctionalElement.prototype.onAfterHydrate = function () {
+      return afterHydrateFn(this);
+    };
+  }
 
   // Add other methods (context as first param)
   for (const [name, fn] of Object.entries(methods)) {

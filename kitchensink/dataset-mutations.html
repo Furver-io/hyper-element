@@ -54,7 +54,7 @@
 }
 // After render: element has data-cats="dogs" attribute</code></pre>
       <dataset-add-element></dataset-add-element>
-      <script>
+      <script type="module">
         customElements.define(
           'dataset-add-element',
           class extends hyperElement {
@@ -89,7 +89,7 @@
 this.dataset.json = [5,6,7]
 // After: data-json="[5,6,7]"</code></pre>
       <dataset-update-element data-json="[5,6]"></dataset-update-element>
-      <script>
+      <script type="module">
         customElements.define(
           'dataset-update-element',
           class extends hyperElement {
@@ -135,7 +135,7 @@ this.dataset.json = [5,6,7]
 this.dataset.aBC = {zxy: 123}
 // After: data-a-b-c='{"zxy":123}'</code></pre>
       <dataset-update2-element data-a-b-c="[7,7,7]"></dataset-update2-element>
-      <script>
+      <script type="module">
         customElements.define(
           'dataset-update2-element',
           class extends hyperElement {
@@ -183,13 +183,10 @@ this.dataset.aBC = {zxy: 123}
 elem.setAttribute('data-new-key', 'dynamic-value')
 // After: this.dataset.newKey exists</code></pre>
       <dataset-add-elem></dataset-add-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'dataset-add-elem',
           class extends hyperElement {
-            static get observedAttributes() {
-              return ['data-new-key'];
-            }
             render(Html) {
               Html`Value: ${this.dataset.newKey || 'none'}`;
             }
@@ -240,13 +237,10 @@ elem.setAttribute('data-new-key', 'dynamic-value')
 elem.removeAttribute('data-my-key')
 // After: this.dataset.myKey is undefined</code></pre>
       <dataset-remove-elem data-my-key="initial-value"></dataset-remove-elem>
-      <script>
+      <script type="module">
         customElements.define(
           'dataset-remove-elem',
           class extends hyperElement {
-            static get observedAttributes() {
-              return ['data-my-key'];
-            }
             render(Html) {
               Html`Value: ${this.dataset.myKey || 'removed'}`;
             }

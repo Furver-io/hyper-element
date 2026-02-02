@@ -12,8 +12,7 @@ import { PersistentFragment, diffFragment } from './persistent-fragment.js';
  * @param {Hole} hole
  * @returns {Node}
  */
-export const dom = (hole) =>
-  diffFragment(hole.n ? hole.update(hole) : hole.valueOf(), 1);
+export const dom = (hole) => diffFragment(hole.n || hole.valueOf(), 1);
 
 /**
  * Reconciles arrays of Holes efficiently.

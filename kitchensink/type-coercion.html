@@ -45,7 +45,7 @@
       <h2>Integer Parsing</h2>
       <p>Tests that <code>"42"</code> becomes <code>42</code> (number).</p>
       <div id="type-integer-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="type-integer"]');
 
@@ -83,7 +83,7 @@
       <h2>Negative Integer</h2>
       <p>Tests that <code>"-42"</code> becomes <code>-42</code> (number).</p>
       <div id="type-negative-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="type-negative"]');
 
@@ -121,7 +121,7 @@
       <h2>Decimal Number</h2>
       <p>Tests that <code>"3.14"</code> becomes <code>3.14</code> (number).</p>
       <div id="type-decimal-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="type-decimal"]');
 
@@ -159,7 +159,7 @@
       <h2>Zero Value</h2>
       <p>Tests that <code>"0"</code> becomes <code>0</code> (number, falsy).</p>
       <div id="type-zero-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="type-zero"]');
 
@@ -201,7 +201,7 @@
         <code>true</code> (boolean).
       </p>
       <div id="type-bool-true-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="type-bool-true"]'
@@ -241,7 +241,7 @@
         <code>false</code> (boolean).
       </p>
       <div id="type-bool-false-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="type-bool-false"]'
@@ -278,7 +278,7 @@
       <h2>JSON Array (Dataset)</h2>
       <p>Tests that <code>data-items='[1,2,3]'</code> becomes an array.</p>
       <div id="type-json-array-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="type-json-array"]'
@@ -316,7 +316,7 @@
       <h2>JSON Object (Dataset)</h2>
       <p>Tests that <code>data-config='{"a":1}'</code> becomes an object.</p>
       <div id="type-json-object-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="type-json-object"]'
@@ -355,7 +355,7 @@
       <h2>Plain String</h2>
       <p>Tests that non-numeric strings remain strings.</p>
       <div id="type-string-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector('[data-test="type-string"]');
 
@@ -393,7 +393,7 @@
       <h2>Whitespace Trimmed</h2>
       <p>Tests that <code>" 42 "</code> becomes <code>42</code> (number).</p>
       <div id="type-whitespace-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="type-whitespace"]'
@@ -433,7 +433,7 @@
       <h2>Non-Numeric String</h2>
       <p>Tests that <code>"42px"</code> stays a string.</p>
       <div id="type-non-numeric-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="type-non-numeric"]'
@@ -473,7 +473,7 @@
       <h2>Template Attribute Empty</h2>
       <p>Tests that <code>template=""</code> becomes <code>true</code>.</p>
       <div id="type-template-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="type-template-attr"]'
@@ -514,7 +514,7 @@
         <code>this.dataset.myValue</code>.
       </p>
       <div id="type-camelcase-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="type-camelcase"]'
@@ -551,7 +551,7 @@
       <h2>Nested JSON Object</h2>
       <p>Tests that nested JSON objects are parsed correctly.</p>
       <div id="type-invalid-json-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="type-invalid-json"]'
@@ -589,7 +589,7 @@
       <h2>Dataset Setter Serialization</h2>
       <p>Tests that setting dataset with object JSON-stringifies it.</p>
       <div id="type-dataset-setter-output"></div>
-      <script>
+      <script type="module">
         (function () {
           const section = document.querySelector(
             '[data-test="type-dataset-setter"]'
