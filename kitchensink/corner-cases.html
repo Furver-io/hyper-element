@@ -924,7 +924,10 @@
       </p>
       <div id="dom-rerender-container"></div>
       <script type="module">
-        import { html, dom } from 'hyper-element/render/index.js';
+        // Use globals (works in both source and bundle mode)
+        // In source mode, test-loader exposes them via import map
+        // In bundle mode, they're set as window.html/window.dom
+        const { html, dom } = window;
 
         requestAnimationFrame(async () => {
           const section = document.querySelector(
