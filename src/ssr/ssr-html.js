@@ -6,6 +6,7 @@
 import { renderToString } from './string-render.js';
 import { safeHtml, isSafeHtml, escapeHtml } from '../utils/escape.js';
 import { hasEachBlocks, transformEachBlocks } from '../html/parseEachBlocks.js';
+import { setSSRContext } from './string-update.js';
 
 /**
  * Creates an SSR wire function for keyed templates.
@@ -59,6 +60,10 @@ function processFragmentResult(result) {
  * @returns {Object} Html function with wire, raw, lite methods
  */
 export function createSSRHtml(context = {}) {
+  // Set SSR context for styled handlers
+  // This makes styled, colors, attrs, store available during style resolution
+  setSSRContext(context);
+
   // Track async fragments for resolution
   const asyncFragments = [];
 

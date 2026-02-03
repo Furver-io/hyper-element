@@ -4,10 +4,12 @@
 
 ```
 test/
+├── all-ssr-tests.mjs    # Combined SSR test runner
 ├── coverage-report.mjs   # Coverage merging
 ├── ssr-e2e.mjs          # SSR e2e test runner
 ├── ssr-with-coverage.mjs # SSR test runner with coverage
-└── ssr.test.mjs         # SSR integration tests
+├── ssr.test.mjs         # SSR integration tests
+└── styled.test.mjs      # +styled system integration tests
 ```
 
 ## Files
@@ -24,6 +26,14 @@ End-to-end SSR test runner. Demonstrates the server phase of SSR by rendering a 
 
 SSR test runner with coverage collection. Imports tests from ssr.test.mjs and runs them with c8 coverage instrumentation.
 
+### `all-ssr-tests.mjs`
+
+Combined SSR test runner. Imports and executes both ssr.test.mjs and styled.test.mjs in a single process for unified coverage collection.
+
 ### `coverage-report.mjs`
 
 Coverage merging and reporting. Combines V8 coverage from Playwright browser tests with c8 coverage from SSR tests into a unified report.
+
+### `styled.test.mjs`
+
++styled system integration tests. Contains 40+ tests covering base styles, shared selectors, prop flags, logic functions, color palettes, SSR rendering, and edge cases for the inline styling system.

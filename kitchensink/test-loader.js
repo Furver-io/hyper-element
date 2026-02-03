@@ -39,16 +39,20 @@
     // This ensures hyperElement is available before inline scripts run
     document.write(
       '<script type="module">' +
-        'import { hyperElement, signal, computed, effect, batch, untracked, configureSSR } from "hyper-element";' +
+        'import { hyperElement, withOptions, signal, computed, effect, batch, untracked, configureSSR } from "hyper-element";' +
+        'import { html, dom } from "hyper-element/render/index.js";' +
         // Add configureSSR as static method to match bundle behavior
         'hyperElement.configureSSR = configureSSR;' +
         'window.hyperElement = hyperElement;' +
+        'window.withOptions = withOptions;' +
         'window.signal = signal;' +
         'window.computed = computed;' +
         'window.effect = effect;' +
         'window.batch = batch;' +
         'window.untracked = untracked;' +
         'window.configureSSR = configureSSR;' +
+        'window.html = html;' +
+        'window.dom = dom;' +
         // Dispatch event when ready so tests can wait
         "window.dispatchEvent(new Event('hyper-element-loaded'));" +
         '</' +

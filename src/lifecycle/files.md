@@ -6,7 +6,8 @@
 lifecycle/
 ├── connectedCallback.js
 ├── observer.js
-└── onNext.js
+├── onNext.js
+└── processFragmentResult.js
 ```
 
 ## Files
@@ -14,6 +15,10 @@ lifecycle/
 ### `connectedCallback.js`
 
 Core initialization logic. Creates element identifier, sets up manager reference, attaches observers, defines fragment methods (capital-letter methods), and triggers initial render.
+
+### `processFragmentResult.js`
+
+Fragment result processor. Handles text, html, template, and any types from fragment methods. Supports async content via promises with placeholder rendering and re-render on resolution.
 
 ### `observer.js`
 

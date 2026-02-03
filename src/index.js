@@ -9,6 +9,7 @@ import { hyperElement as HyperElementClass } from './hyperElement.js';
 import { createFunctionalElement } from './functional.js';
 import { signal, computed, effect, batch, untracked } from './signals/index.js';
 import { configureSSR } from './ssr/index.js';
+import { withOptions } from './withOptions.js';
 
 /**
  * Throws error when hyperElement is instantiated directly.
@@ -67,6 +68,7 @@ const hyperElement = new Proxy(HyperElementClass, {
 
 export {
   hyperElement,
+  withOptions,
   signal,
   computed,
   effect,

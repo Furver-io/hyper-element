@@ -14,7 +14,8 @@ src/render/
 ├── resolve.js            # Path-based node traversal
 ├── diff.js               # Array diffing algorithm
 ├── keyed.js              # Key tracking for array items
-└── persistent-fragment.js # Multi-node fragment handling
+├── persistent-fragment.js # Multi-node fragment handling
+└── styled.js             # +styled inline styling system
 ```
 
 ## Files
@@ -62,3 +63,7 @@ WeakMap + WeakRef based key tracking for stable DOM node identity across renders
 ### `persistent-fragment.js`
 
 Handles templates with multiple root nodes using comment markers as anchors.
+
+### `styled.js`
+
++styled inline styling system for react-outline-inspired component styling. Provides base styles keyed by tag name, shared selectors, prop flags for boolean variants, logic functions for dynamic styles, and color palette resolution.

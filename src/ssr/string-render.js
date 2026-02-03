@@ -49,6 +49,9 @@ function cloneNode(node) {
     const clone = new Element(node.name, node.xml);
     // Always create new props object (original may be frozen)
     clone.props = { ...node.props };
+    // Copy +styled properties for SSR styled support
+    clone.isStyled = node.isStyled;
+    clone.propFlags = node.propFlags;
     // Clone children recursively
     if (node.children && node.children.length > 0) {
       clone.children = node.children.map((child) => {

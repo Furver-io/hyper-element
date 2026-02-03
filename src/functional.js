@@ -106,6 +106,14 @@ export function createFunctionalElement(tagOrDef, definition) {
     };
   }
 
+  // Attach styled config if present (for +styled template syntax)
+  if (definition.styled || definition.__options) {
+    FunctionalElement.__styledConfig = {
+      styled: definition.styled || null,
+      colors: definition.__options?.colors || null,
+    };
+  }
+
   // Auto-register if tag name provided
   if (tagName) {
     customElements.define(tagName, FunctionalElement);

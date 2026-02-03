@@ -34,14 +34,14 @@ async function runSSRTestsWithCoverage() {
     }
   }
 
-  // Run SSR tests with c8 coverage against source files
+  // Run all SSR tests with c8 coverage against source files
   const c8Args = [
     'c8',
     '--reporter=none',
     '--temp-directory=' + ssrCoverageDir,
     '--include=src/**/*.js',
     'node',
-    join(__dirname, 'ssr.test.mjs'),
+    join(__dirname, 'all-ssr-tests.mjs'),
   ];
 
   await new Promise((resolve, reject) => {

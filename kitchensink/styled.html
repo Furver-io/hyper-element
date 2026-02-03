@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>+styled System - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>+styled Inline Styling System</h1>
+    <p>
+      Demonstrates the +styled template syntax for react-outline-inspired inline
+      styling with base styles, prop flags, logic functions, and color palettes.
+    </p>
+
+    <!-- Test 1: Base Styles -->
+    <section data-test="base-styles" data-test-result="pending">
+      <h2>1. Base Styles</h2>
+      <p>Simple base styles keyed by tag name.</p>
+      <pre><code>hyperElement('styled-base', {
+  styled: [{
+    h2: { color: 'red', fontSize: '24px' },
+    span: { fontWeight: 'bold' }
+  }],
+  render: (Html) => Html`
+    &lt;h2+styled&gt;Title&lt;/h2&gt;
+    &lt;span+styled&gt;Content&lt;/span&gt;
+  `
+});</code></pre>
+      <div id="output-1"></div>
+      <script type="module">
+        hyperElement('styled-base', {
+          styled: [
+            {
+              h2: { color: 'red', fontSize: '24px' },
+              span: { fontWeight: 'bold' },
+            },
+          ],
+          render: (Html) => Html`
+            <h2+styled>Title</h2>
+            <span+styled>Content</span>
+          `,
+        });
+
+        const elem1 = document.createElement('styled-base');
+        document.getElementById('output-1').appendChild(elem1);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="base-styles"]');
+          const h2 = elem1.querySelector('h2');
+          const span = elem1.querySelector('span');
+
+          const h2HasColor = h2 && h2.style.color === 'red';
+          const h2HasFontSize =
+            h2 && (h2.style.fontSize === '24px' || h2.style['font-size'] === '24px');
+          const spanHasBold = span && span.style.fontWeight === 'bold';
+
+          if (h2HasColor && h2HasFontSize && spanHasBold) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Base styles test failed:', {
+              h2HasColor,
+              h2HasFontSize,
+              spanHasBold,
+              h2Style: h2?.style.cssText,
+              spanStyle: span?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 2: Shared Selectors -->
+    <section data-test="shared-selectors" data-test-result="pending">
+      <h2>2. Shared Selectors</h2>
+      <p>Comma-separated selectors apply to multiple tags.</p>
+      <pre><code>hyperElement('styled-shared', {
+  styled: [{
+    'h3, p': { margin: '0', fontFamily: 'Arial' }
+  }],
+  render: (Html) => Html`
+    &lt;h3+styled&gt;Heading&lt;/h3&gt;
+    &lt;p+styled&gt;Paragraph&lt;/p&gt;
+  `
+});</code></pre>
+      <div id="output-2"></div>
+      <script type="module">
+        hyperElement('styled-shared', {
+          styled: [
+            {
+              'h3, p': { margin: '0', fontFamily: 'Arial' },
+            },
+          ],
+          render: (Html) => Html`
+            <h3+styled>Heading</h3>
+            <p+styled>Paragraph</p>
+          `,
+        });
+
+        const elem2 = document.createElement('styled-shared');
+        document.getElementById('output-2').appendChild(elem2);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="shared-selectors"]'
+          );
+          const h3 = elem2.querySelector('h3');
+          const p = elem2.querySelector('p');
+
+          const h3HasMargin = h3 && h3.style.margin === '0px';
+          const pHasMargin = p && p.style.margin === '0px';
+
+          if (h3HasMargin && pHasMargin) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Shared selectors test failed:', {
+              h3HasMargin,
+              pHasMargin,
+              h3Style: h3?.style.cssText,
+              pStyle: p?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 3: Prop Flags -->
+    <section data-test="prop-flags" data-test-result="pending">
+      <h2>3. Prop Flags (Boolean Variants)</h2>
+      <p>Toggle visual states with boolean attributes.</p>
+      <pre><code>hyperElement('styled-flags', {
+  styled: [{
+    div: {
+      base: { padding: '10px', border: '1px solid gray' },
+      error: { borderColor: 'red', backgroundColor: '#fee' },
+      large: { padding: '20px', fontSize: '18px' }
+    }
+  }],
+  render: (Html) => Html`
+    &lt;div+styled&gt;Normal&lt;/div&gt;
+    &lt;div+styled error&gt;Error&lt;/div&gt;
+    &lt;div+styled error large&gt;Error + Large&lt;/div&gt;
+  `
+});</code></pre>
+      <div id="output-3"></div>
+      <script type="module">
+        hyperElement('styled-flags', {
+          styled: [
+            {
+              div: {
+                base: { padding: '10px', border: '1px solid gray' },
+                error: { borderColor: 'red', backgroundColor: '#fee' },
+                large: { padding: '20px', fontSize: '18px' },
+              },
+            },
+          ],
+          render: (Html) => Html`
+            <div+styled>Normal</div>
+            <div+styled error>Error</div>
+            <div+styled error large>Error + Large</div>
+          `,
+        });
+
+        const elem3 = document.createElement('styled-flags');
+        document.getElementById('output-3').appendChild(elem3);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="prop-flags"]');
+          const divs = elem3.querySelectorAll('div');
+          const [normal, error, errorLarge] = divs;
+
+          const normalHasPadding = normal && normal.style.padding === '10px';
+          const errorHasRed = error && error.style.borderColor === 'red';
+          const errorLargeHasBoth =
+            errorLarge &&
+            errorLarge.style.borderColor === 'red' &&
+            errorLarge.style.padding === '20px';
+
+          if (normalHasPadding && errorHasRed && errorLargeHasBoth) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Prop flags test failed:', {
+              normalHasPadding,
+              errorHasRed,
+              errorLargeHasBoth,
+              normalStyle: normal?.style.cssText,
+              errorStyle: error?.style.cssText,
+              errorLargeStyle: errorLarge?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 4: Logic Functions -->
+    <section data-test="logic-functions" data-test-result="pending">
+      <h2>4. Logic Functions</h2>
+      <p>Compute styles dynamically based on state.</p>
+      <pre><code>hyperElement('styled-logic', {
+  styled: [
+    { span: { display: 'inline-block' } },
+    { span: (styleValue) => ({ width: `${styleValue}%` }) }
+  ],
+  render: (Html, ctx) => Html`
+    &lt;span+styled style=${ctx.attrs.percent || 50}&gt;Bar&lt;/span&gt;
+  `
+});</code></pre>
+      <div id="output-4"></div>
+      <script type="module">
+        hyperElement('styled-logic', {
+          styled: [
+            { span: { display: 'inline-block' } },
+            { span: (styleValue) => ({ width: `${styleValue}%` }) },
+          ],
+          render: (Html, ctx) =>
+            Html`<span+styled style=${ctx.attrs.percent || 50}>Bar</span>`,
+        });
+
+        const elem4 = document.createElement('styled-logic');
+        elem4.setAttribute('percent', '75');
+        document.getElementById('output-4').appendChild(elem4);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="logic-functions"]');
+          const span = elem4.querySelector('span');
+
+          const hasWidth = span && span.style.width === '75%';
+          const hasDisplay = span && span.style.display === 'inline-block';
+
+          if (hasWidth && hasDisplay) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Logic functions test failed:', {
+              hasWidth,
+              hasDisplay,
+              spanStyle: span?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 5: Color Palettes with withOptions -->
+    <section data-test="color-palettes" data-test-result="pending">
+      <h2>5. Color Palettes (withOptions)</h2>
+      <p>Reference named colors from a shared palette.</p>
+      <pre><code>const themed = withOptions({
+  colors: { primary: '#007bff', danger: '#dc3545' }
+});
+
+themed('styled-themed', {
+  styled: [{
+    button: { backgroundColor: 'primary', color: 'white' }
+  }],
+  render: (Html) => Html`&lt;button+styled&gt;Click&lt;/button&gt;`
+});</code></pre>
+      <div id="output-5"></div>
+      <script type="module">
+        const themed = withOptions({
+          colors: { primary: '#007bff', danger: '#dc3545' },
+        });
+
+        themed('styled-themed', {
+          styled: [
+            {
+              button: { backgroundColor: 'primary', color: 'white' },
+            },
+          ],
+          render: (Html) => Html`<button+styled>Click</button>`,
+        });
+
+        const elem5 = document.createElement('styled-themed');
+        document.getElementById('output-5').appendChild(elem5);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="color-palettes"]');
+          const button = elem5.querySelector('button');
+
+          // Check if color was resolved
+          const hasResolvedColor =
+            button &&
+            (button.style.backgroundColor === 'rgb(0, 123, 255)' ||
+              button.style.backgroundColor === '#007bff');
+
+          if (hasResolvedColor) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Color palettes test failed:', {
+              hasResolvedColor,
+              buttonStyle: button?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 6: Style Passthrough (No Logic Function) -->
+    <section data-test="style-passthrough" data-test-result="pending">
+      <h2>6. Style Passthrough</h2>
+      <p>When no logic function exists, style object merges directly.</p>
+      <pre><code>hyperElement('styled-passthrough', {
+  styled: [{
+    div: { display: 'flex', gap: '8px' }
+  }],
+  render: (Html) => Html`
+    &lt;div+styled style=${{ flexDirection: 'column' }}&gt;Content&lt;/div&gt;
+  `
+});</code></pre>
+      <div id="output-6"></div>
+      <script type="module">
+        hyperElement('styled-passthrough', {
+          styled: [
+            {
+              div: { display: 'flex', gap: '8px' },
+            },
+          ],
+          render: (Html) =>
+            Html`<div+styled style=${{ flexDirection: 'column' }}>Content</div>`,
+        });
+
+        const elem6 = document.createElement('styled-passthrough');
+        document.getElementById('output-6').appendChild(elem6);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="style-passthrough"]'
+          );
+          const div = elem6.querySelector('div');
+
+          const hasDisplay = div && div.style.display === 'flex';
+          const hasGap = div && div.style.gap === '8px';
+          const hasFlexDirection = div && div.style.flexDirection === 'column';
+
+          if (hasDisplay && hasGap && hasFlexDirection) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Style passthrough test failed:', {
+              hasDisplay,
+              hasGap,
+              hasFlexDirection,
+              divStyle: div?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 7: No Styles for Tag -->
+    <section data-test="no-styles-for-tag" data-test-result="pending">
+      <h2>7. No Styles Defined for Tag</h2>
+      <p>
+        Elements with +styled but no matching styles render without style
+        attribute.
+      </p>
+      <pre><code>hyperElement('styled-no-match', {
+  styled: [{
+    h2: { color: 'blue' }
+  }],
+  render: (Html) => Html`&lt;span+styled&gt;No span styles&lt;/span&gt;`
+});</code></pre>
+      <div id="output-7"></div>
+      <script type="module">
+        hyperElement('styled-no-match', {
+          styled: [
+            {
+              h2: { color: 'blue' },
+            },
+          ],
+          render: (Html) => Html`<span+styled>No span styles</span>`,
+        });
+
+        const elem7 = document.createElement('styled-no-match');
+        document.getElementById('output-7').appendChild(elem7);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="no-styles-for-tag"]'
+          );
+          const span = elem7.querySelector('span');
+
+          // Should render without error, may or may not have style attribute
+          const renderedCorrectly =
+            span && span.textContent === 'No span styles';
+
+          if (renderedCorrectly) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('No styles test failed:', {
+              renderedCorrectly,
+              spanStyle: span?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 8: Mixed +styled and Regular Elements -->
+    <section data-test="mixed-elements" data-test-result="pending">
+      <h2>8. Mixed +styled and Regular Elements</h2>
+      <p>Not all elements need styling - only +styled elements get styles.</p>
+      <pre><code>hyperElement('styled-mixed', {
+  styled: [{
+    p: { color: 'navy' }
+  }],
+  render: (Html) => Html`
+    &lt;p+styled&gt;Styled paragraph&lt;/p&gt;
+    &lt;p&gt;Regular paragraph&lt;/p&gt;
+  `
+});</code></pre>
+      <div id="output-8"></div>
+      <script type="module">
+        hyperElement('styled-mixed', {
+          styled: [
+            {
+              p: { color: 'navy' },
+            },
+          ],
+          render: (Html) => Html`
+            <p+styled>Styled paragraph</p>
+            <p>Regular paragraph</p>
+          `,
+        });
+
+        const elem8 = document.createElement('styled-mixed');
+        document.getElementById('output-8').appendChild(elem8);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="mixed-elements"]');
+          const paragraphs = elem8.querySelectorAll('p');
+          const [styled, regular] = paragraphs;
+
+          const styledHasColor = styled && styled.style.color === 'navy';
+          const regularNoStyle = regular && regular.style.cssText === '';
+
+          if (styledHasColor && regularNoStyle) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Mixed elements test failed:', {
+              styledHasColor,
+              regularNoStyle,
+              styledStyle: styled?.style.cssText,
+              regularStyle: regular?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 9: Logic Function with Context Access -->
+    <section data-test="logic-with-context" data-test-result="pending">
+      <h2>9. Logic Function with Context Access</h2>
+      <p>Logic functions receive (styleValue, ctx, store).</p>
+      <pre><code>hyperElement('styled-context', {
+  styled: [
+    { div: { padding: '10px' } },
+    { div: (val, ctx) => ({ color: ctx.attrs.textcolor || 'black' }) }
+  ],
+  render: (Html) => Html`&lt;div+styled&gt;Context-aware&lt;/div&gt;`
+});</code></pre>
+      <div id="output-9"></div>
+      <script type="module">
+        hyperElement('styled-context', {
+          styled: [
+            { div: { padding: '10px' } },
+            { div: (val, ctx) => ({ color: ctx.attrs.textcolor || 'black' }) },
+          ],
+          render: (Html) => Html`<div+styled>Context-aware</div>`,
+        });
+
+        const elem9 = document.createElement('styled-context');
+        elem9.setAttribute('textcolor', 'green');
+        document.getElementById('output-9').appendChild(elem9);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="logic-with-context"]'
+          );
+          const div = elem9.querySelector('div');
+
+          const hasColor = div && div.style.color === 'green';
+          const hasPadding = div && div.style.padding === '10px';
+
+          if (hasColor && hasPadding) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Logic with context test failed:', {
+              hasColor,
+              hasPadding,
+              divStyle: div?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 10: Color in Compound Value -->
+    <section data-test="color-in-compound" data-test-result="pending">
+      <h2>10. Color in Compound Value</h2>
+      <p>Colors within strings are also resolved.</p>
+      <pre><code>const themed2 = withOptions({
+  colors: { primary: '#007bff' }
+});
+
+themed2('styled-compound', {
+  styled: [{
+    div: { border: '2px solid primary' }
+  }],
+  render: (Html) => Html`&lt;div+styled&gt;Border&lt;/div&gt;`
+});</code></pre>
+      <div id="output-10"></div>
+      <script type="module">
+        const themed2 = withOptions({
+          colors: { primary: '#007bff' },
+        });
+
+        themed2('styled-compound', {
+          styled: [
+            {
+              div: { border: '2px solid primary' },
+            },
+          ],
+          render: (Html) => Html`<div+styled>Border</div>`,
+        });
+
+        const elem10 = document.createElement('styled-compound');
+        document.getElementById('output-10').appendChild(elem10);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="color-in-compound"]'
+          );
+          const div = elem10.querySelector('div');
+
+          // Check if border contains the resolved color
+          const borderStyle = div?.style.border || div?.style.cssText || '';
+          const hasResolvedBorder =
+            borderStyle.includes('007bff') || borderStyle.includes('0, 123, 255');
+
+          if (hasResolvedBorder) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Color in compound test failed:', {
+              hasResolvedBorder,
+              borderStyle,
+              divStyle: div?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 11: withOptions without tag name (manual registration) -->
+    <section data-test="withoptions-no-tag" data-test-result="pending">
+      <h2>11. withOptions Without Tag Name</h2>
+      <p>Returns class for manual registration.</p>
+      <pre><code>const factory = withOptions({ colors: { accent: '#ff6600' } });
+const MyClass = factory({ ... });  // No tag
+customElements.define('styled-manual', MyClass);</code></pre>
+      <div id="output-11"></div>
+      <script type="module">
+        const factory11 = withOptions({ colors: { accent: '#ff6600' } });
+        const StyledManualClass = factory11({
+          styled: [{ span: { color: 'accent' } }],
+          render: (Html) => Html`<span+styled>Manual</span>`,
+        });
+        customElements.define('styled-manual', StyledManualClass);
+
+        const elem11 = document.createElement('styled-manual');
+        document.getElementById('output-11').appendChild(elem11);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="withoptions-no-tag"]');
+          const span = elem11.querySelector('span');
+          const hasColor =
+            span &&
+            (span.style.color === 'rgb(255, 102, 0)' || span.style.color === '#ff6600');
+
+          if (hasColor) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('withOptions no-tag test failed:', {
+              hasColor,
+              spanStyle: span?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 12: withOptions with render function shorthand -->
+    <section data-test="withoptions-shorthand" data-test-result="pending">
+      <h2>12. withOptions Render Function Shorthand</h2>
+      <p>Passing just a render function to the factory (coverage for shorthand path).</p>
+      <pre><code>themed('styled-shorthand', (Html) => Html`...`);</code></pre>
+      <div id="output-12"></div>
+      <script type="module">
+        // Test: withOptions shorthand (just render function, no styled)
+        // This tests the shorthand conversion path in withOptions.js
+        const themed12 = withOptions({ colors: { info: '#17a2b8' } });
+        themed12('styled-shorthand', (Html) => Html`<span>Shorthand Works</span>`);
+
+        const elem12 = document.createElement('styled-shorthand');
+        document.getElementById('output-12').appendChild(elem12);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="withoptions-shorthand"]'
+          );
+          const span = elem12.querySelector('span');
+          const renderedCorrectly =
+            span && span.textContent === 'Shorthand Works';
+
+          if (renderedCorrectly) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('withOptions shorthand test failed:', {
+              renderedCorrectly,
+              spanContent: span?.textContent,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 13: Non-string values in styles with color palette -->
+    <section data-test="non-string-values" data-test-result="pending">
+      <h2>13. Non-String Values with Color Palette</h2>
+      <p>Numbers pass through unchanged even when color palette is active.</p>
+      <pre><code>withOptions({ colors: { accent: '#ff0' } })
+styled: [{ div: { zIndex: 100, opacity: 0.5, color: 'accent' } }]</code></pre>
+      <div id="output-13"></div>
+      <script type="module">
+        // Test non-string values WITH colors to cover resolveColors non-string branch
+        const themed13 = withOptions({ colors: { accent: '#ffff00' } });
+        themed13('styled-numbers', {
+          styled: [{ div: { zIndex: 100, opacity: 0.5, color: 'accent' } }],
+          render: (Html) => Html`<div+styled>Numbers</div>`,
+        });
+
+        const elem13 = document.createElement('styled-numbers');
+        document.getElementById('output-13').appendChild(elem13);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="non-string-values"]');
+          const div = elem13.querySelector('div');
+          const hasZIndex = div && div.style.zIndex === '100';
+          const hasOpacity = div && div.style.opacity === '0.5';
+          // Color should be resolved from palette
+          const hasColor =
+            div &&
+            (div.style.color === 'rgb(255, 255, 0)' || div.style.color === '#ffff00');
+
+          if (hasZIndex && hasOpacity && hasColor) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Non-string values test failed:', {
+              hasZIndex,
+              hasOpacity,
+              hasColor,
+              divStyle: div?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 14: Null/empty values in styles -->
+    <section data-test="null-values" data-test-result="pending">
+      <h2>14. Null/Empty Values Clear Properties</h2>
+      <p>Null values remove the property from the style.</p>
+      <pre><code>render: (Html) => Html`&lt;div+styled style=${{ color: null }}&gt;...&lt;/div&gt;`</code></pre>
+      <div id="output-14"></div>
+      <script type="module">
+        hyperElement('styled-null', {
+          styled: [{ div: { padding: '10px', color: 'red' } }],
+          render: (Html) =>
+            Html`<div+styled style=${{ color: null }}>Null clears</div>`,
+        });
+
+        const elem14 = document.createElement('styled-null');
+        document.getElementById('output-14').appendChild(elem14);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="null-values"]');
+          const div = elem14.querySelector('div');
+          const hasPadding = div && div.style.padding === '10px';
+          // color should be cleared by null
+          const noColor = div && !div.style.color;
+
+          if (hasPadding && noColor) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Null values test failed:', {
+              hasPadding,
+              noColor,
+              divStyle: div?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 15: Empty styled config -->
+    <section data-test="empty-styled" data-test-result="pending">
+      <h2>15. Empty Styled Config</h2>
+      <p>Works correctly when styled array is empty or has no matching styles.</p>
+      <pre><code>styled: [{}]  // Empty base styles</code></pre>
+      <div id="output-15"></div>
+      <script type="module">
+        hyperElement('styled-empty', {
+          styled: [{}],
+          render: (Html) =>
+            Html`<div+styled style=${{ margin: '5px' }}>Passthrough</div>`,
+        });
+
+        const elem15 = document.createElement('styled-empty');
+        document.getElementById('output-15').appendChild(elem15);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="empty-styled"]');
+          const div = elem15.querySelector('div');
+          // Should passthrough the inline style
+          const hasMargin = div && div.style.margin === '5px';
+
+          if (hasMargin) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Empty styled test failed:', {
+              hasMargin,
+              divStyle: div?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 16: Re-render updates styles -->
+    <section data-test="rerender-update" data-test-result="pending">
+      <h2>16. Re-render Updates Styles</h2>
+      <p>Styles update when component re-renders (DOM traversal fallback).</p>
+      <pre><code>Re-renders with different style value</code></pre>
+      <div id="output-16"></div>
+      <script type="module">
+        hyperElement('styled-rerender', {
+          observedAttributes: ['width'],
+          styled: [
+            { div: { display: 'inline-block', backgroundColor: '#eee' } },
+            { div: (val) => ({ width: val + 'px' }) },
+          ],
+          render: (Html, ctx) =>
+            Html`<div+styled style=${ctx.attrs.width || 50}>Box</div>`,
+        });
+
+        const elem16 = document.createElement('styled-rerender');
+        elem16.setAttribute('width', '100');
+        document.getElementById('output-16').appendChild(elem16);
+
+        requestAnimationFrame(() => {
+          // First check initial render
+          const div = elem16.querySelector('div');
+          const initialWidth = div && div.style.width === '100px';
+
+          // Trigger re-render with new value
+          elem16.setAttribute('width', '200');
+
+          requestAnimationFrame(() => {
+            const section = document.querySelector('[data-test="rerender-update"]');
+            const updatedWidth = div && div.style.width === '200px';
+
+            if (initialWidth && updatedWidth) {
+              section.dataset.testResult = 'pass';
+            } else {
+              section.dataset.testResult = 'fail';
+              console.log('Re-render update test failed:', {
+                initialWidth,
+                updatedWidth,
+                divStyle: div?.style.cssText,
+              });
+            }
+          });
+        });
+      </script>
+    </section>
+
+    <!-- Test 17: Direct render outside component (+styled fallback) -->
+    <section data-test="direct-render-fallback" data-test-result="pending">
+      <h2>17. Direct Render Fallback</h2>
+      <p>Using Html.lite directly outside a component still applies inline styles.</p>
+      <pre><code>// Direct render (not in a component)
+Html.lite(target)`&lt;div+styled style=${{ color: 'green' }}&gt;...&lt;/div&gt;`</code></pre>
+      <div id="output-17"></div>
+      <script type="module">
+        // Use window global (works in both source and bundle mode)
+        const { hyperElement } = window;
+
+        // Create a component that uses Html.lite to render directly
+        // This tests the fallback path when no rendering context is set
+        hyperElement('direct-render-test', {
+          render: function (Html) {
+            // Use Html.lite to render directly to a child element
+            // This bypasses the normal rendering context
+            const target = document.createElement('div');
+            Html.lite(target)`<span+styled style=${{ color: 'green', fontWeight: 'bold' }}>Direct</span>`;
+            return Html`<div id="container">${target}</div>`;
+          },
+        });
+
+        const elem17 = document.createElement('direct-render-test');
+        document.getElementById('output-17').appendChild(elem17);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="direct-render-fallback"]'
+          );
+          const span = elem17.querySelector('span');
+          // Should apply inline styles via fallback path
+          const hasColor = span && span.style.color === 'green';
+          const hasBold =
+            span && (span.style.fontWeight === 'bold' || span.style['font-weight'] === 'bold');
+
+          if (hasColor && hasBold) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Direct render fallback test failed:', {
+              hasColor,
+              hasBold,
+              spanStyle: span?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 18: +styled without styled config -->
+    <section data-test="no-styled-config" data-test-result="pending">
+      <h2>18. +styled Without Styled Config</h2>
+      <p>Using +styled syntax without defining styled config passes through styles.</p>
+      <pre><code>hyperElement('no-styled-config', {
+  // No styled array defined
+  render: (Html) => Html`&lt;div+styled style=${{ color: 'blue' }}&gt;...&lt;/div&gt;`
+});</code></pre>
+      <div id="output-18"></div>
+      <script type="module">
+        // Component uses +styled but has NO styled config - tests fallback
+        hyperElement('no-styled-config', {
+          render: (Html) =>
+            Html`<div+styled style=${{ color: 'blue', padding: '5px' }}>Passthrough</div>`,
+        });
+
+        const elem18 = document.createElement('no-styled-config');
+        document.getElementById('output-18').appendChild(elem18);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="no-styled-config"]');
+          const div = elem18.querySelector('div');
+          // Should passthrough inline styles since no styled config
+          const hasColor = div && div.style.color === 'blue';
+          const hasPadding = div && div.style.padding === '5px';
+
+          if (hasColor && hasPadding) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('No styled config test failed:', {
+              hasColor,
+              hasPadding,
+              divStyle: div?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 19: +styled with empty styled array -->
+    <section data-test="empty-styled-array" data-test-result="pending">
+      <h2>19. +styled with Empty Styled Array</h2>
+      <p>Empty styled array still allows style passthrough.</p>
+      <pre><code>styled: [],  // Empty array
+render: (Html) => Html`&lt;div+styled style=${{ margin: '10px' }}&gt;...&lt;/div&gt;`</code></pre>
+      <div id="output-19"></div>
+      <script type="module">
+        // Component has styled array but it's empty - tests invalid config fallback
+        hyperElement('empty-styled-array', {
+          styled: [],
+          render: (Html) =>
+            Html`<div+styled style=${{ margin: '10px' }}>Empty Array</div>`,
+        });
+
+        const elem19 = document.createElement('empty-styled-array');
+        document.getElementById('output-19').appendChild(elem19);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="empty-styled-array"]');
+          const div = elem19.querySelector('div');
+          // Should passthrough inline styles since styled array is empty
+          const hasMargin = div && div.style.margin === '10px';
+
+          if (hasMargin) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Empty styled array test failed:', {
+              hasMargin,
+              divStyle: div?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 20: +styled without config or inline style (return null path) -->
+    <section data-test="no-config-no-style" data-test-result="pending">
+      <h2>20. +styled Without Config or Inline Style</h2>
+      <p>Covers the return null fallback path when no styled config and no style value.</p>
+      <pre><code>// No styled config, no inline style
+hyperElement('no-config-no-style', {
+  render: (Html) => Html`&lt;span+styled&gt;Plain text&lt;/span&gt;`
+});</code></pre>
+      <div id="output-20"></div>
+      <script type="module">
+        // No styled config, no inline style - tests return null path
+        hyperElement('no-config-no-style', {
+          render: (Html) => Html`<span+styled>Plain text</span>`,
+        });
+
+        const elem20 = document.createElement('no-config-no-style');
+        document.getElementById('output-20').appendChild(elem20);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="no-config-no-style"]');
+          const span = elem20.querySelector('span');
+
+          // Should render without error, element should exist
+          // No styles should be applied (since no config and no inline style)
+          const rendered = span && span.textContent === 'Plain text';
+          const noStyle = span && (span.style.cssText === '' || !span.hasAttribute('style'));
+
+          if (rendered && noStyle) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('No config no style test failed:', {
+              rendered,
+              noStyle,
+              spanStyle: span?.style.cssText,
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

@@ -54,6 +54,8 @@ export async function renderElement(tagName, options = {}) {
     shadowDOM = false,
     fragments = {},
     render,
+    styled,
+    colors,
   } = options;
 
   if (typeof render !== 'function') {
@@ -65,6 +67,9 @@ export async function renderElement(tagName, options = {}) {
     attrs,
     store,
     fragments,
+    // Styled system support
+    styled,
+    colors,
     // Element-like properties for compatibility
     tagName: tagName.toUpperCase(),
     localName: tagName.toLowerCase(),

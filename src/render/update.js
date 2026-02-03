@@ -30,6 +30,7 @@ import {
   nodes,
   PersistentFragment,
 } from './persistent-fragment.js';
+import { styledStyleHandler } from './styled.js';
 
 /** @type {symbol} */
 export const ref = Symbol('ref');
@@ -85,8 +86,7 @@ const directFor = (name) => {
  * @returns {Function} Attribute update function
  */
 const attribute = (name) => (node, value) => {
-  if (value == null) node.removeAttribute(name);
-  else node.setAttribute(name, value);
+  value == null ? node.removeAttribute(name) : node.setAttribute(name, value);
 };
 
 /**
@@ -113,10 +113,8 @@ const toggle = (name) => (node, value) => {
  * @param {Object} values - Key-value pairs to set
  */
 const data = ({ dataset }, values) => {
-  for (const [key, value] of Object.entries(values)) {
-    if (value == null) delete dataset[key];
-    else dataset[key] = value;
-  }
+  for (const [key, value] of Object.entries(values))
+    value == null ? delete dataset[key] : (dataset[key] = value);
 };
 
 const templateState = new WeakMap(); // Partial interpolation state: node -> Map(name -> state)
@@ -341,6 +339,14 @@ export function update(node, type, path, name, hint) {
           }
           if (name === 'style') {
             // Special handling for style - supports both strings and objects
+            // Use styled handler for +styled elements
+            if (node.isStyled) {
+              return [
+                path,
+                styledStyleHandler(node.name, node.propFlags),
+                ATTRIBUTE,
+              ];
+            }
             return [path, styleHandler, ATTRIBUTE];
           }
           return [path, attribute(name), ATTRIBUTE];

@@ -16,7 +16,8 @@ src/
 ├── functional.js
 ├── hyperElement.js
 ├── index.js
-└── package.json
+├── package.json
+└── withOptions.js
 ```
 
 ## Files
@@ -36,3 +37,7 @@ Module entry point. Wraps `hyperElement` class in a Proxy to support dual-purpos
 ### `package.json`
 
 ESM module configuration for the src/ directory. Enables `"type": "module"` for direct ESM imports from source files during development.
+
+### `withOptions.js`
+
+Factory function `withOptions()` that creates a customized hyperElement factory with shared configuration. Supports color palettes for the +styled system, enabling themed components with resolved color values across all components created by the factory.

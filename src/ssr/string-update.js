@@ -24,6 +24,30 @@ import {
   TEXT_TYPE,
 } from '../render/constants.js';
 import { escapeHtml } from '../utils/escape.js';
+import { resolveStylesWithEntry } from '../render/styled.js';
+
+/**
+ * Current SSR rendering context.
+ * Set before render to provide styled handlers access to the component context.
+ * @type {Object|null}
+ */
+let ssrContext = null;
+
+/**
+ * Set the current SSR rendering context.
+ * @param {Object|null} context - The SSR context with styled, colors, attrs, store
+ */
+export function setSSRContext(context) {
+  ssrContext = context;
+}
+
+/**
+ * Get the current SSR rendering context.
+ * @returns {Object|null} The current SSR context
+ */
+export function getSSRContext() {
+  return ssrContext;
+}
 
 /**
  * Converts a style object to a CSS string.
@@ -64,6 +88,39 @@ const stringStyle = (value) => {
     return styleObjectToString(value);
   }
   return escapeHtml(String(value));
+};
+
+/**
+ * SSR styled style handler factory.
+ * Resolves styles using the styled system (base → shared → prop flags → logic → colors).
+ * @param {string} tagName - The element's tag name
+ * @param {Array|null} propFlags - Static prop flags from parsing
+ * @returns {Function} Style handler that resolves styles
+ */
+const stringStyledStyle = (tagName, propFlags) => (value) => {
+  const context = getSSRContext();
+  if (!context || !context.styled) {
+    // No styled config - fall back to regular style handling
+    return stringStyle(value);
+  }
+
+  // Build entry for resolveStylesWithEntry
+  const entry = {
+    styled: context.styled,
+    ctx: { attrs: context.attrs, store: context.store },
+    store: context.store,
+    colors: context.colors || null,
+  };
+
+  // Convert static prop flags to active flags format
+  const activeFlags = propFlags
+    ? propFlags.map((f) => ({ name: f.name, active: true }))
+    : [];
+
+  const resolved = resolveStylesWithEntry(entry, tagName, value, activeFlags);
+  if (!resolved) return null;
+
+  return styleObjectToString(resolved);
 };
 
 /**
@@ -259,6 +316,15 @@ export function ssrUpdate(node, type, path, name, hint) {
             return [path, stringDirect(), DIRECT, null];
           }
           if (name === 'style') {
+            // Use styled handler for +styled elements
+            if (node.isStyled) {
+              return [
+                path,
+                stringStyledStyle(node.name, node.propFlags),
+                ATTRIBUTE,
+                'style',
+              ];
+            }
             return [path, stringStyle, ATTRIBUTE, 'style'];
           }
           return [path, stringAttribute(name), ATTRIBUTE, name];

@@ -22,13 +22,13 @@ const sharedFiles = [
 
 const browserFiles = [
   'render/creator.js', 'render/resolve.js', 'render/diff.js',
-  'render/persistent-fragment.js', 'render/update.js', 'render/hole.js', 'render/index.js',
+  'render/persistent-fragment.js', 'render/update.js', 'render/styled.js', 'render/hole.js', 'render/index.js',
   'template/buildTemplate.js', 'attributes/dataset.js', 'attributes/attachAttrs.js',
   'html/createHtml.js',
   'ssr/pathResolver.js', 'ssr/buffer.js', 'ssr/devIndicator.js',
   'ssr/capture.js', 'ssr/replay.js', 'ssr/index.js',
-  'lifecycle/onNext.js', 'lifecycle/observer.js', 'lifecycle/connectedCallback.js',
-  'hyperElement.js', 'functional.js',
+  'lifecycle/onNext.js', 'lifecycle/observer.js', 'lifecycle/processFragmentResult.js', 'lifecycle/connectedCallback.js',
+  'hyperElement.js', 'functional.js', 'withOptions.js',
 ];
 
 const ssrServerFiles = [
@@ -100,6 +100,9 @@ function createBundle() {
       root.effect = exports.effect;
       root.batch = exports.batch;
       root.untracked = exports.untracked;
+      root.withOptions = exports.withOptions;
+      root.html = exports.html;
+      root.dom = exports.dom;
     }
   }
 })(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this, function (isBrowser) {
@@ -122,9 +125,11 @@ function createBundle() {
 
   addFiles(sharedFiles, '  ', false);
   addPart(`
-  var hyperElement, createFunctionalElement, configureSSR;
+  var hyperElement, createFunctionalElement, configureSSR, withOptions;
   var createFragment, resolve, diff, diffFragment, PersistentFragment, nodes;
-  var update, Hole, render, dom, createHtml, isKeyed, bind, wire;
+  var update, Hole, render, dom, createHtml, isKeyed, html, bind, wire;
+  var setRenderingInstance, getRenderingInstance, registerStyled, unregisterStyled;
+  var resolveStylesWithEntry, resolveStyles, applyStylesToNode, resolveColors, isNestedSyntax, styledStyleHandler;
   var buildTemplate, addDataset, getDataset, attachAttrs, processFragmentResult;
   var pathResolver, ssrBuffer, showDevIndicator, hideDevIndicator;
   var getNthOfTypeIndex, calculatePath, resolvePath, addToBuffer, getBufferedEvents, clearBuffer;
@@ -158,7 +163,8 @@ function createBundle() {
     });
     hyperElementProxy.configureSSR = configureSSR;
     return { default: hyperElementProxy, hyperElement: hyperElementProxy, configureSSR: configureSSR,
-      signal: signal, computed: computed, effect: effect, batch: batch, untracked: untracked };
+      signal: signal, computed: computed, effect: effect, batch: batch, untracked: untracked, withOptions: withOptions,
+      html: html, dom: dom };
   } else {
     return { renderElement: renderElement, renderElements: renderElements, createRenderer: createRenderer,
       renderToString: renderToString, ssrHtml: ssrHtml, createSSRHtml: createSSRHtml,

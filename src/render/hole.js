@@ -89,7 +89,8 @@ export class Hole {
     const [fragment, updates, keys] = this.t;
     const root = document.importNode(fragment, true);
     const values = this.v;
-    let length = values.length;
+    // Use updates.length to ensure auto-created handlers (e.g., +styled) are called
+    let length = updates.length;
     let changes = children;
     let node;
     let prev;
@@ -98,7 +99,8 @@ export class Hole {
       changes = updates.slice(0);
       while (length--) {
         const [path, update, type] = updates[length];
-        const value = values[length];
+        // Values may have fewer entries than updates (auto-created handlers)
+        const value = length < values.length ? values[length] : undefined;
 
         // Resolve node from path (cache if same path)
         if (prev !== path) {
@@ -176,7 +178,8 @@ export class Hole {
 
       if (type === KEY) continue;
 
-      let value = values[length];
+      // Handle auto-created handlers (e.g., +styled) with no corresponding value
+      let value = length < values.length ? values[length] : undefined;
       let change = value;
 
       // Handle arrays

@@ -145,8 +145,17 @@ export function createParser(update) {
         const name = chunk.slice(1);
         let tag = name;
 
+        // Detect +styled suffix
+        const STYLED_SUFFIX = '+styled';
+        let isStyled = false;
+
         if (!xml) {
           tag = tag.toLowerCase();
+          // Check for +styled suffix after lowercasing
+          if (tag.endsWith(STYLED_SUFFIX)) {
+            isStyled = true;
+            tag = tag.slice(0, -STYLED_SUFFIX.length);
+          }
           if (node.name === 'table' && (tag === 'tr' || tag === 'td')) {
             node = append(node, new Element('tbody', xml));
             ignore.add(node);
@@ -158,6 +167,7 @@ export function createParser(update) {
         }
 
         node = append(node, new Element(tag, xml ? tag !== 'svg' : false));
+        node.isStyled = isStyled;
         resolvedPath = children;
 
         if (i < j) {
@@ -177,15 +187,14 @@ export function createParser(update) {
                 resolvedPath === children
                   ? (resolvedPath = path(node))
                   : resolvedPath;
+              const actualAttrName = dot ? attrName.slice(0, -1) : attrName;
               values.push(
-                update(
-                  node,
-                  ATTRIBUTE_TYPE,
-                  p,
-                  dot ? attrName.slice(0, -1) : attrName,
-                  holes[hole++]
-                )
+                update(node, ATTRIBUTE_TYPE, p, actualAttrName, holes[hole++])
               );
+              // Mark dynamic style attribute to prevent auto-creation for +styled
+              if (actualAttrName === 'style') {
+                node.hasDynamicStyle = true;
+              }
               dot = false;
               skip++;
             } else if (value && value.includes(NUL)) {
@@ -214,9 +223,44 @@ export function createParser(update) {
             } else {
               // Static attribute
               prop(node, attrName, value ? value.slice(1, -1) : true);
+
+              // Collect prop flags for +styled elements
+              // Boolean attributes (no value) that aren't special prefixes are potential prop flags
+              if (node.isStyled && !value) {
+                const firstChar = attrName[0];
+                const isSpecialPrefix =
+                  firstChar === '@' || firstChar === '?' || firstChar === '.';
+                const isReserved =
+                  attrName === 'style' ||
+                  attrName === 'class' ||
+                  attrName === 'id' ||
+                  attrName === 'role' ||
+                  attrName.startsWith('data-') ||
+                  attrName.startsWith('aria-');
+
+                if (!isSpecialPrefix && !isReserved) {
+                  if (!node.propFlags) node.propFlags = [];
+                  node.propFlags.push({ name: attrName, static: true });
+                }
+              }
             }
           }
           resolvedPath = children;
+        }
+
+        // For +styled elements without an explicit style attribute,
+        // create a style handler to apply base styles
+        if (
+          node.isStyled &&
+          !node.props.style &&
+          node.props.style !== '' &&
+          !node.hasDynamicStyle
+        ) {
+          const p =
+            resolvedPath === children
+              ? (resolvedPath = path(node))
+              : resolvedPath;
+          values.push(update(node, ATTRIBUTE_TYPE, p, 'style', null));
         }
 
         pos = j + 1;

@@ -124,8 +124,11 @@ async function runTests() {
 
   console.log('\n' + '='.repeat(50));
   console.log(`Results: ${passed} passed, ${failed} failed`);
-  process.exit(failed > 0 ? 1 : 0);
+  return { passed, failed };
 }
+
+// Export for combined runner
+export { runTests };
 
 // ============================================================================
 // renderElement Tests
@@ -2218,5 +2221,9 @@ test('replayEvents: handles element with no stored state', () => {
   assert.ok(true, 'Should handle element with no stored state gracefully');
 });
 
-// Run all tests
-runTests();
+// Run tests if this is the main module
+if (import.meta.url === `file://${process.argv[1]}`) {
+  runTests().then(({ failed }) => {
+    process.exit(failed > 0 ? 1 : 0);
+  });
+}

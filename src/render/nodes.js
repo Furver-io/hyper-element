@@ -77,6 +77,8 @@ export class Element extends Node {
     super(ELEMENT);
     this.name = name;
     this.xml = xml;
+    this.isStyled = false; // True if +styled suffix was detected
+    this.propFlags = null; // Array of {name, static} for prop flag attributes
     this.props = props;
     this.children = children;
   }
