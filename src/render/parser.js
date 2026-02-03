@@ -6,6 +6,7 @@
 import {
   ELEMENT,
   ATTRIBUTE_TYPE,
+  ATTRIBUTE_TEMPLATE_TYPE,
   TEXT_TYPE,
   COMMENT_TYPE,
   TEXT_ELEMENTS,
@@ -164,12 +165,14 @@ export function createParser(update) {
           for (const [, attrName, value] of content
             .slice(i, j)
             .matchAll(ATTRS)) {
-            if (
+            // Check for exact NUL match (single dynamic value)
+            const isExactNul =
               value === NUL ||
               value === DOUBLE_QUOTED_NUL ||
-              value === SINGLE_QUOTED_NUL ||
-              (dot = attrName.endsWith(NUL))
-            ) {
+              value === SINGLE_QUOTED_NUL;
+
+            if (isExactNul || (dot = attrName.endsWith(NUL))) {
+              // Single dynamic value - existing logic
               const p =
                 resolvedPath === children
                   ? (resolvedPath = path(node))
@@ -185,7 +188,31 @@ export function createParser(update) {
               );
               dot = false;
               skip++;
+            } else if (value && value.includes(NUL)) {
+              // Partial interpolation - value contains NUL but isn't exact
+              const rawValue = value.slice(1, -1); // Strip quotes
+              const parts = rawValue.split(NUL); // Split into static segments
+              const holeCount = parts.length - 1;
+
+              const p =
+                resolvedPath === children
+                  ? (resolvedPath = path(node))
+                  : resolvedPath;
+
+              // Create update entries for each hole (maintains 1:1 correspondence)
+              for (let h = 0; h < holeCount; h++) {
+                values.push(
+                  update(node, ATTRIBUTE_TEMPLATE_TYPE, p, attrName, {
+                    parts,
+                    holeIndex: h,
+                    holeCount,
+                    hint: holes[hole++],
+                  })
+                );
+                skip++;
+              }
             } else {
+              // Static attribute
               prop(node, attrName, value ? value.slice(1, -1) : true);
             }
           }

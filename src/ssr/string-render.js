@@ -8,6 +8,7 @@ import { Comment, Text, Element, Fragment } from '../render/nodes.js';
 import { ssrUpdate } from './string-update.js';
 import {
   ATTRIBUTE,
+  ATTRIBUTE_TEMPLATE,
   COMMENT,
   COMMENT_ARRAY,
   DATA,
@@ -166,6 +167,38 @@ function applyUpdates(tree, updates, values) {
           const attrs = handler(value);
           if (attrs && typeof attrs === 'object') {
             Object.assign(node.props, attrs);
+          }
+        }
+        break;
+      }
+      case ATTRIBUTE_TEMPLATE: {
+        // Partial interpolation - accumulate values and concatenate when complete
+        if (node instanceof Element && attrName) {
+          const result = handler(value);
+          const key = `_template_${attrName}`;
+
+          // Initialize accumulator for this attribute
+          if (!node[key]) {
+            node[key] = {
+              values: new Array(result.holeCount),
+              parts: result.parts,
+              remaining: result.holeCount,
+            };
+          }
+
+          // Store value at this hole's index
+          node[key].values[result.holeIndex] = result.value;
+          node[key].remaining--;
+
+          // When all holes collected, concatenate and set attribute
+          if (node[key].remaining === 0) {
+            const { parts, values: vals } = node[key];
+            let final = parts[0];
+            for (let j = 0; j < vals.length; j++) {
+              // vals[j] is always a string (escaped by stringAttributeTemplate)
+              final += vals[j] + parts[j + 1];
+            }
+            node.props[attrName] = final;
           }
         }
         break;

@@ -6,6 +6,7 @@
 
 import {
   ATTRIBUTE,
+  ATTRIBUTE_TEMPLATE,
   COMMENT,
   COMMENT_ARRAY,
   DATA,
@@ -18,6 +19,7 @@ import {
   TOGGLE,
   UNSAFE,
   ATTRIBUTE_TYPE,
+  ATTRIBUTE_TEMPLATE_TYPE,
   COMMENT_TYPE,
   TEXT_TYPE,
 } from '../render/constants.js';
@@ -160,6 +162,21 @@ const stringText = (value) => {
 };
 
 /**
+ * SSR partial interpolation handler.
+ * Returns escaped value and metadata for concatenation.
+ * @param {string[]} parts - Static parts between holes
+ * @param {number} holeIndex - This hole's index
+ * @param {number} holeCount - Total number of holes
+ * @returns {Function} Handler that returns { value, parts, holeIndex, holeCount }
+ */
+const stringAttributeTemplate = (parts, holeIndex, holeCount) => (value) => ({
+  value: escapeHtml(String(value ?? '')),
+  parts,
+  holeIndex,
+  holeCount,
+});
+
+/**
  * Main SSR update factory - creates the right handler based on type and name.
  * Returns [path, handler, type, attrName] tuple.
  * The 4th element (attrName) is included for attribute/toggle updates.
@@ -172,6 +189,16 @@ const stringText = (value) => {
  */
 export function ssrUpdate(node, type, path, name, hint) {
   switch (type) {
+    case ATTRIBUTE_TEMPLATE_TYPE: {
+      // Partial interpolation - hint contains { parts, holeIndex, holeCount }
+      const { parts, holeIndex, holeCount } = hint;
+      return [
+        path,
+        stringAttributeTemplate(parts, holeIndex, holeCount),
+        ATTRIBUTE_TEMPLATE,
+        name,
+      ];
+    }
     case COMMENT_TYPE: {
       if (Array.isArray(hint))
         return [path, stringCommentArray, COMMENT_ARRAY, null];
@@ -243,6 +270,7 @@ export function ssrUpdate(node, type, path, name, hint) {
 
 export {
   stringAttribute,
+  stringAttributeTemplate,
   stringStyle,
   stringToggle,
   stringEvent,

@@ -15,6 +15,7 @@ export const PROP = 1 << 7; // .prop direct property
 export const TEXT = 1 << 8; // Text content (textContent)
 export const TOGGLE = 1 << 9; // Boolean toggle (?attr)
 export const UNSAFE = 1 << 10; // Raw HTML (innerHTML)
+export const ATTRIBUTE_TEMPLATE = 1 << 11; // Partial interpolation ("prefix-${x}")
 
 // Parser node types (from ish.js pattern)
 export const ELEMENT = 1;
@@ -22,6 +23,7 @@ export const ATTRIBUTE_TYPE = 2;
 export const TEXT_TYPE = 3;
 export const COMMENT_TYPE = 8;
 export const FRAGMENT = 11;
+export const ATTRIBUTE_TEMPLATE_TYPE = 12; // Partial interpolation type
 
 // Combined flags for common patterns
 export const COMMENT_ARRAY = COMMENT | ARRAY;

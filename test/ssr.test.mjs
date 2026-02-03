@@ -1363,6 +1363,90 @@ test('Multiple interpolations in single element', () => {
   assert.ok(html.includes('>content<'), 'Should have content');
 });
 
+// ============================================================================
+// SSR: Partial Interpolation Tests (Issue #21)
+// ============================================================================
+
+test('SSR: partial interpolation with prefix-${suffix}', () => {
+  const Html = createSSRHtml();
+  const suffix = 'primary';
+  const html = Html`<button class="btn-${suffix}">Click</button>`;
+
+  assert.ok(html.includes('class="btn-primary"'), 'Should concatenate partial interpolation');
+  assert.ok(html.includes('>Click<'), 'Should have content');
+});
+
+test('SSR: partial interpolation with multiple holes', () => {
+  const Html = createSSRHtml();
+  const a = 'flex';
+  const b = 'items-center';
+  const c = 'gap-2';
+  const html = Html`<div class="${a} ${b} ${c}">Content</div>`;
+
+  assert.ok(html.includes('class="flex items-center gap-2"'), 'Should concatenate multiple holes');
+});
+
+test('SSR: partial interpolation with conditional', () => {
+  const Html = createSSRHtml();
+  const active = true;
+  const html = Html`<button class="btn ${active ? 'active' : ''}">Toggle</button>`;
+
+  assert.ok(html.includes('class="btn active"'), 'Should handle conditional expression');
+});
+
+test('SSR: partial interpolation cascade test (Issue #21 original bug)', () => {
+  const Html = createSSRHtml();
+  const node = {
+    earned: false,
+    id: 'skill-1',
+    label: 'RPC',
+  };
+  const html = Html`<button class="skill-node ${node.earned ? 'earned' : 'locked'}" title="${node.id}">${node.label}</button>`;
+
+  assert.ok(html.includes('class="skill-node locked"'), 'Should concatenate class');
+  assert.ok(html.includes('title="skill-1"'), 'Title should not be affected');
+  assert.ok(html.includes('>RPC<'), 'Content should not be affected');
+});
+
+test('SSR: partial interpolation with XSS prevention', () => {
+  const Html = createSSRHtml();
+  const userInput = '<script>alert("xss")</script>';
+  const html = Html`<div class="prefix-${userInput}">Content</div>`;
+
+  assert.ok(!html.includes('<script>'), 'Should escape script tags');
+  assert.ok(html.includes('&lt;script&gt;'), 'Should HTML-escape user input');
+});
+
+test('SSR: mixed partial and full interpolations', () => {
+  const Html = createSSRHtml();
+  const classVal = 'suffix';
+  const titleVal = 'My Title';
+  const content = 'Content Here';
+  const html = Html`<div class="prefix-${classVal}" title="${titleVal}">${content}</div>`;
+
+  assert.ok(html.includes('class="prefix-suffix"'), 'Should handle partial class');
+  assert.ok(html.includes('title="My Title"'), 'Should handle full interpolation');
+  assert.ok(html.includes('>Content Here<'), 'Should render content');
+});
+
+test('SSR: partial interpolation with null value', () => {
+  const Html = createSSRHtml();
+  const nullVal = null;
+  const html = Html`<div class="prefix-${nullVal}-suffix">Content</div>`;
+
+  // null should be coerced to empty string
+  assert.ok(html.includes('class="prefix--suffix"'), 'Should handle null value as empty string');
+});
+
+test('SSR: partial interpolation with undefined value', () => {
+  const Html = createSSRHtml();
+  const undefinedVal = undefined;
+  const html = Html`<div class="prefix-${undefinedVal}-suffix">Content</div>`;
+
+  // undefined should be coerced to empty string
+  assert.ok(html.includes('class="prefix--suffix"'), 'Should handle undefined value as empty string');
+});
+
 test('Fragment: sync fragment with safeHtml result', () => {
   const Html = createSSRHtml({
     fragments: {

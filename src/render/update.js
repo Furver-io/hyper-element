@@ -5,6 +5,7 @@
 
 import {
   ATTRIBUTE,
+  ATTRIBUTE_TEMPLATE,
   COMMENT,
   COMMENT_ARRAY,
   DATA,
@@ -17,6 +18,7 @@ import {
   TOGGLE,
   UNSAFE,
   ATTRIBUTE_TYPE,
+  ATTRIBUTE_TEMPLATE_TYPE,
   COMMENT_TYPE,
   TEXT_TYPE,
   children,
@@ -77,8 +79,6 @@ const directFor = (name) => {
   return fn;
 };
 
-// Update handler factories
-
 /**
  * Creates an attribute setter.
  * @param {string} name - Attribute name
@@ -119,27 +119,51 @@ const data = ({ dataset }, values) => {
   }
 };
 
+const templateState = new WeakMap(); // Partial interpolation state: node -> Map(name -> state)
+
+/**
+ * Partial interpolation handler - accumulates hole values, applies when complete.
+ * @param {string} name - Attribute name
+ * @param {string[]} parts - Static parts between holes
+ * @param {number} holeIndex - This handler's hole index
+ * @param {number} holeCount - Total holes in this attribute
+ * @returns {Function} Handler that accumulates value and applies when complete
+ */
+const attributeTemplate =
+  (name, parts, holeIndex, holeCount) => (node, value) => {
+    let nodeState = templateState.get(node);
+    if (!nodeState) templateState.set(node, (nodeState = new Map()));
+    let s = nodeState.get(name);
+    if (!s)
+      nodeState.set(
+        name,
+        (s = { values: new Array(holeCount), remaining: holeCount })
+      );
+    s.values[holeIndex] = value;
+    if (--s.remaining === 0) {
+      let result = parts[0];
+      for (let i = 0; i < holeCount; i++)
+        result += (s.values[i] ?? '') + parts[i + 1];
+      result === ''
+        ? node.removeAttribute(name)
+        : node.setAttribute(name, result);
+      s.remaining = holeCount; // Reset for next render
+    }
+  };
+
 /**
  * Updates style attribute - handles both strings and objects.
  * @param {HTMLElement} node - Target element
  * @param {string|Object|null} value - Style string or object
  */
 const styleHandler = (node, value) => {
-  if (value == null) {
-    node.removeAttribute('style');
-  } else if (typeof value === 'object') {
-    // Style object - set individual properties
-    for (const [prop, val] of Object.entries(value)) {
-      if (val == null) {
-        node.style.removeProperty(prop);
-      } else {
-        node.style.setProperty(prop, val);
-      }
-    }
-  } else {
-    // Style string
-    node.setAttribute('style', value);
-  }
+  if (value == null) node.removeAttribute('style');
+  else if (typeof value === 'object') {
+    for (const [prop, val] of Object.entries(value))
+      val == null
+        ? node.style.removeProperty(prop)
+        : node.style.setProperty(prop, val);
+  } else node.setAttribute('style', value);
 };
 
 /**
@@ -171,18 +195,13 @@ const event = (type, at, array) =>
  * @returns {Array} Array of DOM nodes
  */
 const toNodes = (arr, xml) =>
-  arr.map((item) => {
-    // Strings become text nodes (auto-escaped by the browser)
-    if (typeof item === 'string' || typeof item === 'number') {
-      return document.createTextNode(String(item));
-    }
-    // Handle __unsafe objects - render as raw HTML fragment
-    if (item && typeof item === 'object' && item.__unsafe) {
-      return PersistentFragment(createFragment(item.value, xml));
-    }
-    // Already a node or has nodes property
-    return item;
-  });
+  arr.map((item) =>
+    typeof item === 'string' || typeof item === 'number'
+      ? document.createTextNode(String(item))
+      : item && typeof item === 'object' && item.__unsafe
+        ? PersistentFragment(createFragment(item.value, xml))
+        : item
+  );
 
 /**
  * Creates an array update handler.
@@ -255,6 +274,15 @@ const commentUnsafe = (xml) => (node, value) => {
  */
 export function update(node, type, path, name, hint) {
   switch (type) {
+    case ATTRIBUTE_TEMPLATE_TYPE: {
+      // Partial interpolation - hint contains { parts, holeIndex, holeCount }
+      const { parts, holeIndex, holeCount } = hint;
+      return [
+        path,
+        attributeTemplate(name, parts, holeIndex, holeCount),
+        ATTRIBUTE_TEMPLATE,
+      ];
+    }
     case COMMENT_TYPE: {
       if (Array.isArray(hint))
         return [path, commentArrayFactory(node.xml), COMMENT_ARRAY];
