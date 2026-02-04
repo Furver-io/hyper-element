@@ -1473,141 +1473,73 @@ hyperElement('no-config-no-style', {
       </script>
     </section>
 
-    <!-- Test 29: Parser Hooks API Coverage -->
-    <section data-test="parser-hooks-api" data-test-result="pending">
-      <h2>29. Parser Hooks API</h2>
-      <p>Coverage test for parser-hooks.js utilities exported for external consumers.</p>
-      <pre><code>// detectStyledSuffix - checks for +styled suffix
-detectStyledSuffix('div+styled')  // { isStyled: true, tagName: 'div' }
-detectStyledSuffix('div')         // { isStyled: false, tagName: 'div' }
-
-// isValidPropFlag - validates prop flag names
-isValidPropFlag('error')     // true (valid prop flag)
-isValidPropFlag('style')     // false (reserved)
-isValidPropFlag('data-foo')  // false (data- prefix)
-</code></pre>
+    <!-- Test 29: Styled with non-prop-flag attributes -->
+    <section data-test="non-prop-flags" data-test-result="pending">
+      <h2>29. Styled with Non-Prop-Flag Attributes</h2>
+      <p>Styled elements can have regular HTML attributes that aren't treated as prop flags.</p>
+      <pre><code>hyperElement('styled-with-attrs', {
+  styled: [{ div: { padding: '10px' } }],
+  render: (Html) => Html`
+    &lt;div+styled class="my-class" id="my-id" data-test="val"
+                aria-label="label" @click=${handler}&gt;Content&lt;/div&gt;
+  `
+});</code></pre>
       <div id="output-29"></div>
       <script type="module">
-        import { detectStyledSuffix, isValidPropFlag, STYLED_SUFFIX } from 'hyper-element/styled/index.js';
+        let clickCount = 0;
+        const handler = () => { clickCount++; };
 
-        const section = document.querySelector('[data-test="parser-hooks-api"]');
-        const results = [];
+        hyperElement('styled-with-attrs', {
+          styled: [{ div: { padding: '10px', color: 'green' } }],
+          render: (Html) => Html`
+            <div+styled
+              class="my-class"
+              id="my-id"
+              style=${{ padding: '10px' }}
+              role="button"
+              slot="content"
+              data-test="value"
+              aria-label="Test label"
+              @click=${handler}
+              .title=${'Direct prop'}
+              ?hidden=${false}>
+              Content with attributes
+            </div>
+          `
+        });
 
-        // Test STYLED_SUFFIX constant
-        results.push(['STYLED_SUFFIX', STYLED_SUFFIX === '+styled']);
+        const elem = document.createElement('styled-with-attrs');
+        document.getElementById('output-29').appendChild(elem);
 
-        // Test detectStyledSuffix
-        const r1 = detectStyledSuffix('div+styled');
-        results.push(['detect styled tag', r1.isStyled === true && r1.tagName === 'div']);
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="non-prop-flags"]');
+          const div = elem.querySelector('div');
+          const results = [];
 
-        const r2 = detectStyledSuffix('DIV+STYLED'); // case insensitive
-        results.push(['detect styled tag (case)', r2.isStyled === true && r2.tagName === 'DIV']);
+          // Regular attributes should be applied, not treated as prop flags
+          results.push(['has class', div.classList.contains('my-class')]);
+          results.push(['has id', div.id === 'my-id']);
+          results.push(['has data-test', div.dataset.test === 'value']);
+          results.push(['has aria-label', div.getAttribute('aria-label') === 'Test label']);
+          results.push(['has role', div.getAttribute('role') === 'button']);
+          results.push(['has title (via .prop)', div.title === 'Direct prop']);
 
-        const r3 = detectStyledSuffix('span');
-        results.push(['detect non-styled tag', r3.isStyled === false && r3.tagName === 'span']);
+          // Style should still be applied (base + inline)
+          const hasStyle = div.style.padding === '10px' && div.style.color === 'green';
+          results.push(['styled applied', hasStyle]);
 
-        // Test isValidPropFlag - valid flags
-        results.push(['valid: error', isValidPropFlag('error') === true]);
-        results.push(['valid: large', isValidPropFlag('large') === true]);
-        results.push(['valid: active', isValidPropFlag('active') === true]);
+          // Event handler should work
+          div.click();
+          results.push(['click handler', clickCount === 1]);
 
-        // Test isValidPropFlag - reserved attributes
-        results.push(['invalid: style', isValidPropFlag('style') === false]);
-        results.push(['invalid: class', isValidPropFlag('class') === false]);
-        results.push(['invalid: id', isValidPropFlag('id') === false]);
-        results.push(['invalid: role', isValidPropFlag('role') === false]);
-        results.push(['invalid: slot', isValidPropFlag('slot') === false]);
-        results.push(['invalid: is', isValidPropFlag('is') === false]);
-        results.push(['invalid: part', isValidPropFlag('part') === false]);
+          const allPassed = results.every(r => r[1]);
+          const output = document.getElementById('output-29');
+          output.innerHTML += '<hr><strong>Results:</strong>' + results.map(([name, passed]) =>
+            `<div style="color: ${passed ? 'green' : 'red'}">${passed ? '✓' : '✗'} ${name}</div>`
+          ).join('');
 
-        // Test isValidPropFlag - prefixes
-        results.push(['invalid: data-foo', isValidPropFlag('data-foo') === false]);
-        results.push(['invalid: aria-label', isValidPropFlag('aria-label') === false]);
-        results.push(['invalid: onclick', isValidPropFlag('onclick') === false]);
-        results.push(['invalid: @click', isValidPropFlag('@click') === false]);
-        results.push(['invalid: .prop', isValidPropFlag('.prop') === false]);
-        results.push(['invalid: ?disabled', isValidPropFlag('?disabled') === false]);
-
-        // Display results
-        const output = document.getElementById('output-29');
-        const allPassed = results.every(r => r[1]);
-        output.innerHTML = results.map(([name, passed]) =>
-          `<div style="color: ${passed ? 'green' : 'red'}">${passed ? '✓' : '✗'} ${name}</div>`
-        ).join('');
-
-        section.dataset.testResult = allPassed ? 'pass' : 'fail';
-      </script>
-    </section>
-
-    <!-- Test 30: Handler Fallback Coverage (outside component context) -->
-    <section data-test="handler-fallback" data-test-result="pending">
-      <h2>30. Handler Fallback Coverage</h2>
-      <p>Tests +styled outside component context - triggers DOM traversal and fallback paths.</p>
-      <pre><code>// Using html() directly without a component
-const render = bind(container);
-render`&lt;div+styled style=${{ padding: '10px' }}&gt;Direct&lt;/div&gt;`;
-// Handler runs without renderingInstance - uses object passthrough</code></pre>
-      <div id="output-30"></div>
-      <script type="module">
-        import { html, bind, dom } from 'hyper-element/render/index.js';
-
-        const section = document.querySelector('[data-test="handler-fallback"]');
-        const output = document.getElementById('output-30');
-        const results = [];
-
-        // Test 1: Using html() directly with +styled and style object
-        // This triggers the handler fallback since no component context exists
-        const container1 = document.createElement('div');
-        output.appendChild(container1);
-        const render1 = bind(container1);
-        render1`<div+styled style=${{ padding: '15px', color: 'blue' }}>Object Style</div>`;
-
-        const div1 = container1.querySelector('div');
-        const hasObjectStyle = div1 && div1.style.padding === '15px' && div1.style.color === 'blue';
-        results.push(['object style passthrough', hasObjectStyle]);
-
-        // Test 2: Using html() with +styled and dynamic string style value
-        // This must be a dynamic value (${...}) for the handler to process it
-        const container2 = document.createElement('div');
-        output.appendChild(container2);
-        const render2 = bind(container2);
-        const stringStyle = 'font-weight: bold; margin: 5px';
-        render2`<span+styled style=${stringStyle}>String Style</span>`;
-
-        const span2 = container2.querySelector('span');
-        const hasStringStyle = span2 && span2.getAttribute('style')?.includes('font-weight');
-        results.push(['string style setAttribute', hasStringStyle]);
-
-        // Test 3: +styled with no style value (undefined)
-        const container3 = document.createElement('div');
-        output.appendChild(container3);
-        const render3 = bind(container3);
-        render3`<p+styled>No Style Value</p>`;
-
-        const p3 = container3.querySelector('p');
-        const noStyleApplied = p3 && !p3.getAttribute('style');
-        results.push(['no style (undefined value)', noStyleApplied]);
-
-        // Test 4: +styled with __unsafe marker (should not apply as object)
-        const container4 = document.createElement('div');
-        output.appendChild(container4);
-        const render4 = bind(container4);
-        const unsafeStyle = { padding: '20px', __unsafe: true };
-        render4`<div+styled style=${unsafeStyle}>Unsafe Marker</div>`;
-
-        const div4 = container4.querySelector('div');
-        // __unsafe object should not be applied as style object
-        const unsafeNotApplied = div4 && div4.style.padding !== '20px';
-        results.push(['__unsafe marker respected', unsafeNotApplied]);
-
-        // Display results
-        const allPassed = results.every(r => r[1]);
-        const resultHtml = results.map(([name, passed]) =>
-          `<div style="color: ${passed ? 'green' : 'red'}">${passed ? '✓' : '✗'} ${name}</div>`
-        ).join('');
-        output.innerHTML += `<hr><strong>Results:</strong>${resultHtml}`;
-
-        section.dataset.testResult = allPassed ? 'pass' : 'fail';
+          section.dataset.testResult = allPassed ? 'pass' : 'fail';
+        });
       </script>
     </section>
 

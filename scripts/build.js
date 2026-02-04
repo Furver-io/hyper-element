@@ -130,7 +130,7 @@ function createBundle() {
   var update, Hole, render, dom, createHtml, isKeyed, html, bind, wire;
   var setRenderingInstance, getRenderingInstance, registerStyled, unregisterStyled, getStyledEntry;
   var resolveStylesWithEntry, resolveStyles, applyStylesToNode, resolveColors, isNestedSyntax, styledStyleHandler;
-  var STYLED_SUFFIX, RESERVED_ATTRS, detectStyledSuffix, isValidPropFlag;
+  var STYLED_SUFFIX;
   var buildTemplate, addDataset, getDataset, attachAttrs, processFragmentResult;
   var pathResolver, ssrBuffer, showDevIndicator, hideDevIndicator;
   var getNthOfTypeIndex, calculatePath, resolvePath, addToBuffer, getBufferedEvents, clearBuffer;

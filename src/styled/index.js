@@ -34,8 +34,4 @@ export {
 } from '../ssr/string-update.js';
 
 // Parser hooks
-export {
-  STYLED_SUFFIX,
-  detectStyledSuffix,
-  isValidPropFlag,
-} from './parser-hooks.js';
+export { STYLED_SUFFIX } from './parser-hooks.js';
