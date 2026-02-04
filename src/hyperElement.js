@@ -7,7 +7,7 @@ import { manager } from './core/manager.js';
 import { createdCallback } from './lifecycle/connectedCallback.js';
 import { attachAttrs } from './attributes/attachAttrs.js';
 import { getDataset, addDataset } from './attributes/dataset.js';
-import { unregisterStyled } from './render/styled.js';
+import { unregisterStyled } from './styled/index.js';
 
 /**
  * Context object available as `this` in render() and setup() methods.

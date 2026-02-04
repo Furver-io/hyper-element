@@ -24,7 +24,7 @@ import {
   TEXT_TYPE,
 } from '../render/constants.js';
 import { escapeHtml } from '../utils/escape.js';
-import { resolveStylesWithEntry } from '../render/styled.js';
+import { resolveStylesWithEntry } from '../styled/resolution.js';
 
 /**
  * Current SSR rendering context.

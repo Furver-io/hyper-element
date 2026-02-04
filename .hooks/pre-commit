@@ -68,6 +68,7 @@ run_check() {
 print_header "Pre-commit Checks"
 
 # Run checks
+run_check "$CHECKS_DIR/check-no-c8-ignore.sh" "No c8 ignore"
 run_check "$CHECKS_DIR/check-lint.sh" "ESLint"
 run_check "$CHECKS_DIR/check-format.sh" "Prettier"
 run_check "$CHECKS_DIR/check-build.sh" "Build"

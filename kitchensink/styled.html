@@ -996,6 +996,621 @@ hyperElement('no-config-no-style', {
       </script>
     </section>
 
+    <!-- Test 21: Conditional Prop Flag via Style Object with Inline Styles -->
+    <section data-test="conditional-prop-flag" data-test-result="pending">
+      <h2>21. Conditional Prop Flag via Style Object</h2>
+      <p>Like react-outline: <code>&lt;Title style={{ error: true, width: '200px' }}&gt;</code></p>
+      <pre><code>hyperElement('styled-conditional-flag', {
+  styled: [{
+    div: {
+      base: { padding: '10px', border: '1px solid gray' },
+      error: { borderColor: 'red', backgroundColor: '#fee' }
+    }
+  }],
+  render: (Html, ctx) => Html`
+    &lt;div+styled style=${{ error: ctx.attrs.haserror === 'true', width: '200px' }}&gt;Conditional&lt;/div&gt;
+  `
+});</code></pre>
+      <div id="output-21"></div>
+      <script type="module">
+        hyperElement('styled-conditional-flag', {
+          observedAttributes: ['haserror'],
+          styled: [{
+            div: {
+              base: { padding: '10px', border: '1px solid gray' },
+              error: { borderColor: 'red', backgroundColor: '#fee' }
+            }
+          }],
+          render: (Html, ctx) => Html`
+            <div+styled style=${{ error: ctx.attrs.haserror === 'true', width: '200px' }}>Conditional</div>
+          `
+        });
+
+        const elem21 = document.createElement('styled-conditional-flag');
+        elem21.setAttribute('haserror', 'true');
+        document.getElementById('output-21').appendChild(elem21);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="conditional-prop-flag"]');
+          const div = elem21.querySelector('div');
+
+          const hasPadding = div && div.style.padding === '10px';
+          const hasRedBorder = div && div.style.borderColor === 'red';
+          const hasBgColor = div && (div.style.backgroundColor === 'rgb(255, 238, 238)' || div.style.backgroundColor === '#fee');
+          const hasWidth = div && div.style.width === '200px';
+
+          if (hasPadding && hasRedBorder && hasBgColor && hasWidth) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Conditional prop flag test failed:', {
+              hasPadding, hasRedBorder, hasBgColor, hasWidth,
+              divStyle: div?.style.cssText
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 22: Multiple Conditional Flags via Style Object -->
+    <section data-test="multiple-conditional-flags" data-test-result="pending">
+      <h2>22. Multiple Conditional Flags via Style Object</h2>
+      <p>Pass multiple boolean flags via style object: <code>style=${{ error: true, large: true }}</code></p>
+      <pre><code>hyperElement('styled-multi-flags', {
+  styled: [{
+    div: {
+      base: { padding: '10px', fontSize: '14px' },
+      error: { color: 'red' },
+      large: { fontSize: '24px', padding: '20px' }
+    }
+  }],
+  render: (Html, ctx) => Html`
+    &lt;div+styled style=${{ error: ctx.attrs.err === 'true', large: ctx.attrs.big === 'true' }}&gt;Multi&lt;/div&gt;
+  `
+});</code></pre>
+      <div id="output-22"></div>
+      <script type="module">
+        hyperElement('styled-multi-flags', {
+          observedAttributes: ['err', 'big'],
+          styled: [{
+            div: {
+              base: { padding: '10px', fontSize: '14px' },
+              error: { color: 'red' },
+              large: { fontSize: '24px', padding: '20px' }
+            }
+          }],
+          render: (Html, ctx) => Html`
+            <div+styled style=${{ error: ctx.attrs.err === 'true', large: ctx.attrs.big === 'true' }}>Multi</div>
+          `
+        });
+
+        const elem22 = document.createElement('styled-multi-flags');
+        elem22.setAttribute('err', 'true');
+        elem22.setAttribute('big', 'true');
+        document.getElementById('output-22').appendChild(elem22);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="multiple-conditional-flags"]');
+          const div = elem22.querySelector('div');
+
+          const hasRed = div && div.style.color === 'red';
+          const hasLargePadding = div && div.style.padding === '20px';
+          const hasLargeFontSize = div && div.style.fontSize === '24px';
+
+          if (hasRed && hasLargePadding && hasLargeFontSize) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Multiple conditional flags test failed:', {
+              hasRed, hasLargePadding, hasLargeFontSize,
+              divStyle: div?.style.cssText
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 23: Logic Function Conditional Styling -->
+    <section data-test="logic-fn-base-style" data-test-result="pending">
+      <h2>23. Logic Function Conditional Styling</h2>
+      <p>Logic functions receive <code>(styleValue, ctx, store)</code> and return computed styles.</p>
+      <pre><code>hyperElement('styled-logic-conditional', {
+  styled: [
+    { span: { color: 'gray' } },
+    { span: (important) => ({
+        fontSize: important ? '24px' : '14px',
+        fontWeight: important ? 'bold' : 'normal'
+      })
+    }
+  ],
+  render: (Html) => Html`
+    &lt;span+styled style=${true}&gt;Important&lt;/span&gt;
+    &lt;span+styled style=${false}&gt;Normal&lt;/span&gt;
+  `
+});</code></pre>
+      <div id="output-23"></div>
+      <script type="module">
+        hyperElement('styled-logic-conditional', {
+          styled: [
+            { span: { color: 'gray' } },
+            { span: (important) => ({
+                fontSize: important ? '24px' : '14px',
+                fontWeight: important ? 'bold' : 'normal'
+              })
+            }
+          ],
+          render: (Html) => Html`
+            <span+styled style=${true}>Important</span>
+            <span+styled style=${false}>Normal</span>
+          `
+        });
+
+        const elem23 = document.createElement('styled-logic-conditional');
+        document.getElementById('output-23').appendChild(elem23);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="logic-fn-base-style"]');
+          const spans = elem23.querySelectorAll('span');
+          const [important, normal] = spans;
+
+          const importantHasLargeFont = important && important.style.fontSize === '24px';
+          const importantHasBold = important && important.style.fontWeight === 'bold';
+          const normalHasBaseFont = normal && normal.style.fontSize === '14px';
+          const normalHasNormal = normal && normal.style.fontWeight === 'normal';
+
+          if (importantHasLargeFont && importantHasBold && normalHasBaseFont && normalHasNormal) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Logic fn conditional test failed:', {
+              importantHasLargeFont, importantHasBold, normalHasBaseFont, normalHasNormal,
+              importantStyle: important?.style.cssText,
+              normalStyle: normal?.style.cssText
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 24: Function Without Base Style -->
+    <section data-test="fn-without-base" data-test-result="pending">
+      <h2>24. Function Without Base Style</h2>
+      <p>Like react-outline: Logic function exists but no base style defined.</p>
+      <pre><code>hyperElement('styled-fn-no-base', {
+  styled: [
+    { /* no 'div' here */ },
+    { div: () => ({ backgroundColor: 'lightgray', padding: '15px' }) }
+  ],
+  render: (Html) => Html`&lt;div+styled&gt;Function Only&lt;/div&gt;`
+});</code></pre>
+      <div id="output-24"></div>
+      <script type="module">
+        hyperElement('styled-fn-no-base', {
+          styled: [
+            { /* no 'div' here */ },
+            { div: () => ({ backgroundColor: 'lightgray', padding: '15px' }) }
+          ],
+          render: (Html) => Html`<div+styled>Function Only</div>`
+        });
+
+        const elem24 = document.createElement('styled-fn-no-base');
+        document.getElementById('output-24').appendChild(elem24);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="fn-without-base"]');
+          const div = elem24.querySelector('div');
+
+          const hasBg = div && (div.style.backgroundColor === 'lightgray' || div.style.backgroundColor === 'rgb(211, 211, 211)');
+          const hasPadding = div && div.style.padding === '15px';
+
+          if (hasBg && hasPadding) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Function without base test failed:', {
+              hasBg, hasPadding,
+              divStyle: div?.style.cssText
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 25: Animate.css Integration -->
+    <section data-test="animate-css" data-test-result="pending">
+      <h2>25. External CSS Class Integration</h2>
+      <p>Like react-outline: <code>className</code> works alongside +styled.</p>
+      <pre><code>hyperElement('styled-with-class', {
+  styled: [{
+    div: { padding: '20px', backgroundColor: '#e0e0ff' }
+  }],
+  render: (Html) => Html`
+    &lt;div+styled class="custom-animation"&gt;Styled + Class&lt;/div&gt;
+  `
+});</code></pre>
+      <style>
+        .custom-animation {
+          animation: pulse 1s ease-in-out;
+          border: 2px dashed purple;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+      </style>
+      <div id="output-25"></div>
+      <script type="module">
+        hyperElement('styled-with-class', {
+          styled: [{
+            div: { padding: '20px', backgroundColor: '#e0e0ff' }
+          }],
+          render: (Html) => Html`
+            <div+styled class="custom-animation">Styled + Class</div>
+          `
+        });
+
+        const elem25 = document.createElement('styled-with-class');
+        document.getElementById('output-25').appendChild(elem25);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="animate-css"]');
+          const div = elem25.querySelector('div');
+
+          const hasClass = div && div.classList.contains('custom-animation');
+          const hasPadding = div && div.style.padding === '20px';
+          const hasBg = div && (div.style.backgroundColor === 'rgb(224, 224, 255)' || div.style.backgroundColor === '#e0e0ff');
+
+          if (hasClass && hasPadding && hasBg) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Animate CSS test failed:', {
+              hasClass, hasPadding, hasBg,
+              divClass: div?.className,
+              divStyle: div?.style.cssText
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 26: Store Access in Logic Function -->
+    <section data-test="store-access" data-test-result="pending">
+      <h2>26. Store Access in Logic Function</h2>
+      <p>+styled exclusive: Logic functions receive <code>(styleValue, ctx, store)</code>.</p>
+      <pre><code>hyperElement('styled-store-access', {
+  setup: (ctx, onNext) => onNext({ loading: true }),
+  styled: [
+    { div: { padding: '15px' } },
+    { div: (val, ctx, store) => ({
+        opacity: store.loading ? '0.5' : '1',
+        cursor: store.loading ? 'wait' : 'default'
+      })
+    }
+  ],
+  render: (Html, store) => Html`&lt;div+styled&gt;Loading State&lt;/div&gt;`
+});</code></pre>
+      <div id="output-26"></div>
+      <script type="module">
+        hyperElement('styled-store-access', {
+          setup: (ctx, onNext) => onNext({ loading: true }),
+          styled: [
+            { div: { padding: '15px' } },
+            { div: (val, ctx, store) => ({
+                opacity: store.loading ? '0.5' : '1',
+                cursor: store.loading ? 'wait' : 'default'
+              })
+            }
+          ],
+          render: (Html, store) => Html`<div+styled>Loading State</div>`
+        });
+
+        const elem26 = document.createElement('styled-store-access');
+        document.getElementById('output-26').appendChild(elem26);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="store-access"]');
+          const div = elem26.querySelector('div');
+
+          const hasOpacity = div && div.style.opacity === '0.5';
+          const hasCursor = div && div.style.cursor === 'wait';
+          const hasPadding = div && div.style.padding === '15px';
+
+          if (hasOpacity && hasCursor && hasPadding) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Store access test failed:', {
+              hasOpacity, hasCursor, hasPadding,
+              divStyle: div?.style.cssText
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 27: Implied Tag Names -->
+    <section data-test="implied-tags" data-test-result="pending">
+      <h2>27. Implied Tag Names</h2>
+      <p>Like react-outline: Style names matching HTML tags get auto-applied.</p>
+      <pre><code>hyperElement('styled-implied-tags', {
+  styled: [{
+    table: { borderCollapse: 'collapse', width: '100%' },
+    tr: { borderBottom: '2px solid #333' },
+    td: { padding: '8px', textAlign: 'center' },
+    button: { cursor: 'pointer', backgroundColor: '#007bff', color: 'white' }
+  }],
+  render: (Html) => Html`
+    &lt;table+styled&gt;
+      &lt;tr+styled&gt;&lt;td+styled&gt;A&lt;/td&gt;&lt;td+styled&gt;B&lt;/td&gt;&lt;/tr&gt;
+    &lt;/table&gt;
+    &lt;button+styled&gt;Click&lt;/button&gt;
+  `
+});</code></pre>
+      <div id="output-27"></div>
+      <script type="module">
+        hyperElement('styled-implied-tags', {
+          styled: [{
+            table: { borderCollapse: 'collapse', width: '100%' },
+            tr: { borderBottom: '2px solid #333' },
+            td: { padding: '8px', textAlign: 'center' },
+            button: { cursor: 'pointer', backgroundColor: '#007bff', color: 'white' }
+          }],
+          render: (Html) => Html`
+            <table+styled>
+              <tr+styled><td+styled>A</td><td+styled>B</td></tr>
+            </table>
+            <button+styled>Click</button>
+          `
+        });
+
+        const elem27 = document.createElement('styled-implied-tags');
+        document.getElementById('output-27').appendChild(elem27);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="implied-tags"]');
+          const table = elem27.querySelector('table');
+          const tr = elem27.querySelector('tr');
+          const td = elem27.querySelector('td');
+          const button = elem27.querySelector('button');
+
+          const tableHasCollapse = table && table.style.borderCollapse === 'collapse';
+          const trHasBorder = tr && tr.style.borderBottom.includes('solid');
+          const tdHasPadding = td && td.style.padding === '8px';
+          const buttonHasCursor = button && button.style.cursor === 'pointer';
+
+          if (tableHasCollapse && trHasBorder && tdHasPadding && buttonHasCursor) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Implied tags test failed:', {
+              tableHasCollapse, trHasBorder, tdHasPadding, buttonHasCursor,
+              tableStyle: table?.style.cssText,
+              trStyle: tr?.style.cssText,
+              tdStyle: td?.style.cssText,
+              buttonStyle: button?.style.cssText
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 28: Complex Nested Structure -->
+    <section data-test="complex-nested" data-test-result="pending">
+      <h2>28. Complex Nested Structure</h2>
+      <p>Multiple nested elements with different styles applied correctly.</p>
+      <pre><code>hyperElement('styled-complex-nested', {
+  styled: [{
+    article: { border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden' },
+    header: { backgroundColor: '#f0f0f0', padding: '10px' },
+    h1: { margin: '0', fontSize: '18px', color: '#333' },
+    section: { padding: '15px' },
+    p: { margin: '0', lineHeight: '1.5', color: '#666' },
+    footer: { backgroundColor: '#fafafa', padding: '10px', textAlign: 'right' }
+  }],
+  render: (Html) => Html`
+    &lt;article+styled&gt;
+      &lt;header+styled&gt;&lt;h1+styled&gt;Title&lt;/h1&gt;&lt;/header&gt;
+      &lt;section+styled&gt;&lt;p+styled&gt;Content here&lt;/p&gt;&lt;/section&gt;
+      &lt;footer+styled&gt;Footer&lt;/footer&gt;
+    &lt;/article&gt;
+  `
+});</code></pre>
+      <div id="output-28"></div>
+      <script type="module">
+        hyperElement('styled-complex-nested', {
+          styled: [{
+            article: { border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden' },
+            header: { backgroundColor: '#f0f0f0', padding: '10px' },
+            h1: { margin: '0', fontSize: '18px', color: '#333' },
+            section: { padding: '15px' },
+            p: { margin: '0', lineHeight: '1.5', color: '#666' },
+            footer: { backgroundColor: '#fafafa', padding: '10px', textAlign: 'right' }
+          }],
+          render: (Html) => Html`
+            <article+styled>
+              <header+styled><h1+styled>Title</h1></header>
+              <section+styled><p+styled>Content here</p></section>
+              <footer+styled>Footer</footer>
+            </article>
+          `
+        });
+
+        const elem28 = document.createElement('styled-complex-nested');
+        document.getElementById('output-28').appendChild(elem28);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="complex-nested"]');
+          const article = elem28.querySelector('article');
+          const header = elem28.querySelector('header');
+          const h1 = elem28.querySelector('h1');
+          const sectionEl = elem28.querySelector('section');
+          const p = elem28.querySelector('p');
+          const footer = elem28.querySelector('footer');
+
+          const articleHasBorder = article && article.style.borderRadius === '8px';
+          const headerHasBg = header && (header.style.backgroundColor === 'rgb(240, 240, 240)' || header.style.backgroundColor === '#f0f0f0');
+          const h1HasFontSize = h1 && h1.style.fontSize === '18px';
+          const sectionHasPadding = sectionEl && sectionEl.style.padding === '15px';
+          const pHasLineHeight = p && p.style.lineHeight === '1.5';
+          const footerHasAlign = footer && footer.style.textAlign === 'right';
+
+          if (articleHasBorder && headerHasBg && h1HasFontSize && sectionHasPadding && pHasLineHeight && footerHasAlign) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.log('Complex nested test failed:', {
+              articleHasBorder, headerHasBg, h1HasFontSize, sectionHasPadding, pHasLineHeight, footerHasAlign,
+              articleStyle: article?.style.cssText,
+              headerStyle: header?.style.cssText,
+              h1Style: h1?.style.cssText,
+              sectionStyle: sectionEl?.style.cssText,
+              pStyle: p?.style.cssText,
+              footerStyle: footer?.style.cssText
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 29: Parser Hooks API Coverage -->
+    <section data-test="parser-hooks-api" data-test-result="pending">
+      <h2>29. Parser Hooks API</h2>
+      <p>Coverage test for parser-hooks.js utilities exported for external consumers.</p>
+      <pre><code>// detectStyledSuffix - checks for +styled suffix
+detectStyledSuffix('div+styled')  // { isStyled: true, tagName: 'div' }
+detectStyledSuffix('div')         // { isStyled: false, tagName: 'div' }
+
+// isValidPropFlag - validates prop flag names
+isValidPropFlag('error')     // true (valid prop flag)
+isValidPropFlag('style')     // false (reserved)
+isValidPropFlag('data-foo')  // false (data- prefix)
+</code></pre>
+      <div id="output-29"></div>
+      <script type="module">
+        import { detectStyledSuffix, isValidPropFlag, STYLED_SUFFIX } from 'hyper-element/styled/index.js';
+
+        const section = document.querySelector('[data-test="parser-hooks-api"]');
+        const results = [];
+
+        // Test STYLED_SUFFIX constant
+        results.push(['STYLED_SUFFIX', STYLED_SUFFIX === '+styled']);
+
+        // Test detectStyledSuffix
+        const r1 = detectStyledSuffix('div+styled');
+        results.push(['detect styled tag', r1.isStyled === true && r1.tagName === 'div']);
+
+        const r2 = detectStyledSuffix('DIV+STYLED'); // case insensitive
+        results.push(['detect styled tag (case)', r2.isStyled === true && r2.tagName === 'DIV']);
+
+        const r3 = detectStyledSuffix('span');
+        results.push(['detect non-styled tag', r3.isStyled === false && r3.tagName === 'span']);
+
+        // Test isValidPropFlag - valid flags
+        results.push(['valid: error', isValidPropFlag('error') === true]);
+        results.push(['valid: large', isValidPropFlag('large') === true]);
+        results.push(['valid: active', isValidPropFlag('active') === true]);
+
+        // Test isValidPropFlag - reserved attributes
+        results.push(['invalid: style', isValidPropFlag('style') === false]);
+        results.push(['invalid: class', isValidPropFlag('class') === false]);
+        results.push(['invalid: id', isValidPropFlag('id') === false]);
+        results.push(['invalid: role', isValidPropFlag('role') === false]);
+        results.push(['invalid: slot', isValidPropFlag('slot') === false]);
+        results.push(['invalid: is', isValidPropFlag('is') === false]);
+        results.push(['invalid: part', isValidPropFlag('part') === false]);
+
+        // Test isValidPropFlag - prefixes
+        results.push(['invalid: data-foo', isValidPropFlag('data-foo') === false]);
+        results.push(['invalid: aria-label', isValidPropFlag('aria-label') === false]);
+        results.push(['invalid: onclick', isValidPropFlag('onclick') === false]);
+        results.push(['invalid: @click', isValidPropFlag('@click') === false]);
+        results.push(['invalid: .prop', isValidPropFlag('.prop') === false]);
+        results.push(['invalid: ?disabled', isValidPropFlag('?disabled') === false]);
+
+        // Display results
+        const output = document.getElementById('output-29');
+        const allPassed = results.every(r => r[1]);
+        output.innerHTML = results.map(([name, passed]) =>
+          `<div style="color: ${passed ? 'green' : 'red'}">${passed ? '✓' : '✗'} ${name}</div>`
+        ).join('');
+
+        section.dataset.testResult = allPassed ? 'pass' : 'fail';
+      </script>
+    </section>
+
+    <!-- Test 30: Handler Fallback Coverage (outside component context) -->
+    <section data-test="handler-fallback" data-test-result="pending">
+      <h2>30. Handler Fallback Coverage</h2>
+      <p>Tests +styled outside component context - triggers DOM traversal and fallback paths.</p>
+      <pre><code>// Using html() directly without a component
+const render = bind(container);
+render`&lt;div+styled style=${{ padding: '10px' }}&gt;Direct&lt;/div&gt;`;
+// Handler runs without renderingInstance - uses object passthrough</code></pre>
+      <div id="output-30"></div>
+      <script type="module">
+        import { html, bind, dom } from 'hyper-element/render/index.js';
+
+        const section = document.querySelector('[data-test="handler-fallback"]');
+        const output = document.getElementById('output-30');
+        const results = [];
+
+        // Test 1: Using html() directly with +styled and style object
+        // This triggers the handler fallback since no component context exists
+        const container1 = document.createElement('div');
+        output.appendChild(container1);
+        const render1 = bind(container1);
+        render1`<div+styled style=${{ padding: '15px', color: 'blue' }}>Object Style</div>`;
+
+        const div1 = container1.querySelector('div');
+        const hasObjectStyle = div1 && div1.style.padding === '15px' && div1.style.color === 'blue';
+        results.push(['object style passthrough', hasObjectStyle]);
+
+        // Test 2: Using html() with +styled and dynamic string style value
+        // This must be a dynamic value (${...}) for the handler to process it
+        const container2 = document.createElement('div');
+        output.appendChild(container2);
+        const render2 = bind(container2);
+        const stringStyle = 'font-weight: bold; margin: 5px';
+        render2`<span+styled style=${stringStyle}>String Style</span>`;
+
+        const span2 = container2.querySelector('span');
+        const hasStringStyle = span2 && span2.getAttribute('style')?.includes('font-weight');
+        results.push(['string style setAttribute', hasStringStyle]);
+
+        // Test 3: +styled with no style value (undefined)
+        const container3 = document.createElement('div');
+        output.appendChild(container3);
+        const render3 = bind(container3);
+        render3`<p+styled>No Style Value</p>`;
+
+        const p3 = container3.querySelector('p');
+        const noStyleApplied = p3 && !p3.getAttribute('style');
+        results.push(['no style (undefined value)', noStyleApplied]);
+
+        // Test 4: +styled with __unsafe marker (should not apply as object)
+        const container4 = document.createElement('div');
+        output.appendChild(container4);
+        const render4 = bind(container4);
+        const unsafeStyle = { padding: '20px', __unsafe: true };
+        render4`<div+styled style=${unsafeStyle}>Unsafe Marker</div>`;
+
+        const div4 = container4.querySelector('div');
+        // __unsafe object should not be applied as style object
+        const unsafeNotApplied = div4 && div4.style.padding !== '20px';
+        results.push(['__unsafe marker respected', unsafeNotApplied]);
+
+        // Display results
+        const allPassed = results.every(r => r[1]);
+        const resultHtml = results.map(([name, passed]) =>
+          `<div style="color: ${passed ? 'green' : 'red'}">${passed ? '✓' : '✗'} ${name}</div>`
+        ).join('');
+        output.innerHTML += `<hr><strong>Results:</strong>${resultHtml}`;
+
+        section.dataset.testResult = allPassed ? 'pass' : 'fail';
+      </script>
+    </section>
+
     <a href="index.html">&larr; Back to Kitchen Sink</a>
   </body>
 </html>
