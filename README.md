@@ -12,53 +12,6 @@ A lightweight [Custom Elements] library with a fast, built-in render core. Your 
 
 ### If you like it, please [★ it on github](https://github.com/codemeasandwich/hyper-element)
 
-# Installation
-
-## npm
-
-```bash
-npm install hyper-element
-```
-
-### ES6 Modules
-
-```js
-import hyperElement from 'hyper-element';
-
-hyperElement('my-elem', (Html, ctx) => Html`Hello ${ctx.attrs.who}!`);
-```
-
-### CommonJS
-
-```js
-const hyperElement = require('hyper-element');
-
-hyperElement('my-elem', (Html, ctx) => Html`Hello ${ctx.attrs.who}!`);
-```
-
-## CDN (Browser)
-
-For browser environments without a bundler:
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/hyper-element@latest/build/hyperElement.min.js"></script>
-```
-
-The `hyperElement` class will be available globally on `window.hyperElement`.
-
-## Browser Support
-
-hyper-element requires native ES6 class support and the Custom Elements v1 API:
-
-| Browser | Version |
-| ------- | ------- |
-| Chrome  | 86+     |
-| Firefox | 78+     |
-| Safari  | 14.1+   |
-| Edge    | 86+     |
-
-For older browsers, a [Custom Elements polyfill](https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements) may be required.
-
 ## Why hyper-element
 
 - hyper-element is fast & small
@@ -70,6 +23,48 @@ For older browsers, a [Custom Elements polyfill](https://github.com/webcomponent
 - First class support for [data stores](#connecting-to-a-data-store)
 - [Server-side rendering](#server-side-rendering-ssr) with progressive hydration
 - Pass `function` to other custom hyper-elements via there tag attribute
+
+# Setup
+
+## npm
+
+```bash
+npm install hyper-element
+```
+
+### ES6 Modules
+
+```js
+import hyperElement from 'hyper-element';
+```
+
+### CommonJS
+
+```js
+const hyperElement = require('hyper-element');
+```
+
+### use
+
+```js
+hyperElement('my-elem', (Html) => Html`Hello You!`);
+```
+
+## CDN (Browser)
+
+For browser environments without a bundler:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/hyper-element@latest/build/hyperElement.min.js"></script>
+```
+
+The `hyperElement` will be available globally on `window.hyperElement`.
+
+```js
+<script>
+window.hyperElement('my-elem', Html => Html`Hello You!`);
+</script>
+```
 
 # [Live Demo](https://jsfiddle.net/codemeasandwich/k25e6ufv/)
 
@@ -85,6 +80,17 @@ For older browsers, a [Custom Elements polyfill](https://github.com/webcomponent
 | Styling              | React-style inline styles           | [CodePen](https://codepen.io/codemeasandwich/pen/RmQVKY)   |
 | Full Demo            | Complete feature demonstration      | [JSFiddle](https://jsfiddle.net/codemeasandwich/k25e6ufv/) |
 
+## Browser Support
+
+hyper-element requires native ES6 class support and the Custom Elements v1 API:
+
+![Chrome 86+](https://img.shields.io/badge/Chrome-86+-4285F4?logo=googlechrome&logoColor=white)
+![Firefox 78+](https://img.shields.io/badge/Firefox-78+-FF7139?logo=firefox&logoColor=white)
+![Safari 14.1+](https://img.shields.io/badge/Safari-14.1+-000000?logo=safari&logoColor=white)
+![Edge 86+](https://img.shields.io/badge/Edge-86+-0078D7?logo=microsoftedge&logoColor=white)
+
+For older browsers, a [Custom Elements polyfill](https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements) may be required.
+
 ---
 
 - [Browser Support](#browser-support)
@@ -97,7 +103,7 @@ For older browsers, a [Custom Elements polyfill](https://github.com/webcomponent
   - [Html.wire](#htmlwire)
   - [Html.lite](#htmllite)
   - [setup](#setup)
-  - [this](#this)
+  - [this / ctx](#this--ctx)
 - [Advanced Attributes](#advanced-attributes)
 - [Templates](#templates)
   - [Basic Syntax](#basic-template-syntax)
@@ -136,14 +142,7 @@ For older browsers, a [Custom Elements polyfill](https://github.com/webcomponent
   <body>
     <my-elem who="world"></my-elem>
     <script>
-      customElements.define(
-        'my-elem',
-        class extends hyperElement {
-          render(Html) {
-            Html`hello ${this.attrs.who}`;
-          }
-        }
-      );
+      hyperElement('my-elem', (Html, { attrs }) => Html`hello ${attrs.who}!`);
     </script>
   </body>
 </html>
@@ -586,9 +585,9 @@ setup(attachStore) {
 
 ---
 
-## this
+## this / ctx
 
-Available properties and methods on `this`:
+Available properties and methods on `this` (class-based) or `ctx` (functional API):
 
 | Property              | Description                                                                 |
 | --------------------- | --------------------------------------------------------------------------- |
@@ -644,8 +643,6 @@ this.dataset.user = { name: 'Alice' }; // Updates data-user attribute
 ### Dynamic Attributes with Custom-element Children
 
 Being able to set attributes at run-time should be the same for dealing with a native element and ones defined by hyper-element.
-
-**⚠ To support dynamic attributes on custom elements YOU MUST USE `customElements.define` which requires native ES6 support! Use `/build/hyperElement.min.js`.**
 
 This is what allows for the passing any dynamic attributes from parent to child custom element! You can also pass a `function`, `boolean`, `number`, or `object` to a child element (that extends hyperElement).
 
