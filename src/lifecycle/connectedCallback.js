@@ -15,7 +15,7 @@ import {
   markTagRegistered,
   initSSR,
 } from '../ssr/index.js';
-import { registerStyled, setRenderingInstance } from '../render/styled.js';
+import { registerStyled, setRenderingInstance } from '../styled/index.js';
 
 /**
  * Core initialization callback, called when element is connected to DOM.

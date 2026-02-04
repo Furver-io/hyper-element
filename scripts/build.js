@@ -22,7 +22,8 @@ const sharedFiles = [
 
 const browserFiles = [
   'render/creator.js', 'render/resolve.js', 'render/diff.js',
-  'render/persistent-fragment.js', 'render/update.js', 'render/styled.js', 'render/hole.js', 'render/index.js',
+  'render/persistent-fragment.js', 'render/update.js', 'render/hole.js', 'render/index.js',
+  'styled/parser-hooks.js', 'styled/registry.js', 'styled/resolution.js', 'styled/apply.js', 'styled/handler.js',
   'template/buildTemplate.js', 'attributes/dataset.js', 'attributes/attachAttrs.js',
   'html/createHtml.js',
   'ssr/pathResolver.js', 'ssr/buffer.js', 'ssr/devIndicator.js',
@@ -85,10 +86,9 @@ function createBundle() {
   if (typeof module === 'object' && module.exports) {
     // CommonJS
     module.exports = factory(isBrowser);
-  /* c8 ignore start - AMD is not tested */
+  /* AMD is not tested */
   } else if (typeof define === 'function' && define.amd) {
     define(function() { return factory(isBrowser); });
-  /* c8 ignore stop */
   } else {
     // Browser global (covered by browser tests)
     var exports = factory(isBrowser);
@@ -128,8 +128,9 @@ function createBundle() {
   var hyperElement, createFunctionalElement, configureSSR, withOptions;
   var createFragment, resolve, diff, diffFragment, PersistentFragment, nodes;
   var update, Hole, render, dom, createHtml, isKeyed, html, bind, wire;
-  var setRenderingInstance, getRenderingInstance, registerStyled, unregisterStyled;
+  var setRenderingInstance, getRenderingInstance, registerStyled, unregisterStyled, getStyledEntry;
   var resolveStylesWithEntry, resolveStyles, applyStylesToNode, resolveColors, isNestedSyntax, styledStyleHandler;
+  var STYLED_SUFFIX, RESERVED_ATTRS, detectStyledSuffix, isValidPropFlag;
   var buildTemplate, addDataset, getDataset, attachAttrs, processFragmentResult;
   var pathResolver, ssrBuffer, showDevIndicator, hideDevIndicator;
   var getNthOfTypeIndex, calculatePath, resolvePath, addToBuffer, getBufferedEvents, clearBuffer;

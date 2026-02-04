@@ -30,7 +30,7 @@ import {
   nodes,
   PersistentFragment,
 } from './persistent-fragment.js';
-import { styledStyleHandler } from './styled.js';
+import { styledStyleHandler } from '../styled/handler.js';
 
 /** @type {symbol} */
 export const ref = Symbol('ref');

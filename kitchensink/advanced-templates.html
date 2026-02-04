@@ -235,9 +235,9 @@
       </script>
     </section>
 
-    <!-- Test: #unless -->
+    <!-- Test: #unless (falsy condition - content shown) -->
     <section data-test="unless" data-test-result="pending">
-      <h2>Unless Conditional</h2>
+      <h2>Unless Conditional (Falsy)</h2>
       <p>
         {#unless condition}...{/unless} should render when condition is falsy
         (opposite of #if).
@@ -260,6 +260,39 @@
           console.log(
             'unless:',
             elem ? elem.textContent : 'null',
+            'pass:',
+            pass
+          );
+          section.dataset.testResult = pass ? 'pass' : 'fail';
+        });
+      </script>
+    </section>
+
+    <!-- Test: #unless (truthy condition - content hidden) -->
+    <section data-test="unless-truthy" data-test-result="pending">
+      <h2>Unless Conditional (Truthy)</h2>
+      <p>
+        {#unless condition}...{/unless} should NOT render when condition is truthy.
+      </p>
+      <unless-truthy-elem template>{+unless visible}HIDDEN{-unless}</unless-truthy-elem>
+      <script type="module">
+        customElements.define(
+          'unless-truthy-elem',
+          class extends hyperElement {
+            render(Html) {
+              Html`${Html.template({ visible: true })}`;
+            }
+          }
+        );
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="unless-truthy"]');
+          const elem = document.querySelector('unless-truthy-elem');
+          // Content should NOT be shown when condition is truthy
+          const pass = elem && elem.textContent.trim() === '';
+          console.log(
+            'unless-truthy:',
+            elem ? `"${elem.textContent}"` : 'null',
             'pass:',
             pass
           );
