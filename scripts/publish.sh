@@ -186,6 +186,19 @@ fi
 git tag -a "$TAG" -m "Release $TAG"
 git push origin "$TAG"
 
+# Generate AI-readable documentation (llms.txt)
+echo "Generating llms.txt..."
+node scripts/generate-llms-txt.mjs
+
+# Stage generated files if changed
+git add llms.txt llms-full.txt SKILL.md 2>/dev/null || true
+if ! git diff --cached --quiet; then
+  git commit --amend --no-edit
+  git push --force-with-lease origin HEAD
+  git tag -f "$TAG" -m "Release $TAG"
+  git push --force origin "$TAG"
+fi
+
 # Generate changelog
 PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 COMMIT_RANGE="${PREV_TAG:+$PREV_TAG..}HEAD"

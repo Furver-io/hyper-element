@@ -1,0 +1,25 @@
+{
+  "url": "https://context7.com/codemeasandwich/hyper-element",
+  "public_key": "pk_8kWkJC0xz0qcLkT6TRy1L",
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "hyper-element",
+  "description": "A lightweight Custom Elements library with fast built-in render core. Create reactive web components with efficient DOM updates, signals-based reactivity, and server-side rendering support.",
+  "folders": ["src"],
+  "excludeFolders": [
+    "node_modules",
+    "coverage",
+    "build",
+    ".git",
+    ".hooks",
+    "kitchensink"
+  ],
+  "excludeFiles": ["CHANGELOG.md", "LICENSE", "package-lock.json"],
+  "rules": [
+    "Use Html.wire(obj, ':id') for rendering arrays to prevent XSS and ensure efficient DOM reuse",
+    "Prefer functional API over class-based for simpler components",
+    "Use signals (signal, computed, effect) for reactive state",
+    "Template syntax: {+each ${array}}, {+if ${condition}}, {+unless ${condition}}",
+    "Return cleanup function from setup() for resources that need disposal",
+    "Use batch() when updating multiple signals to trigger effects only once"
+  ]
+}

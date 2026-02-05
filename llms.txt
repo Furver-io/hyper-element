@@ -1,0 +1,17 @@
+# hyper-element
+
+> Fast, lightweight web components
+
+A lightweight [Custom Elements] library with a fast, built-in render core. Your custom-element will react to tag attribute and store changes with efficient DOM updates.
+
+## Documentation
+
+- [README](https://github.com/codemeasandwich/hyper-element#readme): Complete documentation with API reference
+- [TypeScript](https://github.com/codemeasandwich/hyper-element/blob/master/index.d.ts): Type definitions
+- [Examples](https://jsfiddle.net/codemeasandwich/k25e6ufv/): Live interactive demos
+- [SKILL.md](https://github.com/codemeasandwich/hyper-element/blob/master/SKILL.md): AI agent instructions
+
+## Optional
+
+- [npm](https://www.npmjs.com/package/hyper-element): Package page
+- [GitHub](https://github.com/codemeasandwich/hyper-element): Source code and issues

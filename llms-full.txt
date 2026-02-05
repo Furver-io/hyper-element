@@ -1,5 +1,7 @@
 # hyper-element
 
+# hyper-element
+
 [![npm version](https://img.shields.io/npm/v/hyper-element.svg)](https://www.npmjs.com/package/hyper-element)
 [![npm package size](https://img.shields.io/bundlephobia/minzip/hyper-element)](https://bundlephobia.com/package/hyper-element)
 [![CI](https://github.com/codemeasandwich/hyper-element/actions/workflows/publish.yml/badge.svg)](https://github.com/codemeasandwich/hyper-element/actions/workflows/publish.yml)

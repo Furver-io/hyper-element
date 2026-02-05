@@ -44,6 +44,13 @@ jobs:
       - name: Rebuild for publish
         run: npm run build
 
+      - name: Verify AI docs included in package
+        run: |
+          npm pack --dry-run 2>&1 | grep -q "llms.txt" || (echo "ERROR: llms.txt missing from package" && exit 1)
+          npm pack --dry-run 2>&1 | grep -q "SKILL.md" || (echo "ERROR: SKILL.md missing from package" && exit 1)
+          npm pack --dry-run 2>&1 | grep -q "context7.json" || (echo "ERROR: context7.json missing from package" && exit 1)
+          echo "AI documentation files verified"
+
       - name: Publish to npm with provenance
         run: npm publish --provenance --access public
         env:
