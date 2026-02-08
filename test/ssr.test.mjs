@@ -32,7 +32,12 @@ let renderElement,
   // SSR hydration replay
   replayEvents,
   // Template processing for direct testing
-  processAdvancedTemplate;
+  processAdvancedTemplate,
+  // Node classes for direct toString() testing
+  NodeElement,
+  NodeFragment,
+  NodeText,
+  NodeComment;
 
 if (process.env.SSR_COVERAGE) {
   // Import from source files for coverage collection
@@ -42,6 +47,7 @@ if (process.env.SSR_COVERAGE) {
   const signals = await import('../src/signals/index.js');
   const ssrReplay = await import('../src/ssr/replay.js');
   const advancedTemplate = await import('../src/template/processAdvancedTemplate.js');
+  const nodesModule = await import('../src/render/nodes.js');
 
   renderElement = ssrServer.renderElement;
   renderElements = ssrServer.renderElements;
@@ -66,6 +72,11 @@ if (process.env.SSR_COVERAGE) {
   replayEvents = ssrReplay.replayEvents;
   // Template processing
   processAdvancedTemplate = advancedTemplate.processAdvancedTemplate;
+  // Node classes for direct toString() testing
+  NodeElement = nodesModule.Element;
+  NodeFragment = nodesModule.Fragment;
+  NodeText = nodesModule.Text;
+  NodeComment = nodesModule.Comment;
 
   console.log('SSR tests: Using SOURCE files (coverage mode)');
 } else {
@@ -94,6 +105,11 @@ if (process.env.SSR_COVERAGE) {
   stringUnsafe = bundle.stringUnsafe || (() => '');
   // SSR hydration replay (may not be in bundle)
   replayEvents = bundle.replayEvents || (() => {});
+  // Node classes not available in bundle - use null stubs
+  NodeElement = null;
+  NodeFragment = null;
+  NodeText = null;
+  NodeComment = null;
 
   console.log('SSR tests: Using BUNDLE (verification mode)');
 }
@@ -2219,6 +2235,139 @@ test('replayEvents: handles element with no stored state', () => {
 
   // Element should be unchanged (no state to restore)
   assert.ok(true, 'Should handle element with no stored state gracefully');
+});
+
+// ============================================================================
+// Node Class toString() Tests (nodes.js lines 89-133)
+// ============================================================================
+// These tests directly exercise Element.toString() and Fragment.toString()
+// which are used in the browser rendering path (render/index.js:40) but
+// whose coverage is not captured by browser V8 coverage collection.
+// The c8 SSR coverage collector reliably captures these calls.
+
+test('Node Element.toString: element with props and text children', () => {
+  if (!NodeElement) return; // Skip in bundle mode
+  const el = new NodeElement('div', false);
+  el.props = { id: 'test', class: 'box' };
+  el.children = [new NodeText('Hello')];
+  assert.strictEqual(el.toString(), '<div id="test" class="box">Hello</div>');
+});
+
+test('Node Element.toString: null prop value skipped', () => {
+  if (!NodeElement) return;
+  const el = new NodeElement('div', false);
+  el.props = { id: 'test', title: null };
+  el.children = [new NodeText('Content')];
+  const html = el.toString();
+  assert.ok(html.includes('id="test"'));
+  assert.ok(!html.includes('title'));
+});
+
+test('Node Element.toString: boolean true in HTML mode', () => {
+  if (!NodeElement) return;
+  const el = new NodeElement('button', false);
+  el.props = { disabled: true };
+  el.children = [new NodeText('Click')];
+  assert.strictEqual(el.toString(), '<button disabled>Click</button>');
+});
+
+test('Node Element.toString: boolean true in XML mode', () => {
+  if (!NodeElement) return;
+  const el = new NodeElement('rect', true);
+  el.props = { focusable: true };
+  el.children = [];
+  assert.strictEqual(el.toString(), '<rect focusable="" />');
+});
+
+test('Node Element.toString: boolean false skipped', () => {
+  if (!NodeElement) return;
+  const el = new NodeElement('button', false);
+  el.props = { disabled: false, hidden: true };
+  el.children = [];
+  const html = el.toString();
+  assert.ok(!html.includes('disabled'));
+  assert.ok(html.includes('hidden'));
+});
+
+test('Node Element.toString: string prop value', () => {
+  if (!NodeElement) return;
+  const el = new NodeElement('a', false);
+  el.props = { href: '/page', title: 'Link' };
+  el.children = [new NodeText('Click here')];
+  assert.strictEqual(el.toString(), '<a href="/page" title="Link">Click here</a>');
+});
+
+test('Node Element.toString: TEXT_ELEMENT uses .data property', () => {
+  if (!NodeElement) return;
+  const el = new NodeElement('textarea', false);
+  el.props = {};
+  const textNode = new NodeText('User input');
+  el.children = [textNode];
+  const html = el.toString();
+  assert.strictEqual(html, '<textarea>User input</textarea>');
+});
+
+test('Node Element.toString: non-text element children use toString', () => {
+  if (!NodeElement) return;
+  const parent = new NodeElement('div', false);
+  parent.props = {};
+  const child = new NodeElement('span', false);
+  child.props = {};
+  child.children = [new NodeText('nested')];
+  parent.children = [child];
+  assert.strictEqual(parent.toString(), '<div><span>nested</span></div>');
+});
+
+test('Node Element.toString: XML self-closing', () => {
+  if (!NodeElement) return;
+  const el = new NodeElement('circle', true);
+  el.props = { cx: '50', cy: '50', r: '25' };
+  el.children = [];
+  assert.strictEqual(el.toString(), '<circle cx="50" cy="50" r="25" />');
+});
+
+test('Node Element.toString: void element', () => {
+  if (!NodeElement) return;
+  const el = new NodeElement('br', false);
+  el.props = {};
+  el.children = [];
+  assert.strictEqual(el.toString(), '<br>');
+});
+
+test('Node Element.toString: empty non-void element', () => {
+  if (!NodeElement) return;
+  const el = new NodeElement('div', false);
+  el.props = {};
+  el.children = [];
+  assert.strictEqual(el.toString(), '<div></div>');
+});
+
+test('Node Element.toString: void element with attributes', () => {
+  if (!NodeElement) return;
+  const el = new NodeElement('img', false);
+  el.props = { src: 'test.png', alt: 'Test' };
+  el.children = [];
+  assert.strictEqual(el.toString(), '<img src="test.png" alt="Test">');
+});
+
+test('Node Fragment.toString: joins children', () => {
+  if (!NodeFragment) return;
+  const frag = new NodeFragment();
+  const span1 = new NodeElement('span', false);
+  span1.props = {};
+  span1.children = [new NodeText('A')];
+  const span2 = new NodeElement('span', false);
+  span2.props = {};
+  span2.children = [new NodeText('B')];
+  frag.children = [span1, span2];
+  assert.strictEqual(frag.toString(), '<span>A</span><span>B</span>');
+});
+
+test('Node Fragment.toString: empty fragment', () => {
+  if (!NodeFragment) return;
+  const frag = new NodeFragment();
+  frag.children = [];
+  assert.strictEqual(frag.toString(), '');
 });
 
 // Run tests if this is the main module

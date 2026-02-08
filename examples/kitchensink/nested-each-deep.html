@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nested Each Deep - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Nested Each Deep Coverage Tests</h1>
+    <p>Tests for nested {+each {property}} syntax to cover parseEachBlocks.js lines 140-192.</p>
+
+    <!-- Test 1: Basic nested each with property reference -->
+    <section data-test="nested-property-each" data-test-result="pending">
+      <h2>1. Nested Each with Property Reference</h2>
+      <p>Uses {+each {items}} syntax to iterate over a nested array property.</p>
+      <pre><code>const categories = [
+  { name: 'Fruits', items: ['Apple', 'Banana'] },
+  { name: 'Veggies', items: ['Carrot', 'Broccoli'] }
+];
+Html`{+each ${categories}}
+  &lt;div&gt;{name}: {+each {items}}&lt;span&gt;{...}&lt;/span&gt;{-each}&lt;/div&gt;
+{-each}`;</code></pre>
+      <div id="output-1"></div>
+      <script type="module">
+        customElements.define(
+          'nested-each-property',
+          class extends hyperElement {
+            render(Html) {
+              const categories = [
+                { name: 'Fruits', items: ['Apple', 'Banana'] },
+                { name: 'Veggies', items: ['Carrot', 'Broccoli'] }
+              ];
+              Html`<div id="nested-each-result-1">{+each ${categories}}
+                <div class="category">{name}: {+each {items}}<span class="item">{...}</span>{-each}</div>
+              {-each}</div>`;
+            }
+          }
+        );
+
+        const elem = document.createElement('nested-each-property');
+        document.getElementById('output-1').appendChild(elem);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="nested-property-each"]');
+          const result = document.getElementById('nested-each-result-1');
+          const categories = result?.querySelectorAll('.category') || [];
+          const items = result?.querySelectorAll('.item') || [];
+
+          const hasTwoCategories = categories.length === 2;
+          const hasFourItems = items.length === 4;
+          const firstCatHasFruits = categories[0]?.textContent.includes('Fruits');
+          const hasApple = items[0]?.textContent === 'Apple';
+          const hasBanana = items[1]?.textContent === 'Banana';
+
+          if (hasTwoCategories && hasFourItems && firstCatHasFruits && hasApple && hasBanana) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('Nested property each test failed:', {
+              hasTwoCategories, hasFourItems, firstCatHasFruits, hasApple, hasBanana,
+              html: result?.innerHTML
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 2: Two-level nesting with property reference (supported pattern) -->
+    <section data-test="deep-nested-each" data-test-result="pending">
+      <h2>2. Two-Level Nested Each</h2>
+      <p>Two levels of nesting - outer with interpolation, inner with property reference.</p>
+      <div id="output-2"></div>
+      <script type="module">
+        customElements.define(
+          'deep-nested-each',
+          class extends hyperElement {
+            render(Html) {
+              // Flat structure that only needs 2 levels
+              const stores = [
+                { name: 'Store A', products: ['Apples', 'Oranges', 'Milk'] },
+                { name: 'Store B', products: ['Bread', 'Cheese'] }
+              ];
+              Html`<div id="nested-each-result-2">{+each ${stores}}<div class="store">{name}: {+each {products}}<span class="product">{...}</span>{-each}</div>{-each}</div>`;
+            }
+          }
+        );
+
+        const elem = document.createElement('deep-nested-each');
+        document.getElementById('output-2').appendChild(elem);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="deep-nested-each"]');
+          const result = document.getElementById('nested-each-result-2');
+          const stores = result?.querySelectorAll('.store') || [];
+          const products = result?.querySelectorAll('.product') || [];
+
+          const hasTwoStores = stores.length === 2;
+          const hasFiveProducts = products.length === 5;
+          const hasApples = Array.from(products).some(p => p.textContent === 'Apples');
+          const hasBread = Array.from(products).some(p => p.textContent === 'Bread');
+
+          if (hasTwoStores && hasFiveProducts && hasApples && hasBread) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('Deep nested each test failed:', {
+              hasTwoStores, hasFiveProducts, hasApples, hasBread,
+              html: result?.innerHTML
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 3: Nested each with empty array -->
+    <section data-test="nested-empty-array" data-test-result="pending">
+      <h2>3. Nested Each with Empty/Missing Array</h2>
+      <p>Handles gracefully when nested property is not an array or is empty.</p>
+      <div id="output-3"></div>
+      <script type="module">
+        customElements.define(
+          'nested-empty-each',
+          class extends hyperElement {
+            render(Html) {
+              const data = [
+                { name: 'Has Items', items: ['One', 'Two'] },
+                { name: 'No Items', items: [] },
+                { name: 'Missing Items' } // items is undefined
+              ];
+              Html`<div id="nested-each-result-3">{+each ${data}}
+                <div class="row">{name}: [{+each {items}}<span class="item">{...}</span>{-each}]</div>
+              {-each}</div>`;
+            }
+          }
+        );
+
+        const elem = document.createElement('nested-empty-each');
+        document.getElementById('output-3').appendChild(elem);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="nested-empty-array"]');
+          const result = document.getElementById('nested-each-result-3');
+          const rows = result?.querySelectorAll('.row') || [];
+          const items = result?.querySelectorAll('.item') || [];
+
+          // Should have 3 rows but only 2 items (from first row)
+          const hasThreeRows = rows.length === 3;
+          const hasTwoItems = items.length === 2;
+          const firstRowHasItems = rows[0]?.textContent.includes('One');
+          const secondRowEmpty = rows[1]?.textContent.includes('No Items: []');
+
+          if (hasThreeRows && hasTwoItems && firstRowHasItems) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('Nested empty array test failed:', {
+              hasThreeRows, hasTwoItems, firstRowHasItems, secondRowEmpty,
+              html: result?.innerHTML
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 4: Nested each with object property access in inner loop -->
+    <section data-test="nested-object-props" data-test-result="pending">
+      <h2>4. Nested Each with Object Properties in Inner Loop</h2>
+      <p>Access object properties within nested each using {property}.</p>
+      <div id="output-4"></div>
+      <script type="module">
+        customElements.define(
+          'nested-object-props',
+          class extends hyperElement {
+            render(Html) {
+              const teams = [
+                {
+                  name: 'Team Alpha',
+                  members: [
+                    { name: 'Alice', role: 'Lead' },
+                    { name: 'Bob', role: 'Dev' }
+                  ]
+                },
+                {
+                  name: 'Team Beta',
+                  members: [
+                    { name: 'Charlie', role: 'QA' }
+                  ]
+                }
+              ];
+              Html`<div id="nested-each-result-4">{+each ${teams}}
+                <div class="team">{name}:
+                  {+each {members}}<span class="member">{name} ({role})</span>{-each}
+                </div>
+              {-each}</div>`;
+            }
+          }
+        );
+
+        const elem = document.createElement('nested-object-props');
+        document.getElementById('output-4').appendChild(elem);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="nested-object-props"]');
+          const result = document.getElementById('nested-each-result-4');
+          const teams = result?.querySelectorAll('.team') || [];
+          const members = result?.querySelectorAll('.member') || [];
+
+          const hasTwoTeams = teams.length === 2;
+          const hasThreeMembers = members.length === 3;
+          const aliceIsLead = members[0]?.textContent === 'Alice (Lead)';
+          const charlieIsQA = members[2]?.textContent === 'Charlie (QA)';
+
+          if (hasTwoTeams && hasThreeMembers && aliceIsLead && charlieIsQA) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('Nested object props test failed:', {
+              hasTwoTeams, hasThreeMembers, aliceIsLead, charlieIsQA,
+              html: result?.innerHTML
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 5: Nested each with index access -->
+    <section data-test="nested-index-access" data-test-result="pending">
+      <h2>5. Nested Each with Index Access {@}</h2>
+      <p>Uses {@} to access current index in nested loops.</p>
+      <div id="output-5"></div>
+      <script type="module">
+        customElements.define(
+          'nested-index-access',
+          class extends hyperElement {
+            render(Html) {
+              const data = [
+                { group: 'A', values: [10, 20, 30] },
+                { group: 'B', values: [40, 50] }
+              ];
+              Html`<div id="nested-each-result-5">{+each ${data}}
+                <div class="group">Group {group} (idx {@}):
+                  {+each {values}}<span class="val">[{@}]={...}</span>{-each}
+                </div>
+              {-each}</div>`;
+            }
+          }
+        );
+
+        const elem = document.createElement('nested-index-access');
+        document.getElementById('output-5').appendChild(elem);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="nested-index-access"]');
+          const result = document.getElementById('nested-each-result-5');
+          const groups = result?.querySelectorAll('.group') || [];
+          const vals = result?.querySelectorAll('.val') || [];
+
+          const hasTwoGroups = groups.length === 2;
+          const hasFiveVals = vals.length === 5;
+          const firstValCorrect = vals[0]?.textContent === '[0]=10';
+          const lastValCorrect = vals[4]?.textContent === '[1]=50';
+          const groupAHasIdx0 = groups[0]?.textContent.includes('idx 0');
+          const groupBHasIdx1 = groups[1]?.textContent.includes('idx 1');
+
+          if (hasTwoGroups && hasFiveVals && firstValCorrect && lastValCorrect && groupAHasIdx0 && groupBHasIdx1) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('Nested index access test failed:', {
+              hasTwoGroups, hasFiveVals, firstValCorrect, lastValCorrect, groupAHasIdx0, groupBHasIdx1,
+              html: result?.innerHTML
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 6: Multiple blocks after closing tag (lines 306-311) -->
+    <section data-test="multiple-blocks-after" data-test-result="pending">
+      <h2>6. Multiple Blocks After Closing Tag</h2>
+      <p>Tests having another block immediately after {-each} on the same template string.</p>
+      <div id="output-6"></div>
+      <script type="module">
+        customElements.define(
+          'multiple-blocks-after',
+          class extends hyperElement {
+            render(Html) {
+              const items = ['A', 'B'];
+              const moreItems = ['X', 'Y'];
+              // Two each blocks in sequence - tests the afterBlock path (lines 306-311)
+              Html`<div id="nested-each-result-6">
+                {+each ${items}}<span class="first">{...}</span>{-each}{+each ${moreItems}}<span class="second">{...}</span>{-each}
+              </div>`;
+            }
+          }
+        );
+
+        const elem = document.createElement('multiple-blocks-after');
+        document.getElementById('output-6').appendChild(elem);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="multiple-blocks-after"]');
+          const result = document.getElementById('nested-each-result-6');
+          const firstItems = result?.querySelectorAll('.first') || [];
+          const secondItems = result?.querySelectorAll('.second') || [];
+
+          const hasTwoFirst = firstItems.length === 2;
+          const hasTwoSecond = secondItems.length === 2;
+          const firstA = firstItems[0]?.textContent === 'A';
+          const secondX = secondItems[0]?.textContent === 'X';
+
+          if (hasTwoFirst && hasTwoSecond && firstA && secondX) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('Multiple blocks after test failed:', {
+              hasTwoFirst, hasTwoSecond, firstA, secondX,
+              html: result?.innerHTML
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 7: Depth tracking with if/each blocks (lines 70, 72-73) -->
+    <section data-test="depth-tracking" data-test-result="pending">
+      <h2>7. Depth Tracking with Mixed Blocks</h2>
+      <p>Tests proper depth tracking with {+if} and {+each} blocks.</p>
+      <div id="output-7"></div>
+      <script type="module">
+        customElements.define(
+          'depth-tracking-elem',
+          class extends hyperElement {
+            render(Html) {
+              const items = [
+                { name: 'Active', active: true },
+                { name: 'Inactive', active: false }
+              ];
+              const showHeader = true;
+              // Mix of if and each blocks tests depth tracking in findMatchingClose
+              Html`<div id="nested-each-result-7">{+if ${showHeader}}<h3 class="header">Items</h3>{-if}{+each ${items}}<div class="item">{name}{+if ${true}}<span class="badge">OK</span>{-if}</div>{-each}</div>`;
+            }
+          }
+        );
+
+        const elem = document.createElement('depth-tracking-elem');
+        document.getElementById('output-7').appendChild(elem);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="depth-tracking"]');
+          const result = document.getElementById('nested-each-result-7');
+          const header = result?.querySelector('.header');
+          const items = result?.querySelectorAll('.item') || [];
+          const badges = result?.querySelectorAll('.badge') || [];
+
+          const hasHeader = header && header.textContent === 'Items';
+          const hasTwoItems = items.length === 2;
+          const hasTwoBadges = badges.length === 2;
+
+          if (hasHeader && hasTwoItems && hasTwoBadges) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('Depth tracking test failed:', {
+              hasHeader, hasTwoItems, hasTwoBadges,
+              html: result?.innerHTML
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <!-- Test 8: Nested property path (dot notation in {+each}) -->
+    <section data-test="nested-dot-path" data-test-result="pending">
+      <h2>8. Nested Dot Path in {+each}</h2>
+      <p>Uses dot notation to access deeply nested arrays: {+each {a.b.c}}</p>
+      <div id="output-8"></div>
+      <script type="module">
+        customElements.define(
+          'nested-dot-path',
+          class extends hyperElement {
+            render(Html) {
+              const data = [
+                { meta: { tags: { list: ['tag1', 'tag2'] } } },
+                { meta: { tags: { list: ['tag3'] } } }
+              ];
+              Html`<div id="nested-each-result-8">{+each ${data}}
+                <div class="item">{+each {meta.tags.list}}<span class="tag">{...}</span>{-each}</div>
+              {-each}</div>`;
+            }
+          }
+        );
+
+        const elem = document.createElement('nested-dot-path');
+        document.getElementById('output-8').appendChild(elem);
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="nested-dot-path"]');
+          const result = document.getElementById('nested-each-result-8');
+          const items = result?.querySelectorAll('.item') || [];
+          const tags = result?.querySelectorAll('.tag') || [];
+
+          const hasTwoItems = items.length === 2;
+          const hasThreeTags = tags.length === 3;
+          const firstTag = tags[0]?.textContent === 'tag1';
+          const lastTag = tags[2]?.textContent === 'tag3';
+
+          if (hasTwoItems && hasThreeTags && firstTag && lastTag) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('Nested dot path test failed:', {
+              hasTwoItems, hasThreeTags, firstTag, lastTag,
+              html: result?.innerHTML
+            });
+          }
+        });
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>
