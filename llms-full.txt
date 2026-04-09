@@ -1,5 +1,4 @@
 # hyper-element
-
 # hyper-element
 
 [![npm version](https://img.shields.io/npm/v/hyper-element.svg)](https://www.npmjs.com/package/hyper-element)
@@ -460,6 +459,41 @@ Html`{+unless ${hasErrors}}<p>Form is valid</p>{-unless}`;
 Html`{+unless ${isValid}}Invalid input!{else}Looking good!{-unless}`;
 ```
 
+#### Using Attributes to Drive Conditionals
+
+Component attributes can directly control what gets rendered:
+
+```js
+// Notification banner with attribute-driven rendering
+hyperElement('notification-banner', {
+  setup: (ctx) => {
+    ctx.dismiss = () => ctx.element.remove();
+  },
+
+  render: (Html, ctx) => Html`
+    <div class="banner ${ctx.attrs.type}">
+      {+if ${ctx.attrs.type === 'error'}}
+        <span class="icon">!</span>
+      {-if}
+      {+if ${ctx.attrs.type === 'success'}}
+        <span class="icon">OK</span>
+      {-if}
+      {+if ${ctx.attrs.type === 'warning'}}
+        <span class="icon">?</span>
+      {-if}
+      <p>${ctx.attrs.message}</p>
+      {+if ${ctx.attrs.dismissible}}
+        <button onclick=${ctx.dismiss}>Close</button>
+      {-if}
+    </div>
+  `,
+});
+
+// Usage:
+// <notification-banner type="error" message="Something went wrong!" dismissible />
+// <notification-banner type="success" message="Saved successfully!" />
+```
+
 ---
 
 ## Html.lite
@@ -688,6 +722,108 @@ window.customElements.define(
 
 ---
 
+## Form Validation & Custom Events
+
+Build reusable form components with validation logic and custom event dispatching. Use `ctx.element.dispatchEvent()` to communicate validation state to parent components.
+
+### Validated Input Component
+
+```js
+hyperElement('validated-input', {
+  setup: (ctx, onNext) => {
+    const state = { value: '', error: null, touched: false };
+    const render = onNext(() => state);
+
+    ctx.validate = (value) => {
+      const rules = ctx.attrs.rules || {};
+      if (rules.required && !value) return 'Required';
+      if (rules.minLength && value.length < rules.minLength)
+        return `Min ${rules.minLength} characters`;
+      if (rules.pattern && !new RegExp(rules.pattern).test(value))
+        return 'Invalid format';
+      return null;
+    };
+
+    ctx.handleInput = (e) => {
+      state.value = e.target.value;
+      state.touched = true;
+      state.error = ctx.validate(state.value);
+      render();
+
+      // Dispatch custom event to parent
+      ctx.element.dispatchEvent(
+        new CustomEvent('validated', {
+          bubbles: true,
+          detail: { value: state.value, error: state.error, valid: !state.error },
+        })
+      );
+    };
+  },
+
+  render: (Html, ctx, state) => Html`
+    <div class="form-field">
+      <input
+        type=${ctx.attrs.type || 'text'}
+        value=${state.value}
+        oninput=${ctx.handleInput}
+        placeholder=${ctx.attrs.placeholder || ''}
+      />
+      {+if ${state.error && state.touched}}
+        <span class="error">${state.error}</span>
+      {-if}
+    </div>
+  `,
+});
+```
+
+### Parent Listening for Custom Events
+
+```js
+hyperElement('signup-form', {
+  setup: (ctx, onNext) => {
+    const state = { email: { valid: false }, password: { valid: false } };
+    const render = onNext(() => state);
+
+    ctx.handleValidated = (e) => {
+      const { name } = e.target.closest('validated-input').attributes;
+      state[name.value] = e.detail;
+      render();
+    };
+
+    ctx.handleSubmit = (e) => {
+      e.preventDefault();
+      if (state.email.valid && state.password.valid) {
+        console.log('Form submitted!', state);
+      }
+    };
+  },
+
+  render: (Html, ctx, state) => Html`
+    <form onsubmit=${ctx.handleSubmit}>
+      <validated-input
+        name="email"
+        type="email"
+        placeholder="Email"
+        rules=${{ required: true, pattern: '^[^@]+@[^@]+$' }}
+        onvalidated=${ctx.handleValidated}
+      />
+      <validated-input
+        name="password"
+        type="password"
+        placeholder="Password"
+        rules=${{ required: true, minLength: 8 }}
+        onvalidated=${ctx.handleValidated}
+      />
+      <button type="submit" disabled=${!state.email.valid || !state.password.valid}>
+        Sign Up
+      </button>
+    </form>
+  `,
+});
+```
+
+---
+
 # Templates
 
 Unlike standard Custom Elements which typically discard or replace their innerHTML, hyper-element's template system **preserves** the markup inside your element and uses it as a reusable template. This means your custom element primarily holds logic, while the template markup between the tags defines how data should be rendered.
@@ -897,6 +1033,104 @@ customElements.define(
 
 **Live Example of using an [asynchronous fragment](https://codepen.io/codemeasandwich/pen/MdQrVd)**
 
+## Data Fetching Pattern
+
+For components that need to fetch data on mount, use `setup()` with async operations:
+
+```js
+hyperElement('user-profile', {
+  setup: (ctx, onNext) => {
+    const state = { user: null, loading: true, error: null };
+    const render = onNext(() => state);
+
+    // Fetch data when component mounts
+    fetch(`/api/users/${ctx.attrs.userId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((user) => {
+        state.user = user;
+        state.loading = false;
+        render();
+      })
+      .catch((err) => {
+        state.error = err.message;
+        state.loading = false;
+        render();
+      });
+  },
+
+  render: (Html, ctx, state) => Html`
+    {+if ${state.loading}}
+      <div class="spinner">Loading...</div>
+    {-if}
+    {+if ${state.error}}
+      <div class="error">Error: ${state.error}</div>
+    {-if}
+    {+if ${state.user}}
+      <div class="profile">
+        <img src=${state.user.avatar} alt=${state.user.name} />
+        <h2>${state.user.name}</h2>
+        <p>${state.user.email}</p>
+        <p>Member since: ${new Date(state.user.createdAt).toLocaleDateString()}</p>
+      </div>
+    {-if}
+  `,
+});
+
+// Usage: <user-profile user-id="123"></user-profile>
+```
+
+For components that need to refetch when attributes change, trigger the fetch in both `setup()` and watch for attribute updates:
+
+```js
+hyperElement('user-profile-reactive', {
+  setup: (ctx, onNext) => {
+    const state = { user: null, loading: true, error: null };
+    const render = onNext(() => state);
+
+    // Fetch function that can be called multiple times
+    ctx.fetchUser = async (userId) => {
+      state.loading = true;
+      state.error = null;
+      render();
+
+      try {
+        const res = await fetch(`/api/users/${userId}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        state.user = await res.json();
+      } catch (err) {
+        state.error = err.message;
+      }
+      state.loading = false;
+      render();
+    };
+
+    // Initial fetch
+    ctx.fetchUser(ctx.attrs.userId);
+  },
+
+  // This render is called whenever attrs change
+  render: (Html, ctx, state) => {
+    // Check if userId changed and refetch
+    if (ctx.attrs.userId && state.user?.id !== ctx.attrs.userId) {
+      ctx.fetchUser(ctx.attrs.userId);
+    }
+
+    return Html`
+      {+if ${state.loading}}<div>Loading...</div>{-if}
+      {+if ${state.error}}<div>Error: ${state.error}</div>{-if}
+      {+if ${state.user && !state.loading}}
+        <div class="profile">
+          <h2>${state.user.name}</h2>
+        </div>
+      {-if}
+    `;
+  },
+});
+```
+
 ---
 
 # Styling
@@ -919,6 +1153,81 @@ render(Html) {
 ```
 
 **Live Example of [styling](https://codepen.io/codemeasandwich/pen/RmQVKY)**
+
+## List with State-Based Styling
+
+Combine list rendering with dynamic inline styles driven by component state:
+
+```js
+hyperElement('task-list', {
+  setup: (ctx, onNext) => {
+    const state = {
+      filter: 'all',
+      tasks: ctx.dataset.tasks || [
+        { id: 1, text: 'Learn hyper-element', done: true },
+        { id: 2, text: 'Build an app', done: false },
+        { id: 3, text: 'Deploy to production', done: false },
+      ],
+    };
+    const render = onNext(() => state);
+
+    ctx.setFilter = (filter) => {
+      state.filter = filter;
+      render();
+    };
+
+    ctx.toggleTask = (id) => {
+      const task = state.tasks.find((t) => t.id === id);
+      if (task) task.done = !task.done;
+      render();
+    };
+  },
+
+  render: (Html, ctx, { filter, tasks }) => {
+    const filtered = tasks.filter((t) =>
+      filter === 'all' ? true : filter === 'done' ? t.done : !t.done
+    );
+
+    return Html`
+      <div>
+        <div class="filters">
+          ${['all', 'active', 'done'].map(
+            (f) => Html.wire({ f }, ':filter')`
+            <button
+              onclick=${() => ctx.setFilter(f)}
+              style=${{
+                backgroundColor: filter === f ? '#007bff' : '#f8f9fa',
+                color: filter === f ? '#fff' : '#333',
+                fontWeight: filter === f ? 'bold' : 'normal',
+                border: '1px solid #ddd',
+                padding: '8px 16px',
+                cursor: 'pointer',
+              }}
+            >${f}</button>
+          `
+          )}
+        </div>
+        <ul style=${{ listStyle: 'none', padding: 0 }}>
+          ${filtered.map(
+            (task) => Html.wire(task, ':task')`
+            <li
+              onclick=${() => ctx.toggleTask(task.id)}
+              style=${{
+                textDecoration: task.done ? 'line-through' : 'none',
+                opacity: task.done ? 0.6 : 1,
+                padding: '12px',
+                borderBottom: '1px solid #eee',
+                cursor: 'pointer',
+              }}
+            >${task.text}</li>
+          `
+          )}
+        </ul>
+      </div>
+    `;
+  },
+});
+```
 
 ---
 
@@ -989,6 +1298,223 @@ customElements.define(
     }
   }
 );
+```
+
+## Dual Reactivity: Attributes + Store
+
+Components automatically re-render when **either** attributes change **or** the store updates. This lets you build components that respond to both parent-driven props and global state:
+
+```js
+// Global store
+const appStore = {
+  users: {},
+  listeners: new Set(),
+  subscribe(fn) {
+    this.listeners.add(fn);
+  },
+  unsubscribe(fn) {
+    this.listeners.delete(fn);
+  },
+  notify() {
+    this.listeners.forEach((fn) => fn());
+  },
+  setUserStatus(userId, status) {
+    this.users[userId] = { ...this.users[userId], status };
+    this.notify();
+  },
+};
+
+// Component reacts to BOTH attribute changes AND store updates
+hyperElement('user-status', {
+  setup: (ctx, onNext) => {
+    const render = onNext(() => appStore.users);
+
+    // Subscribe to store changes
+    appStore.subscribe(render);
+
+    // Component ALSO re-renders automatically when attrs change
+    // e.g., <user-status user-id="123" /> → <user-status user-id="456" />
+
+    return () => appStore.unsubscribe(render);
+  },
+
+  render: (Html, ctx, users) => Html`
+    <div class="user-status">
+      <!-- Reacts to attribute changes -->
+      <h3>User: ${ctx.attrs.userId}</h3>
+      <!-- Reacts to store updates -->
+      <span class="status ${users[ctx.attrs.userId]?.status || 'offline'}">
+        ${users[ctx.attrs.userId]?.status || 'offline'}
+      </span>
+    </div>
+  `,
+});
+
+// Usage: Component updates when either happens:
+// 1. Attribute change: element.setAttribute('user-id', '456')
+// 2. Store update: appStore.setUserStatus('123', 'online')
+```
+
+## Persisting State to Stores
+
+Write component actions back to external stores (Redux pattern):
+
+```js
+// Redux-style store
+const todoStore = {
+  state: { todos: [] },
+  listeners: new Set(),
+  subscribe(fn) {
+    this.listeners.add(fn);
+  },
+  dispatch(action) {
+    switch (action.type) {
+      case 'ADD_TODO':
+        this.state.todos.push({ id: Date.now(), text: action.text, done: false });
+        break;
+      case 'TOGGLE_TODO':
+        const todo = this.state.todos.find((t) => t.id === action.id);
+        if (todo) todo.done = !todo.done;
+        break;
+      case 'REMOVE_TODO':
+        this.state.todos = this.state.todos.filter((t) => t.id !== action.id);
+        break;
+    }
+    this.listeners.forEach((fn) => fn());
+  },
+  getState() {
+    return this.state;
+  },
+};
+
+// Component that reads FROM and writes TO the store
+hyperElement('todo-item', {
+  setup: (ctx, onNext) => {
+    const render = onNext(() => todoStore.getState());
+    todoStore.subscribe(render);
+
+    // Actions dispatch to store (persist state changes)
+    ctx.toggle = () => {
+      todoStore.dispatch({ type: 'TOGGLE_TODO', id: ctx.attrs.todoId });
+    };
+
+    ctx.remove = () => {
+      todoStore.dispatch({ type: 'REMOVE_TODO', id: ctx.attrs.todoId });
+    };
+  },
+
+  render: (Html, ctx, { todos }) => {
+    const todo = todos.find((t) => t.id === ctx.attrs.todoId);
+    if (!todo) return Html``;
+
+    return Html`
+      <li style=${{ textDecoration: todo.done ? 'line-through' : 'none' }}>
+        <input type="checkbox" checked=${todo.done} onclick=${ctx.toggle} />
+        <span>${todo.text}</span>
+        <button onclick=${ctx.remove}>Delete</button>
+      </li>
+    `;
+  },
+});
+```
+
+## Multi-Component State Sharing
+
+Multiple components can share the same store, each rendering their own view of the data:
+
+```js
+// Shared store - single source of truth
+const cartStore = {
+  state: { items: [], user: null },
+  listeners: new Set(),
+
+  subscribe(fn) {
+    this.listeners.add(fn);
+  },
+  unsubscribe(fn) {
+    this.listeners.delete(fn);
+  },
+  notify() {
+    this.listeners.forEach((fn) => fn());
+  },
+
+  // Actions
+  addItem(item) {
+    this.state.items.push(item);
+    this.notify();
+  },
+  removeItem(id) {
+    this.state.items = this.state.items.filter((i) => i.id !== id);
+    this.notify();
+  },
+  getState() {
+    return this.state;
+  },
+};
+
+// Component 1: Cart badge in header (shows count)
+hyperElement('cart-badge', {
+  setup: (ctx, onNext) => {
+    const render = onNext(() => cartStore.getState());
+    cartStore.subscribe(render);
+    return () => cartStore.unsubscribe(render);
+  },
+
+  render: (Html, ctx, { items }) => Html`
+    <span class="badge">${items.length}</span>
+  `,
+});
+
+// Component 2: Cart contents (shows full list)
+hyperElement('cart-list', {
+  setup: (ctx, onNext) => {
+    const render = onNext(() => cartStore.getState());
+    cartStore.subscribe(render);
+
+    ctx.remove = (id) => cartStore.removeItem(id);
+
+    return () => cartStore.unsubscribe(render);
+  },
+
+  render: (Html, ctx, { items }) => Html`
+    <ul>
+      ${items.map(
+        (item) => Html.wire(item, ':item')`
+        <li>
+          ${item.name} - $${item.price}
+          <button onclick=${() => ctx.remove(item.id)}>Remove</button>
+        </li>
+      `
+      )}
+    </ul>
+    <p>Total: $${items.reduce((sum, i) => sum + i.price, 0)}</p>
+  `,
+});
+
+// Component 3: Product card (adds to shared cart)
+hyperElement('product-card', {
+  setup: (ctx) => {
+    ctx.addToCart = () =>
+      cartStore.addItem({
+        id: Date.now(),
+        name: ctx.attrs.name,
+        price: Number(ctx.attrs.price),
+      });
+  },
+
+  render: (Html, ctx) => Html`
+    <div class="product">
+      <h3>${ctx.attrs.name}</h3>
+      <p>$${ctx.attrs.price}</p>
+      <button onclick=${ctx.addToCart}>Add to Cart</button>
+    </div>
+  `,
+});
+
+// All three components stay in sync:
+// <cart-badge></cart-badge>           <!-- Shows "2" -->
+// <cart-list></cart-list>             <!-- Shows items -->
+// <product-card name="Widget" price="9.99"></product-card>
 ```
 
 ---
@@ -1560,10 +2086,11 @@ hyper-element/
 ├── build/
 │   ├── hyperElement.min.js  # Minified production build
 │   └── hyperElement.min.js.map
-├── kitchensink/             # Test suite
-│   ├── kitchensink.spec.js  # Playwright test runner
-│   └── *.html               # Test case files
-├── example/                 # Example project
+├── examples/                # Examples and test suite
+│   ├── kitchensink/         # Interactive demos + E2E tests
+│   │   ├── kitchensink.spec.js  # Playwright test runner
+│   │   └── *.html           # Test case files
+│   └── boilerplate/         # Starter template
 ├── docs/                    # Documentation
 ├── .hooks/                  # Git hooks
 │   ├── pre-commit           # Main hook orchestrator
@@ -1669,7 +2196,7 @@ This shows:
 
 ### Test Files
 
-Tests are located in `kitchensink/` and run via Playwright. See `kitchensink/kitchensink.spec.js` for the test suite.
+Tests are located in `examples/kitchensink/` and run via Playwright. See `examples/kitchensink/kitchensink.spec.js` for the test suite.
 
 ## Contributing
 

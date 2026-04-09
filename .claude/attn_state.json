@@ -1,0 +1,19 @@
+{
+  "scores": {
+    "CLAUDE.md": 0.11764899999999995,
+    "personas/persona-tars.md": 0.08087738116777812,
+    "personas/persona-stem.md": 0.11764899999999995,
+    "personas/persona-red-queen.md": 0.08235429999999996,
+    "todo/ssr-hydration-event-replay.md": 9.095436801298589e-7,
+    "todo/ssr-string-rendering.md": 9.095436801298589e-7,
+    "todo/partial-interpolation-fix.md": 9.095436801298589e-7,
+    "todo/styled-system.md": 9.095436801298589e-7,
+    "todo/ai-discoverability.md": 9.095436801298589e-7,
+    "todo/readme-package-managers.md": 9.095436801298589e-7,
+    "todo/social-media-publish.md": 0.35,
+    "todo/brochure.md": 0.35
+  },
+  "turn_count": 312,
+  "last_update": "2026-02-11T15:21:17.671Z",
+  "current_phase": 1
+}

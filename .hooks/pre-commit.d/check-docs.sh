@@ -10,7 +10,7 @@ MISSING_README=()
 MISSING_FILES_MD=()
 
 # Directories to exclude from documentation checks
-EXCLUDED_DIRS="node_modules|coverage|.next|.git|.hooks|.github|example|todo|scripts|build|test-results|playwright-report|docs|kitchensink"
+EXCLUDED_DIRS="node_modules|coverage|.next|.git|.hooks|.github|examples|todo|scripts|build|test-results|playwright-report|docs"
 
 # Function to check if a path should be excluded
 is_excluded() {

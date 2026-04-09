@@ -6,7 +6,7 @@ Testing infrastructure for hyper-element.
 
 ### Browser Integration Tests (Playwright)
 
-Located in `kitchensink/`. Run via Playwright:
+Located in `examples/kitchensink/`. Run via Playwright:
 
 ```bash
 npm run test:src      # Source coverage mode

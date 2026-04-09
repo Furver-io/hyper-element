@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "3.0.0",
   "name": "hyper-element",
   "author": "Brian Shannon (github.com/codemeasandwich)",
   "description": "Fast, lightweight web components",
@@ -25,7 +25,7 @@
     "test:coverage-report": "node test/coverage-report.mjs",
     "test:ui": "playwright test --project=source-coverage --ui",
     "test:headed": "playwright test --project=source-coverage --headed",
-    "kitchensink": "npm run build && cp -r build kitchensink/ && (sleep 1 && open http://localhost:3000) & npx serve ./kitchensink",
+    "kitchensink": "npm run build && cp -r build examples/kitchensink/ && (sleep 1 && open http://localhost:3000) & npx serve ./examples/kitchensink",
     "release": "bash scripts/publish.sh",
     "hooks:install": "cp .hooks/pre-commit .git/hooks/ && cp .hooks/commit-msg .git/hooks/ && cp -r .hooks/pre-commit.d .git/hooks/ && chmod +x .git/hooks/pre-commit .git/hooks/commit-msg .git/hooks/pre-commit.d/*.sh",
     "prepare": "npm run hooks:install",
@@ -79,5 +79,8 @@
     "source-map": "^0.7.6",
     "union-value": "^2.0.1",
     "v8-to-istanbul": "^9.3.0"
+  },
+  "dependencies": {
+    "get-shit-done-cc": "^1.11.1"
   }
 }

@@ -11,7 +11,7 @@ const { defineConfig, devices } = require('@playwright/test');
 const testMode = process.env.TEST_MODE || 'source';
 
 module.exports = defineConfig({
-  testDir: './kitchensink',
+  testDir: './examples/kitchensink',
   testMatch: '*.spec.js',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
