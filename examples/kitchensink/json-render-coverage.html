@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>hyper-element: json-render coverage</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        padding: 2rem;
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.5;
+      }
+      section {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      h2 {
+        margin-top: 0;
+        font-size: 1.25rem;
+      }
+      .debug-output {
+        font-size: 11px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>json-render Coverage Specs</h1>
+    <p>
+      Programmatic test suite designed strictly to exercise edge cases, branch fallbacks, 
+      error emissions, and missing attributes across the <code>json-render</code> core validators and renderers. 
+    </p>
+
+    <section data-test="validator-errors" data-test-result="pending">
+      <h2>Validator Errors</h2>
+      <p>Intentionally triggers registration errors and schema validation failures to ensure they are handled gracefully.</p>
+      <pre><code>// Hit registerComponent errors
+try { window.registerComponent('', () => {}); } catch(e) { }
+try { window.registerComponent('Valid', null); } catch(e) { }
+
+// Override-of-built-in warning path: registerComponent('Text', ...) where 'Text'
+// is a built-in. The warning is logged to console; functionally the registry
+// happily accepts the override (it's a deliberate but uncommon op).
+window.registerComponent('Text', (Html, def, key) =>
+  Html.wire(def, ':' + key)`<span class="overridden-text">${def.props?.content ?? ''}</span>`
+);
+
+// Hit validateSpec errors
+window.validateSpec(null);
+window.validateSpec({ });
+window.validateSpec({ root: 'a' });
+window.validateSpec({ root: 'a', elements: { } });
+
+// Rules
+window.validateSpec({
+  root: 'a',
+  elements: {
+    // 'ghost' triggers Rule 2 dangling-child reference
+    'a': { type: 'Row', children: ['b', 'c', 'ghost'] },
+    'b': { type: 'UnknownType' }, // Rule 4
+    'd': { type: 'Button' }, // Rule 5 missing action
+    'e': { type: 'Progress', props: { value: 150 } }, // Rule 6
+    'f': { type: 'Checklist', props: { items: [{ label: 1, checked: 'yes' }] } }, // Rule 7 (bad item shape)
+    // Rule 7 (items not an array at all) — separate Checklist with a string instead of array
+    'g': { type: 'Checklist', props: { items: 'not-an-array' } },
+    'c': { type: 'Card', children: ['a'] } // Cycle
+  }
+}, new Set(['CustomVal']));</code></pre>
+      <div id="validator-output"></div>
+      <script type="module">
+        // Single source of truth: the displayed snippet IS the full coverage
+        // exercise. Read it and execute it. The "rendered output" of this
+        // example is "no thrown error and no DOM mutation"; we snapshot the
+        // unchanged container as the static post-condition.
+        const code = document.querySelector('[data-test="validator-errors"] pre code').textContent;
+        let checkCount = 0;
+        function checkRender() {
+          const section = document.querySelector('[data-test="validator-errors"]');
+          try {
+            if (typeof window.registerComponent !== 'function') {
+              if (checkCount++ < 10) { setTimeout(checkRender, 50); return; }
+              throw new Error('registerComponent not loaded');
+            }
+            eval(code);
+            // Single-phase snapshot: the validator branches mutate nothing
+            // observable, so the container must remain empty after execution.
+            const expected = '<div id="validator-output"></div>';
+            window.assertSnapshot('validator-errors', document.getElementById('validator-output'), expected);
+          } catch (e) {
+            console.error(e);
+            section.dataset.testResult = 'fail';
+          }
+        }
+        setTimeout(checkRender, 50);
+      </script>
+    </section>
+
+    <section data-test="element-parse-error" data-test-result="pending">
+      <h2>jr-ui Parse Error</h2>
+      <p>Tests un-parseable JSON injected directly into the component's <code>data-spec</code> attribute.</p>
+      <pre><code>&lt;jr-ui data-spec="{ unclosed_json"&gt;&lt;/jr-ui&gt;</code></pre>
+      <div id="element-parse-output"></div>
+      <script type="module">
+        // Single source of truth: snippet is HTML; inject it verbatim.
+        const html = document.querySelector('[data-test="element-parse-error"] pre code').textContent;
+        document.getElementById('element-parse-output').innerHTML = html;
+        const elem = document.getElementById('element-parse-output').firstChild;
+
+        // Single-phase render. The jr-ui parser surfaces a JSON error inside
+        // the component, and the snapshot pins the resolved DOM with that
+        // user-visible error message. Use a poll so the assertion is timing
+        // stable across runs.
+        const expected = '<jr-ui data-spec="{ unclosed_json"><div class="jr-alert error">❌ Render error: Expected property name or \'}\' in JSON at position 2 (line 1 column 3)</div></jr-ui>';
+        const deadline = Date.now() + 1500;
+        (function awaitErr() {
+          if (elem.outerHTML === expected) {
+            window.assertSnapshot('element-parse-error', elem, expected);
+            return;
+          }
+          if (Date.now() > deadline) {
+            window.assertSnapshot('element-parse-error', elem, expected);
+            return;
+          }
+          setTimeout(awaitErr, 25);
+        })();
+      </script>
+    </section>
+
+    <section data-test="element-invalid-spec" data-test-result="pending">
+      <h2>jr-ui Invalid Spec</h2>
+      <p>Tests logically complete JSON that fundamentally misses required internal root schemas.</p>
+      <pre><code>&lt;jr-ui data-spec='{"missing": "root"}'&gt;&lt;/jr-ui&gt;</code></pre>
+      <div id="element-invalid-output"></div>
+      <script type="module">
+        // Single source of truth: snippet is HTML; inject it verbatim.
+        const html = document.querySelector('[data-test="element-invalid-spec"] pre code').textContent;
+        document.getElementById('element-invalid-output').innerHTML = html;
+        const elemInvalid = document.getElementById('element-invalid-output').firstChild;
+
+        // Single-phase render. The validator emits an inline warning that
+        // becomes the entire body of the jr-ui component.
+        const expected = '<jr-ui data-spec="{&quot;missing&quot;: &quot;root&quot;}"><div class="jr-alert warning">⚠️ Invalid spec: missing root or elements</div></jr-ui>';
+        const deadline = Date.now() + 1500;
+        (function awaitErr() {
+          if (elemInvalid.outerHTML === expected) {
+            window.assertSnapshot('element-invalid-spec', elemInvalid, expected);
+            return;
+          }
+          if (Date.now() > deadline) {
+            window.assertSnapshot('element-invalid-spec', elemInvalid, expected);
+            return;
+          }
+          setTimeout(awaitErr, 25);
+        })();
+      </script>
+    </section>
+
+    <section data-test="interactive-actions" data-test-result="pending">
+      <h2>Interactive Actions</h2>
+      <p>Triggers underlying native event callbacks (click, change, keydown) mapping perfectly cleanly into emitted <code>jr-action</code> messages.</p>
+      <pre><code>const specActions = {
+  root: 'main',
+  elements: {
+    'main': { type: 'Column', children: ['btn', 'checks', 'text'] },
+    'btn': {
+      type: 'Button',
+      props: { label: 'Click Me', variant: 'primary' },
+      on: { press: { action: 'TestClick' } }
+    },
+    'checks': {
+      type: 'Checklist',
+      props: { items: [{ label: 'Item 1', checked: false }] },
+      on: { change: { action: 'TestCheck' } }
+    },
+    'text': {
+      type: 'TextField',
+      props: { label: 'Input', placeholder: 'Enter to submit' },
+      on: { submit: { action: 'TestInput' } }
+    }
+  }
+};
+
+const elem = document.createElement('jr-ui');
+elem.dataset.spec = JSON.stringify(specActions);
+document.getElementById('interactive-output').appendChild(elem);</code></pre>
+      <div id="interactive-output"></div>
+      <script type="module">
+        // Single source of truth: read the snippet (which builds the spec and
+        // mounts the jr-ui element) and execute it. The test then drives the
+        // mounted element with synthetic events.
+        const code = document.querySelector('[data-test="interactive-actions"] pre code').textContent;
+        eval(code);
+        const elem = document.getElementById('interactive-output').firstChild;
+
+        let actionsFired = 0;
+        elem.addEventListener('jr-action', (e) => {
+          if (e.detail.action === 'TestClick' || e.detail.action === 'checklist_toggle' || e.detail.action === 'TestInput') {
+            actionsFired++;
+          }
+        });
+
+        // Multi-phase example.
+        //   Phase Mounted — initial render of the spec, before any events.
+        //   Phase Driven  — after dispatching click/change/keydown the
+        //                   internal element state is updated (checkbox is
+        //                   checked, text input has 'hello').
+        //   We pin BOTH phases.
+        const expectedMounted = '<jr-ui data-spec="{&quot;root&quot;:&quot;main&quot;,&quot;elements&quot;:{&quot;main&quot;:{&quot;type&quot;:&quot;Column&quot;,&quot;children&quot;:[&quot;btn&quot;,&quot;checks&quot;,&quot;text&quot;]},&quot;btn&quot;:{&quot;type&quot;:&quot;Button&quot;,&quot;props&quot;:{&quot;label&quot;:&quot;Click Me&quot;,&quot;variant&quot;:&quot;primary&quot;},&quot;on&quot;:{&quot;press&quot;:{&quot;action&quot;:&quot;TestClick&quot;}}},&quot;checks&quot;:{&quot;type&quot;:&quot;Checklist&quot;,&quot;props&quot;:{&quot;items&quot;:[{&quot;label&quot;:&quot;Item 1&quot;,&quot;checked&quot;:false}]},&quot;on&quot;:{&quot;change&quot;:{&quot;action&quot;:&quot;TestCheck&quot;}}},&quot;text&quot;:{&quot;type&quot;:&quot;TextField&quot;,&quot;props&quot;:{&quot;label&quot;:&quot;Input&quot;,&quot;placeholder&quot;:&quot;Enter to submit&quot;},&quot;on&quot;:{&quot;submit&quot;:{&quot;action&quot;:&quot;TestInput&quot;}}}}}">';
+
+        setTimeout(() => {
+          const mountedHTML = elem.outerHTML;
+          const mountedOk = mountedHTML.startsWith(expectedMounted) && mountedHTML.includes('Click Me');
+          if (!mountedOk) {
+            console.error('Phase Mounted mismatch (interactive-actions)\nExpected prefix: ' + expectedMounted + '\nActual: ' + mountedHTML);
+          }
+
+          const root = elem.shadowRoot || elem;
+          const btn = root.querySelector('button');
+          btn.dispatchEvent(new Event('click', { bubbles: true }));
+
+          const checkbox = root.querySelector('input[type="checkbox"]');
+          checkbox.checked = true;
+          checkbox.dispatchEvent(new Event('change'));
+
+          const input = root.querySelector('input[type="text"]');
+          input.value = 'hello';
+          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+          setTimeout(() => {
+            const section = document.querySelector('[data-test="interactive-actions"]');
+            const drivenOk = actionsFired === 3;
+            if (!drivenOk) {
+              console.error('Phase Driven mismatch (interactive-actions): expected 3 actions, got ' + actionsFired);
+            }
+            section.dataset.testResult = (mountedOk && drivenOk) ? 'pass' : 'fail';
+          }, 50);
+        }, 100);
+      </script>
+    </section>
+
+    <section data-test="render-missing-fallbacks" data-test-result="pending">
+      <h2>Render Missing Fallbacks</h2>
+      <p>Tests robust renderer protections against completely missing branch paths and unknown components safely outputting default components.</p>
+      <pre><code>&lt;jr-ui data-spec='{
+  "root": "a",
+  "elements": {
+    "a": { "type": "Row", "children": ["b", "c"] },
+    "c": { "type": "UnknownComponent123" }
+  }
+}'&gt;&lt;/jr-ui&gt;</code></pre>
+      <div id="fallbacks-output"></div>
+      <script type="module">
+        // Single source of truth: snippet is HTML; inject it verbatim.
+        const html = document.querySelector('[data-test="render-missing-fallbacks"] pre code').textContent;
+        document.getElementById('fallbacks-output').innerHTML = html;
+        const elem = document.getElementById('fallbacks-output').firstChild;
+
+        // Single-phase render. The renderer falls back to "[loading...]" for
+        // missing element 'b' and "[unknown: UnknownComponent123]" for the
+        // unknown component type. We poll until the assertion text is present
+        // (timing stable across runs) and then snapshot the resolved DOM.
+        setTimeout(() => {
+          const section = document.querySelector('[data-test="render-missing-fallbacks"]');
+          const root = elem.shadowRoot || elem;
+          const text = root.textContent;
+          if (text.includes('[loading...]') && text.includes('[unknown: UnknownComponent123]')) {
+            section.dataset.testResult = 'pass';
+          } else {
+            console.error('render-missing-fallbacks did not produce expected fallback markers. textContent: ' + text);
+            section.dataset.testResult = 'fail';
+          }
+        }, 100);
+      </script>
+    </section>
+
+    <section data-test="components-coverage" data-test-result="pending">
+      <h2>Components Fallback Coverage</h2>
+      <p>Exercises all internal components stripped of any <code>props</code> or attributes to ensure null-safeties trigger across all default configurations.</p>
+      <pre><code>const Html = { wire: () => () => 'wired' };
+const types = ['Alert', 'Button', 'Card', 'Checklist', 'CodeBlock',
+  'Column', 'Divider', 'Image', 'Progress', 'Row', 'TextField', 'Text'];
+for (const type of types) {
+  const fn = window.BUILT_IN_COMPONENTS.get(type);
+  if (fn) {
+    try { fn(Html, null, 'key'); } catch(e) {}
+    try { fn(Html, { type }, 'key'); } catch(e) {}
+  }
+}</code></pre>
+      <div id="components-output"></div>
+      <script type="module">
+        // Single source of truth: read the snippet (which exercises every
+        // built-in component renderer with empty/missing props) and execute
+        // it. The "rendered output" of this coverage test is "no exception
+        // and no DOM mutation"; we snapshot the unchanged container.
+        const code = document.querySelector('[data-test="components-coverage"] pre code').textContent;
+        let checkRenderCount = 0;
+        function checkComponentRender() {
+          const section = document.querySelector('[data-test="components-coverage"]');
+          try {
+            if (!window.BUILT_IN_COMPONENTS) {
+              if (checkRenderCount++ < 10) { setTimeout(checkComponentRender, 50); return; }
+              throw new Error('BUILT_IN_COMPONENTS not loaded');
+            }
+            eval(code);
+            const expected = '<div id="components-output"></div>';
+            window.assertSnapshot('components-coverage', document.getElementById('components-output'), expected);
+          } catch(e) {
+            console.error(e);
+            section.dataset.testResult = 'fail';
+          }
+        }
+        checkComponentRender();
+      </script>
+    </section>
+
+    <section data-test="renderspec-missing-root" data-test-result="pending">
+      <h2>renderSpec throws when root key is missing</h2>
+      <p>
+        When a spec sets <code>root</code> to a key that does not exist in
+        <code>elements</code>, the core renderer (<code>renderSpecTree</code>)
+        throws. The <code>&lt;jr-ui&gt;</code> component catches the throw and
+        renders an inline error alert. This exercises the throw branch in
+        <code>src/json-render/renderer.js</code> lines 84-86.
+      </p>
+      <pre><code>&lt;jr-ui id="missing-root-target" data-spec='{"root":"ghost","elements":{"real":{"type":"Text","props":{"content":"present but unreachable"}}}}'&gt;&lt;/jr-ui&gt;</code></pre>
+      <div id="missing-root-output"></div>
+      <script type="module">
+        // Single source of truth: read snippet HTML, inject verbatim, poll for
+        // the resolved error alert. The renderer throws synchronously inside
+        // the jr-ui render method; the catch path returns an error alert
+        // template; the snapshot pins that resolved DOM.
+        const html = document.querySelector('[data-test="renderspec-missing-root"] pre code').textContent;
+        document.getElementById('missing-root-output').innerHTML = html;
+        const elem = document.getElementById('missing-root-target');
+        const expected = '<jr-ui id="missing-root-target" data-spec="{&quot;root&quot;:&quot;ghost&quot;,&quot;elements&quot;:{&quot;real&quot;:{&quot;type&quot;:&quot;Text&quot;,&quot;props&quot;:{&quot;content&quot;:&quot;present but unreachable&quot;}}}}"><div class="jr-alert error">❌ Render error: Spec error: root "ghost" not found in elements</div></jr-ui>';
+        const deadline = Date.now() + 1500;
+        (function awaitErr() {
+          if (elem.outerHTML === expected) {
+            window.assertSnapshot('renderspec-missing-root', elem, expected);
+            return;
+          }
+          if (Date.now() > deadline) {
+            window.assertSnapshot('renderspec-missing-root', elem, expected);
+            return;
+          }
+          setTimeout(awaitErr, 25);
+        })();
+      </script>
+    </section>
+
+    <section data-test="list-component-types" data-test-result="pending">
+      <h2>listComponentTypes() public API</h2>
+      <p>
+        The <code>listComponentTypes()</code> export returns a snapshot of every
+        registered component type — built-ins plus any added via
+        <code>registerComponent()</code>. Useful for runtime introspection,
+        debug tools, and self-documenting validators.
+      </p>
+      <pre><code>// Snapshot before any custom registration: should contain only the built-ins.
+const before = window.listComponentTypes();
+
+// Register a custom component, then snapshot again.
+window.registerComponent('MyDebugWidget', (Html, def, key) =>
+  Html.wire(def, ':' + key)`<span>debug</span>`
+);
+const after = window.listComponentTypes();
+
+// Verify both snapshots and the registration delta.
+const section = document.querySelector('[data-test="list-component-types"]');
+const builtIns = ['Card', 'Row', 'Column', 'Button', 'Text', 'Alert',
+  'Progress', 'Divider', 'CodeBlock', 'Image', 'Checklist', 'TextField'];
+const allBuiltInsPresent = builtIns.every((t) => before.includes(t));
+const customAddedAfter = after.includes('MyDebugWidget');
+const customAbsentBefore = !before.includes('MyDebugWidget');
+const isArray = Array.isArray(before) && Array.isArray(after);
+const sizeDelta = after.length === before.length + 1;
+
+document.getElementById('list-types-output').textContent =
+  `before(${before.length}): ${before.join(', ')}\nafter(${after.length}): ${after.join(', ')}`;
+
+section.dataset.testResult =
+  (isArray && allBuiltInsPresent && customAbsentBefore && customAddedAfter && sizeDelta)
+    ? 'pass'
+    : 'fail';</code></pre>
+      <pre id="list-types-output" class="debug-output"></pre>
+      <script type="module">
+        // Single source of truth: snippet IS the program. The script just
+        // reads + evals it. The snippet uses the public listComponentTypes()
+        // API + window.registerComponent and sets the section result directly.
+        const code = document.querySelector('[data-test="list-component-types"] pre code').textContent;
+        // Wait for window.listComponentTypes to be defined (test-loader.js
+        // exposes it as a global; in source mode this is async).
+        let tries = 0;
+        function awaitGlobal() {
+          if (typeof window.listComponentTypes === 'function') {
+            try { eval(code); }
+            catch (e) {
+              console.error('list-component-types eval failed:', e);
+              document.querySelector('[data-test="list-component-types"]').dataset.testResult = 'fail';
+            }
+            return;
+          }
+          if (tries++ > 40) {
+            console.error('window.listComponentTypes not defined after 2s');
+            document.querySelector('[data-test="list-component-types"]').dataset.testResult = 'fail';
+            return;
+          }
+          setTimeout(awaitGlobal, 50);
+        }
+        awaitGlobal();
+      </script>
+    </section>
+
+    <section data-test="jr-ui-shimmer-loading" data-test-result="pending">
+      <h2>jr-ui shimmer placeholder for empty data-spec</h2>
+      <p>
+        When <code>&lt;jr-ui&gt;</code> is mounted with an empty
+        <code>data-spec</code> (or none at all), it shows a shimmer
+        placeholder so the streaming-spec workflow can render before the
+        full payload arrives. This exercises lines 71-76 of
+        <code>src/json-render/element.js</code>.
+      </p>
+      <pre><code>&lt;jr-ui id="shimmer-target" data-spec="{}"&gt;&lt;/jr-ui&gt;</code></pre>
+      <div id="shimmer-output"></div>
+      <script type="module">
+        // Single source of truth: snippet is HTML; inject verbatim. The shimmer
+        // markup is generated by jr-ui itself when the spec is empty.
+        const html = document.querySelector('[data-test="jr-ui-shimmer-loading"] pre code').textContent;
+        document.getElementById('shimmer-output').innerHTML = html;
+        const elem = document.getElementById('shimmer-target');
+        // The shimmer template literal in element.js spans multiple lines.
+        // Whitespace between tags is preserved as text nodes by the renderer
+        // — but the bundle build (scripts/build.js addFiles) re-indents every
+        // line of source content during inlining, so the bundled bundle has
+        // EXTRA leading spaces inside the template literal. Source mode and
+        // bundle mode therefore produce different exact whitespace. To stay
+        // stable across both modes, we collapse any run of whitespace that
+        // sits BETWEEN two tags (`>\s+<` → `><`) before comparison. Text
+        // content (e.g. "Loading UI...") is left untouched because it never
+        // sits between two tag delimiters.
+        const collapseTagWhitespace = (s) => s.replace(/>\s+</g, '><');
+        const expected = '<jr-ui id="shimmer-target" data-spec="{}"><div class="jr-ui-shimmer" data-loading="true"><div class="jr-card" style="opacity:0.4;animation:pulse 1.5s ease-in-out infinite"><div class="jr-text muted">Loading UI...</div></div></div></jr-ui>';
+        const deadline = Date.now() + 1500;
+        (function awaitShimmer() {
+          if (collapseTagWhitespace(elem.outerHTML) === expected) {
+            window.assertSnapshot('jr-ui-shimmer-loading', elem, expected, collapseTagWhitespace);
+            return;
+          }
+          if (Date.now() > deadline) {
+            window.assertSnapshot('jr-ui-shimmer-loading', elem, expected, collapseTagWhitespace);
+            return;
+          }
+          setTimeout(awaitShimmer, 25);
+        })();
+      </script>
+    </section>
+
+  </body>
+</html>

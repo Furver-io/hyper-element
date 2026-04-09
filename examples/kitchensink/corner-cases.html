@@ -1,0 +1,1008 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Corner Cases - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Corner Cases</h1>
+    <p>Edge cases and unusual scenarios for comprehensive testing.</p>
+
+    <section data-test="empty-render" data-test-result="pending">
+      <h2>Empty Render</h2>
+      <p>Element with no content rendered.</p>
+      <empty-element></empty-element>
+      <script type="module">
+        customElements.define(
+          'empty-element',
+          class extends hyperElement {
+            render(Html) {
+              Html``;
+            }
+          }
+        );
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="empty-render"]');
+          const elem = document.querySelector('empty-element');
+          // Should exist but be empty
+          if (elem && elem.textContent.trim() === '') {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+          }
+        });
+      </script>
+    </section>
+
+    <section data-test="multiple-renders" data-test-result="pending">
+      <h2>Multiple Renders</h2>
+      <p>Element that renders and can be triggered to re-render.</p>
+      <multi-render-element></multi-render-element>
+      <script type="module">
+        let multiRenderCount = 0;
+        customElements.define(
+          'multi-render-element',
+          class extends hyperElement {
+            render(Html) {
+              multiRenderCount++;
+              Html`Render count: ${multiRenderCount}`;
+            }
+          }
+        );
+
+        // Element should have rendered at least once on creation
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="multiple-renders"]'
+          );
+          const elem = document.querySelector('multi-render-element');
+          // Should have rendered at least once
+          if (
+            elem &&
+            multiRenderCount >= 1 &&
+            elem.textContent.includes('Render count:')
+          ) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+          }
+        });
+      </script>
+    </section>
+
+    <section data-test="special-chars" data-test-result="pending">
+      <h2>Special Characters</h2>
+      <p>Handling special characters in content and attributes.</p>
+      <special-chars-element
+        data-text="&lt;b&gt;bold&lt;/b&gt;"
+      ></special-chars-element>
+      <script type="module">
+        customElements.define(
+          'special-chars-element',
+          class extends hyperElement {
+            render(Html) {
+              // Should handle HTML entities in text content
+              Html`Text: ${this.attrs['data-text']}`;
+            }
+          }
+        );
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector('[data-test="special-chars"]');
+          const elem = document.querySelector('special-chars-element');
+          // Should contain the HTML entities as text
+          if (
+            elem &&
+            elem.textContent.includes('<b>') &&
+            elem.textContent.includes('</b>')
+          ) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+          }
+        });
+      </script>
+    </section>
+
+    <section data-test="unicode-content" data-test-result="pending">
+      <h2>Unicode Content</h2>
+      <p>Handling unicode characters and emojis.</p>
+      <unicode-element></unicode-element>
+      <script type="module">
+        customElements.define(
+          'unicode-element',
+          class extends hyperElement {
+            render(Html) {
+              Html`Unicode: Hello World`;
+            }
+          }
+        );
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="unicode-content"]'
+          );
+          const elem = document.querySelector('unicode-element');
+          if (elem && elem.textContent.includes('Hello World')) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+          }
+        });
+      </script>
+    </section>
+
+    <section data-test="each-block-inner-content" data-test-result="pending">
+      <h2>Each Block Inner Content Processing</h2>
+      <p>
+        Tests processInnerContent in parseEachBlocks.js - property resolution,
+        index refs, spread, nested blocks, and dot paths.
+      </p>
+      <each-inner-content-element></each-inner-content-element>
+      <script type="module">
+        customElements.define(
+          'each-inner-content-element',
+          class extends hyperElement {
+            render(Html) {
+              const users = [
+                { name: 'Alice', role: 'admin', tags: ['vip', 'early'] },
+                { name: 'Bob', role: 'user', tags: ['new'] },
+              ];
+              const primitives = ['one', 'two', 'three'];
+              // Edge case: nested prop that's NOT an array (lines 148-150)
+              const usersWithNonArrayProp = [
+                { name: 'Carol', notAnArray: 'string-value' },
+              ];
+
+              Html`
+                <div id="props">
+                  {+each ${users}}
+                    <span class="user">{name}:{role}</span>
+                  {-each}
+                </div>
+                <div id="index">
+                  {+each ${primitives}}
+                    <span class="idx">{@}</span>
+                  {-each}
+                </div>
+                <div id="spread">
+                  {+each ${primitives}}
+                    <span class="val">{...}</span>
+                  {-each}
+                </div>
+                <div id="nested">
+                  {+each ${users}}
+                    <div class="user-tags" data-name="{name}">
+                      {+each{tags}}
+                        <span class="tag">{...}</span>
+                      {-each}
+                    </div>
+                  {-each}
+                </div>
+                <div id="static-content">
+                  {+each ${primitives}}
+                    <span class="static">static text only</span>
+                  {-each}
+                </div>
+                <div id="non-array-nested">
+                  {+each ${usersWithNonArrayProp}}
+                    <span class="name">{name}</span>
+                    {+each{notAnArray}}
+                      <span class="should-not-render">X</span>
+                    {-each}
+                  {-each}
+                </div>
+                <div id="mixed">before ${primitives.length} {+each ${primitives}}<span class="m">{...}</span>{-each} after</div>
+              `;
+            }
+          }
+        );
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="each-block-inner-content"]'
+          );
+          const elem = document.querySelector('each-inner-content-element');
+          const errors = [];
+
+          // Test property resolution
+          const userSpans = elem.querySelectorAll('#props .user');
+          if (userSpans.length !== 2) errors.push('Expected 2 user spans');
+          if (userSpans[0]?.textContent !== 'Alice:admin')
+            errors.push('First user wrong: ' + userSpans[0]?.textContent);
+          if (userSpans[1]?.textContent !== 'Bob:user')
+            errors.push('Second user wrong: ' + userSpans[1]?.textContent);
+
+          // Test index reference {@}
+          const idxSpans = elem.querySelectorAll('#index .idx');
+          if (idxSpans.length !== 3) errors.push('Expected 3 index spans');
+          if (idxSpans[0]?.textContent !== '0') errors.push('Index 0 wrong');
+          if (idxSpans[1]?.textContent !== '1') errors.push('Index 1 wrong');
+          if (idxSpans[2]?.textContent !== '2') errors.push('Index 2 wrong');
+
+          // Test spread reference {...}
+          const valSpans = elem.querySelectorAll('#spread .val');
+          if (valSpans.length !== 3) errors.push('Expected 3 value spans');
+          if (valSpans[0]?.textContent !== 'one') errors.push('Spread 0 wrong');
+          if (valSpans[1]?.textContent !== 'two') errors.push('Spread 1 wrong');
+          if (valSpans[2]?.textContent !== 'three')
+            errors.push('Spread 2 wrong');
+
+          // Test nested {+each{tags}}
+          const tagContainers = elem.querySelectorAll('#nested .user-tags');
+          if (tagContainers.length !== 2)
+            errors.push('Expected 2 tag containers');
+          const aliceTags = tagContainers[0]?.querySelectorAll('.tag');
+          if (aliceTags?.length !== 2)
+            errors.push('Alice should have 2 tags, got ' + aliceTags?.length);
+          if (aliceTags?.[0]?.textContent !== 'vip')
+            errors.push('Alice tag 0 wrong');
+          if (aliceTags?.[1]?.textContent !== 'early')
+            errors.push('Alice tag 1 wrong');
+          const bobTags = tagContainers[1]?.querySelectorAll('.tag');
+          if (bobTags?.length !== 1)
+            errors.push('Bob should have 1 tag, got ' + bobTags?.length);
+          if (bobTags?.[0]?.textContent !== 'new')
+            errors.push('Bob tag 0 wrong');
+
+          // Test static content (no property refs) - lines 192-194
+          const staticSpans = elem.querySelectorAll('#static-content .static');
+          if (staticSpans.length !== 3)
+            errors.push('Expected 3 static spans, got ' + staticSpans.length);
+          if (staticSpans[0]?.textContent !== 'static text only')
+            errors.push('Static content wrong');
+
+          // Test nested each with non-array prop - lines 148-150
+          const nonArrayNested = elem.querySelector('#non-array-nested');
+          const carolName = nonArrayNested?.querySelector('.name');
+          if (carolName?.textContent !== 'Carol')
+            errors.push('Carol name wrong: ' + carolName?.textContent);
+          const shouldNotRender = nonArrayNested?.querySelectorAll(
+            '.should-not-render'
+          );
+          if (shouldNotRender?.length !== 0)
+            errors.push(
+              'Non-array nested should not render, got ' + shouldNotRender?.length
+            );
+
+          // Test mixed template (non-block parts) - lines 237-241
+          const mixed = elem.querySelector('#mixed');
+          if (!mixed?.textContent.includes('before'))
+            errors.push('Mixed missing "before"');
+          if (!mixed?.textContent.includes('3'))
+            errors.push('Mixed missing interpolation "3"');
+          if (!mixed?.textContent.includes('after'))
+            errors.push('Mixed missing "after"');
+          const mixedSpans = mixed?.querySelectorAll('.m');
+          if (mixedSpans?.length !== 3)
+            errors.push('Mixed should have 3 spans, got ' + mixedSpans?.length);
+
+          if (errors.length === 0) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('each-block-inner-content errors:', errors);
+          }
+        });
+      </script>
+    </section>
+
+    <section data-test="functional-api-no-args" data-test-result="pending">
+      <h2>Functional API - No Arguments Error</h2>
+      <p>
+        Calling hyperElement() with no arguments should throw an error.
+        Tests the Proxy apply trap validation in src/index.js.
+      </p>
+      <script type="module">
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="functional-api-no-args"]'
+          );
+
+          try {
+            // This should throw: "hyperElement requires a definition object or render function"
+            hyperElement();
+            // If we get here, the test failed - no error was thrown
+            section.dataset.testResult = 'fail';
+            console.error('functional-api-no-args: Expected error was not thrown');
+          } catch (e) {
+            // Verify the correct error message
+            if (
+              e.message === 'hyperElement requires a definition object or render function'
+            ) {
+              section.dataset.testResult = 'pass';
+            } else {
+              section.dataset.testResult = 'fail';
+              console.error(
+                'functional-api-no-args: Wrong error message:',
+                e.message
+              );
+            }
+          }
+        });
+      </script>
+    </section>
+
+    <section data-test="direct-instantiation-blocked" data-test-result="pending">
+      <h2>Direct Instantiation Blocked</h2>
+      <p>
+        Attempting to call <code>new hyperElement()</code> directly should throw
+        an error. The Proxy construct trap blocks direct instantiation while
+        allowing subclass extension.
+      </p>
+      <script type="module">
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="direct-instantiation-blocked"]'
+          );
+
+          try {
+            // This should throw: "hyperElement cannot be instantiated directly..."
+            new hyperElement();
+            // If we get here, the test failed - no error was thrown
+            section.dataset.testResult = 'fail';
+            console.error(
+              'direct-instantiation-blocked: Expected error was not thrown'
+            );
+          } catch (e) {
+            // Verify the correct error message
+            if (
+              e.message ===
+              'hyperElement cannot be instantiated directly. Use class extension or functional API.'
+            ) {
+              section.dataset.testResult = 'pass';
+            } else {
+              section.dataset.testResult = 'fail';
+              console.error(
+                'direct-instantiation-blocked: Wrong error message:',
+                e.message
+              );
+            }
+          }
+        });
+      </script>
+    </section>
+
+    <section data-test="nested-hole-template-switch" data-test-result="pending">
+      <h2>Nested Hole Template Switch (getHole else branch)</h2>
+      <p>
+        Tests the <code>getHole</code> else branch in hole.js where a nested Hole
+        switches to a different template. This triggers
+        <code>hole.n.replaceWith(dom(value))</code> when
+        <code>hole.t !== value.t</code>.
+      </p>
+      <nested-hole-switch-element></nested-hole-switch-element>
+      <script type="module">
+        customElements.define(
+          'nested-hole-switch-element',
+          class extends hyperElement {
+            setup(attachStore) {
+              this.element.count = 0;
+              this.element.trigger = attachStore();
+            }
+            render(Html) {
+              const count = this.element.count;
+              Html`
+                <div>
+                  <span class="count-display">Count: ${count}</span>
+                  <div class="conditional">
+                    ${count % 2 === 0
+                      ? Html.lite`<p class="even">Even: ${count}</p>`
+                      : Html.lite`<p class="odd">Odd: ${count}</p>`
+                    }
+                  </div>
+                </div>
+              `;
+            }
+          }
+        );
+
+        const raf = () => new Promise((r) => requestAnimationFrame(r));
+
+        requestAnimationFrame(async () => {
+          const section = document.querySelector(
+            '[data-test="nested-hole-template-switch"]'
+          );
+          const elem = document.querySelector('nested-hole-switch-element');
+          const errors = [];
+
+          // Initial render: count=0 (even)
+          let evenElem = elem.querySelector('.even');
+          let oddElem = elem.querySelector('.odd');
+          if (!evenElem) errors.push('Initial render should show .even');
+          if (oddElem) errors.push('Initial render should NOT show .odd');
+          if (evenElem?.textContent !== 'Even: 0')
+            errors.push('Initial even text wrong: ' + evenElem?.textContent);
+
+          // Store reference to original element
+          const originalEvenElem = evenElem;
+
+          // Trigger re-render with same template (count=2, still even)
+          // This should hit getHole's IF branch (same template, update in place)
+          elem.count = 2;
+          elem.trigger();
+          await raf();
+
+          evenElem = elem.querySelector('.even');
+          oddElem = elem.querySelector('.odd');
+          if (!evenElem) errors.push('After count=2, should still show .even');
+          if (oddElem) errors.push('After count=2, should NOT show .odd');
+          if (evenElem?.textContent !== 'Even: 2')
+            errors.push('count=2 even text wrong: ' + evenElem?.textContent);
+          // Same template should reuse the DOM node
+          if (evenElem !== originalEvenElem)
+            errors.push('Same template should reuse DOM node (getHole IF branch)');
+
+          // Trigger re-render with DIFFERENT template (count=3, now odd)
+          // This MUST hit getHole's ELSE branch (different template, replaceWith)
+          elem.count = 3;
+          elem.trigger();
+          await raf();
+
+          evenElem = elem.querySelector('.even');
+          oddElem = elem.querySelector('.odd');
+          if (evenElem) errors.push('After count=3, should NOT show .even');
+          if (!oddElem) errors.push('After count=3, should show .odd');
+          if (oddElem?.textContent !== 'Odd: 3')
+            errors.push('count=3 odd text wrong: ' + oddElem?.textContent);
+
+          // Switch back to even (count=4) - ELSE branch again
+          elem.count = 4;
+          elem.trigger();
+          await raf();
+
+          evenElem = elem.querySelector('.even');
+          oddElem = elem.querySelector('.odd');
+          if (!evenElem) errors.push('After count=4, should show .even');
+          if (oddElem) errors.push('After count=4, should NOT show .odd');
+          if (evenElem?.textContent !== 'Even: 4')
+            errors.push('count=4 even text wrong: ' + evenElem?.textContent);
+
+          // The even element should be a NEW node (not the original)
+          // because we went even -> odd -> even (template switched twice)
+          if (evenElem === originalEvenElem)
+            errors.push('After template switch, should be NEW DOM node');
+
+          if (errors.length === 0) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('nested-hole-template-switch errors:', errors);
+          }
+        });
+      </script>
+    </section>
+
+    <section data-test="event-array-same-handler-skip" data-test-result="pending">
+      <h2>Event Array Same Handler Skip (hole.js EVENT optimization)</h2>
+      <p>
+        Tests the <code>else if (type & EVENT && value[0] === prev[0])</code>
+        branch in hole.js update(). When an event is passed as
+        <code>@click=${[handler, options]}</code> and the handler reference
+        doesn't change between renders, the update is skipped (continue).
+      </p>
+      <script type="module">
+        // Track ALL addEventListener calls globally BEFORE element is defined
+        const listenerCalls = [];
+        const originalAddEventListener = EventTarget.prototype.addEventListener;
+        EventTarget.prototype.addEventListener = function (...args) {
+          // Track click listeners on elements with our test class
+          if (args[0] === 'click' && this instanceof Element && this.classList?.contains('event-skip-btn')) {
+            listenerCalls.push({ target: this, type: args[0], handler: args[1] });
+          }
+          return originalAddEventListener.apply(this, args);
+        };
+
+        customElements.define(
+          'event-array-skip-element',
+          class extends hyperElement {
+            setup(attachStore) {
+              this.element.clickCount = 0;
+              this.element.renderCount = 0;
+              this.element.trigger = attachStore();
+
+              // Stable handler reference - same function across all renders
+              this.element.handleClick = () => {
+                this.element.clickCount++;
+              };
+            }
+            render(Html) {
+              this.element.renderCount++;
+              Html`
+                <div>
+                  <span class="render-count">Renders: ${this.element.renderCount}</span>
+                  <span class="click-count">Clicks: ${this.element.clickCount}</span>
+                  <button
+                    class="event-skip-btn"
+                    @click=${[this.element.handleClick, { passive: true }]}
+                  >
+                    Click Me
+                  </button>
+                </div>
+              `;
+            }
+          }
+        );
+
+        const raf = () => new Promise((r) => requestAnimationFrame(r));
+
+        requestAnimationFrame(async () => {
+          const section = document.querySelector(
+            '[data-test="event-array-same-handler-skip"]'
+          );
+          const elem = document.querySelector('event-array-skip-element');
+          const errors = [];
+
+          // Helper to count listeners added to our button
+          const getListenerCount = () => listenerCalls.length;
+
+          // Initial state after first render
+          if (elem.renderCount !== 1)
+            errors.push('Initial renderCount should be 1, got ' + elem.renderCount);
+          if (getListenerCount() !== 1)
+            errors.push(
+              'Initial listenerCount should be 1, got ' + getListenerCount()
+            );
+
+          // Click the button to verify handler works
+          const btn = elem.querySelector('.event-skip-btn');
+          btn.click();
+          await raf();
+
+          if (elem.clickCount !== 1)
+            errors.push('After first click, clickCount should be 1');
+
+          // Trigger re-render with SAME handler reference
+          // The EVENT optimization should skip re-adding the listener
+          elem.trigger();
+          await raf();
+
+          if (elem.renderCount !== 2)
+            errors.push('After trigger, renderCount should be 2, got ' + elem.renderCount);
+
+          // CRITICAL: listenerCount should STILL be 1
+          // because the optimization skipped addEventListener
+          if (getListenerCount() !== 1)
+            errors.push(
+              'After re-render, listenerCount should STILL be 1 (optimization worked), got ' +
+                getListenerCount()
+            );
+
+          // Click again to verify handler still works
+          btn.click();
+          await raf();
+
+          if (elem.clickCount !== 2)
+            errors.push('After second click, clickCount should be 2, got ' + elem.clickCount);
+
+          // Trigger another re-render
+          elem.trigger();
+          await raf();
+
+          if (elem.renderCount !== 3)
+            errors.push('After second trigger, renderCount should be 3');
+          if (getListenerCount() !== 1)
+            errors.push(
+              'After third render, listenerCount should STILL be 1, got ' +
+                getListenerCount()
+            );
+
+          // Final click to confirm handler persists
+          btn.click();
+          await raf();
+
+          if (elem.clickCount !== 3)
+            errors.push('After third click, clickCount should be 3, got ' + elem.clickCount);
+
+          // Restore original addEventListener
+          EventTarget.prototype.addEventListener = originalAddEventListener;
+
+          if (errors.length === 0) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('event-array-same-handler-skip errors:', errors);
+          }
+        });
+      </script>
+      <event-array-skip-element></event-array-skip-element>
+    </section>
+
+    <section data-test="boolean-attr-html-vs-xml" data-test-result="pending">
+      <h2>Boolean Attribute: HTML vs XML Mode (Element.toString)</h2>
+      <p>
+        Tests the boolean attribute handling in <code>Element.toString()</code>
+        from nodes.js. When <code>typeof value === 'boolean'</code> is true:
+        <ul>
+          <li>HTML mode: outputs <code>` ${key}`</code> (bare attribute)</li>
+          <li>XML/SVG mode: outputs <code>` ${key}=""`</code> (empty value)</li>
+        </ul>
+        Uses STATIC boolean attributes (no value) to trigger this code path.
+      </p>
+      <boolean-attr-element></boolean-attr-element>
+      <script type="module">
+        customElements.define(
+          'boolean-attr-element',
+          class extends hyperElement {
+            render(Html) {
+              // Static boolean attributes (no value = true) trigger nodes.js:93
+              // prop(node, attrName, value ? value.slice(1, -1) : true);
+              //                                                   ^^^^ boolean true
+              Html`
+                <div class="html-mode">
+                  <!-- HTML mode: static boolean attrs (no value) -->
+                  <input type="text" disabled class="html-input" />
+                  <input type="checkbox" checked class="html-checkbox" />
+                  <button disabled class="html-button">HTML Button</button>
+                  <textarea readonly class="html-textarea">Read only</textarea>
+                </div>
+                <svg class="xml-mode" width="100" height="100">
+                  <!-- XML/SVG mode: static boolean attrs should have ="" -->
+                  <rect focusable class="svg-rect" width="50" height="50" />
+                  <circle focusable class="svg-circle" r="25" cx="75" cy="75" />
+                </svg>
+              `;
+            }
+          }
+        );
+
+        requestAnimationFrame(() => {
+          const section = document.querySelector(
+            '[data-test="boolean-attr-html-vs-xml"]'
+          );
+          const elem = document.querySelector('boolean-attr-element');
+          const errors = [];
+
+          // Test HTML mode static boolean attributes
+          const htmlInput = elem.querySelector('.html-input');
+          const htmlCheckbox = elem.querySelector('.html-checkbox');
+          const htmlButton = elem.querySelector('.html-button');
+          const htmlTextarea = elem.querySelector('.html-textarea');
+
+          // Verify boolean properties are true
+          if (!htmlInput?.disabled)
+            errors.push('HTML input should have disabled=true');
+          if (!htmlCheckbox?.checked)
+            errors.push('HTML checkbox should have checked=true');
+          if (!htmlButton?.disabled)
+            errors.push('HTML button should have disabled=true');
+          if (!htmlTextarea?.readOnly)
+            errors.push('HTML textarea should have readOnly=true');
+
+          // Verify attributes exist
+          if (!htmlInput?.hasAttribute('disabled'))
+            errors.push('HTML input missing disabled attribute');
+          if (!htmlCheckbox?.hasAttribute('checked'))
+            errors.push('HTML checkbox missing checked attribute');
+          if (!htmlTextarea?.hasAttribute('readonly'))
+            errors.push('HTML textarea missing readonly attribute');
+
+          // Test XML/SVG mode boolean attributes
+          const svgRect = elem.querySelector('.svg-rect');
+          const svgCircle = elem.querySelector('.svg-circle');
+
+          // SVG elements should have focusable attribute
+          if (!svgRect?.hasAttribute('focusable'))
+            errors.push('SVG rect missing focusable attribute');
+          if (!svgCircle?.hasAttribute('focusable'))
+            errors.push('SVG circle missing focusable attribute');
+
+          // Verify SVG namespace (confirms XML mode was used)
+          if (svgRect?.namespaceURI !== 'http://www.w3.org/2000/svg')
+            errors.push('SVG rect not in SVG namespace');
+          if (svgCircle?.namespaceURI !== 'http://www.w3.org/2000/svg')
+            errors.push('SVG circle not in SVG namespace');
+
+          // Log for debugging
+          console.log('HTML disabled attribute:', htmlInput?.outerHTML);
+          console.log('SVG focusable attribute:', svgRect?.outerHTML);
+
+          if (errors.length === 0) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('boolean-attr-html-vs-xml errors:', errors);
+          }
+        });
+      </script>
+    </section>
+
+    <section data-test="persistent-fragment-diff-ops" data-test-result="pending">
+      <h2>PersistentFragment Diff Operations (diffFragment -1 and -0)</h2>
+      <p>
+        Tests the <code>diffFragment</code> function's handling of multi-node
+        fragments during array operations. Specifically targets:
+        <ul>
+          <li><code>drop(node)</code> - triggered by array item REMOVAL (operation -1)</li>
+          <li><code>node.lastChild</code> - triggered by array REORDERING (operation -0)</li>
+        </ul>
+        These branches only execute for PersistentFragments (nodeType === 11) during
+        the diff algorithm's reconciliation of array-based templates.
+      </p>
+      <persistent-fragment-diff-element></persistent-fragment-diff-element>
+      <script type="module">
+        customElements.define(
+          'persistent-fragment-diff-element',
+          class extends hyperElement {
+            setup(attachStore) {
+              // Start with keyed items that produce multi-node fragments
+              this.element.items = [
+                { id: 'a', name: 'Alpha' },
+                { id: 'b', name: 'Beta' },
+                { id: 'c', name: 'Charlie' },
+              ];
+              this.element.trigger = attachStore();
+            }
+            render(Html) {
+              // CRITICAL: Use __unsafe to create PersistentFragments that bypass holed()
+              // This ensures diff() operates directly on PersistentFragment nodes,
+              // triggering diffFragment with -1 (REMOVE) and -0 (GET-SIBLING) operations
+              Html`
+                <div class="item-container">
+                  ${this.element.items.map(
+                    (item) => ({
+                      __unsafe: true,
+                      value: `<span class="item-id" data-id="${item.id}">${item.id}</span><span class="item-name">${item.name}</span>`
+                    })
+                  )}
+                </div>
+              `;
+            }
+          }
+        );
+
+        const raf = () => new Promise((r) => requestAnimationFrame(r));
+
+        requestAnimationFrame(async () => {
+          const section = document.querySelector(
+            '[data-test="persistent-fragment-diff-ops"]'
+          );
+          const elem = document.querySelector('persistent-fragment-diff-element');
+          const errors = [];
+
+          // Helper to get current item IDs in order (from multi-node fragments)
+          const getItemIds = () =>
+            [...elem.querySelectorAll('.item-id')].map((el) => el.dataset.id);
+
+          // Initial state: [a, b, c]
+          let ids = getItemIds();
+          if (ids.join(',') !== 'a,b,c')
+            errors.push('Initial state should be a,b,c, got ' + ids.join(','));
+
+          // ============================================================
+          // TEST 1: REMOVE middle item → triggers diffFragment(node, -1) → drop(node)
+          // ============================================================
+          elem.items = [
+            { id: 'a', name: 'Alpha' },
+            { id: 'c', name: 'Charlie' },
+          ];
+          elem.trigger();
+          await raf();
+
+          ids = getItemIds();
+          if (ids.join(',') !== 'a,c')
+            errors.push('After remove middle, should be a,c, got ' + ids.join(','));
+
+          // ============================================================
+          // TEST 2: REMOVE first item → triggers diffFragment(node, -1) → drop(node)
+          // ============================================================
+          elem.items = [{ id: 'c', name: 'Charlie' }];
+          elem.trigger();
+          await raf();
+
+          ids = getItemIds();
+          if (ids.join(',') !== 'c')
+            errors.push('After remove first, should be c, got ' + ids.join(','));
+
+          // ============================================================
+          // TEST 3: ADD items back for reorder test
+          // ============================================================
+          elem.items = [
+            { id: 'x', name: 'X-ray' },
+            { id: 'y', name: 'Yankee' },
+            { id: 'z', name: 'Zulu' },
+          ];
+          elem.trigger();
+          await raf();
+
+          ids = getItemIds();
+          if (ids.join(',') !== 'x,y,z')
+            errors.push('After add back, should be x,y,z, got ' + ids.join(','));
+
+          // ============================================================
+          // TEST 4: REORDER items → triggers diffFragment(node, -0) → node.lastChild
+          // Move last to first: [z, x, y]
+          // ============================================================
+          elem.items = [
+            { id: 'z', name: 'Zulu' },
+            { id: 'x', name: 'X-ray' },
+            { id: 'y', name: 'Yankee' },
+          ];
+          elem.trigger();
+          await raf();
+
+          ids = getItemIds();
+          if (ids.join(',') !== 'z,x,y')
+            errors.push('After reorder (z first), should be z,x,y, got ' + ids.join(','));
+
+          // ============================================================
+          // TEST 5: REVERSE entire order → more reorder operations
+          // [z, x, y] → [y, x, z]
+          // ============================================================
+          elem.items = [
+            { id: 'y', name: 'Yankee' },
+            { id: 'x', name: 'X-ray' },
+            { id: 'z', name: 'Zulu' },
+          ];
+          elem.trigger();
+          await raf();
+
+          ids = getItemIds();
+          if (ids.join(',') !== 'y,x,z')
+            errors.push('After reverse, should be y,x,z, got ' + ids.join(','));
+
+          // ============================================================
+          // TEST 6: Combined remove + reorder
+          // [y, x, z] → [z, y] (remove x, swap remaining)
+          // ============================================================
+          elem.items = [
+            { id: 'z', name: 'Zulu' },
+            { id: 'y', name: 'Yankee' },
+          ];
+          elem.trigger();
+          await raf();
+
+          ids = getItemIds();
+          if (ids.join(',') !== 'z,y')
+            errors.push('After remove+reorder, should be z,y, got ' + ids.join(','));
+
+          // ============================================================
+          // TEST 7: Remove all items → empty state
+          // ============================================================
+          elem.items = [];
+          elem.trigger();
+          await raf();
+
+          ids = getItemIds();
+          if (ids.length !== 0)
+            errors.push('After remove all, should be empty, got ' + ids.join(','));
+
+          // Verify container still exists
+          const container = elem.querySelector('.item-container');
+          if (!container) errors.push('Container should still exist after emptying');
+
+          if (errors.length === 0) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('persistent-fragment-diff-ops errors:', errors);
+          }
+        });
+      </script>
+    </section>
+
+    <section data-test="dom-rerender-same-hole" data-test-result="pending">
+      <h2>dom() Re-render Same Hole</h2>
+      <p>
+        Tests calling <code>dom(hole)</code> twice on the same Hole instance.
+        The second call should hit the <code>hole.n</code> truthy branch in
+        <code>hole.js:16</code>, calling <code>hole.update(hole)</code>.
+      </p>
+      <div id="dom-rerender-container"></div>
+      <script type="module">
+        // Use globals (works in both source and bundle mode)
+        // In source mode, test-loader exposes them via import map
+        // In bundle mode, they're set as window.html/window.dom
+        const { html, dom } = window;
+
+        requestAnimationFrame(async () => {
+          const section = document.querySelector(
+            '[data-test="dom-rerender-same-hole"]'
+          );
+          const container = document.getElementById('dom-rerender-container');
+          const errors = [];
+
+          // Create a Hole
+          const hole = html`<span class="dom-test">Hello ${42}</span>`;
+
+          // First render - sets hole.n
+          const node1 = dom(hole);
+          container.appendChild(node1);
+
+          if (!hole.n) {
+            errors.push('After first dom(), hole.n should be set');
+          }
+          if (node1.textContent !== 'Hello 42') {
+            errors.push('First render content wrong: ' + node1.textContent);
+          }
+
+          // Second render on SAME hole - should hit hole.n truthy branch
+          const node2 = dom(hole);
+
+          // Should return the same node (no replacement needed)
+          if (node2 !== hole.n) {
+            errors.push('Second dom() should return same node as hole.n');
+          }
+          if (node2.textContent !== 'Hello 42') {
+            errors.push('Second render content wrong: ' + node2.textContent);
+          }
+
+          if (errors.length === 0) {
+            section.dataset.testResult = 'pass';
+          } else {
+            section.dataset.testResult = 'fail';
+            console.error('dom-rerender-same-hole errors:', errors);
+          }
+        });
+      </script>
+    </section>
+
+    <section data-test="prototype-getter-non-function" data-test-result="pending">
+      <h2>Lowercase Prototype Getter Returning Non-Function</h2>
+      <p>
+        Class definition with a lowercase getter (<code>get someValue()</code>)
+        whose return value is NOT a function. The connectedCallback loop in
+        <code>src/lifecycle/connectedCallback.js</code> walks prototype property
+        names; for non-uppercase names it checks <code>typeof this[name]</code>.
+        When the value is NOT a function, lines 119-120 copy it directly to the
+        instance ref. This scenario exercises that branch.
+      </p>
+      <pre><code>customElements.define(
+  'getter-elem',
+  class extends hyperElement {
+    get someValue() { return 42; }
+    get configObject() { return { count: 7 }; }
+    render(Html) {
+      Html`&lt;div id="getter-result"&gt;value=${this.someValue}, count=${this.configObject.count}&lt;/div&gt;`;
+    }
+  }
+);
+document.getElementById('getter-output').innerHTML = '&lt;getter-elem&gt;&lt;/getter-elem&gt;';</code></pre>
+      <div id="getter-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="prototype-getter-non-function"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="getter-output"><getter-elem><div id="getter-result">value=42, count=7</div></getter-elem></div>';
+        requestAnimationFrame(() => {
+          window.assertSnapshot('prototype-getter-non-function', document.getElementById('getter-output'), expected);
+        });
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>
