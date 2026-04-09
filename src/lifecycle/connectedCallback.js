@@ -113,7 +113,11 @@ export function createdCallback() {
           return processed;
         };
       } else {
-        that[name] = this[name].bind(that);
+        if (typeof this[name] === 'function') {
+          that[name] = this[name].bind(that);
+        } else {
+          that[name] = this[name];
+        }
       }
       delete this[name];
     });

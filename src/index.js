@@ -10,6 +10,12 @@ import { createFunctionalElement } from './functional.js';
 import { signal, computed, effect, batch, untracked } from './signals/index.js';
 import { configureSSR } from './ssr/index.js';
 import { withOptions } from './withOptions.js';
+import {
+  renderSpec,
+  registerComponent,
+  validateSpec,
+  listComponentTypes,
+} from './json-render/index.js';
 
 /**
  * Throws error when hyperElement is instantiated directly.
@@ -75,5 +81,9 @@ export {
   batch,
   untracked,
   configureSSR,
+  renderSpec,
+  registerComponent,
+  validateSpec,
+  listComponentTypes,
 };
 export default hyperElement;

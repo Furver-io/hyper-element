@@ -30,6 +30,7 @@ const browserFiles = [
   'ssr/capture.js', 'ssr/replay.js', 'ssr/index.js',
   'lifecycle/onNext.js', 'lifecycle/observer.js', 'lifecycle/processFragmentResult.js', 'lifecycle/connectedCallback.js',
   'hyperElement.js', 'functional.js', 'withOptions.js',
+  'json-render/validator.js', 'json-render/components.js', 'json-render/renderer.js', 'json-render/index.js', 'json-render/element.js',
 ];
 
 const ssrServerFiles = [
@@ -51,7 +52,7 @@ function processFile(filePath, browserOnly = false) {
     /^export\s+(?:async\s+)?(?:const|let|var|function|class)\s+/gm,
     (m) => m.replace(/^export\s+/, '')
   );
-  content = content.replace(/^export\s+\{[\s\S]*?\};?\s*$/gm, '');
+  content = content.replace(/^export\s+\{[\s\S]*?\}(?:\s+from\s+['"].*?['"])?;?\s*$/gm, '');
   content = content.replace(/^export\s+default\s+/gm, '');
   content = content.replace(/\/\*\*[\s\S]*?\*\//g, '');
   content = content.replace(/^\s*\/\/.*$/gm, '');
@@ -103,6 +104,11 @@ function createBundle() {
       root.withOptions = exports.withOptions;
       root.html = exports.html;
       root.dom = exports.dom;
+      root.renderSpec = exports.renderSpec;
+      root.registerComponent = exports.registerComponent;
+      root.validateSpec = exports.validateSpec;
+      root.listComponentTypes = exports.listComponentTypes;
+      root.BUILT_IN_COMPONENTS = exports.BUILT_IN_COMPONENTS;
     }
   }
 })(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this, function (isBrowser) {
@@ -138,6 +144,8 @@ function createBundle() {
   var captureScrollState, captureCheckedState, handleCapturedEvent, restoreElementState;
   var startCapture, replayEvents, initSSR, ssrState, markTagRegistered, createSyntheticEvent;
   var onNext, observer, createdCallback;
+  var renderSpec, registerComponent, validateSpec, listComponentTypes, BUILT_IN_COMPONENTS, renderNode, renderSpecTree, registry, registryInterface;
+  var dispatchAction, renderCard, renderRow, renderColumn, renderButton, renderText, renderAlert, renderProgress, renderDivider, renderCodeBlock, renderImage, renderChecklist, renderTextField;
 `);
   addPart(`\n  if (isBrowser) {`);
   addFiles(browserFiles, '    ', true);
@@ -165,6 +173,8 @@ function createBundle() {
     hyperElementProxy.configureSSR = configureSSR;
     return { default: hyperElementProxy, hyperElement: hyperElementProxy, configureSSR: configureSSR,
       signal: signal, computed: computed, effect: effect, batch: batch, untracked: untracked, withOptions: withOptions,
+      renderSpec: renderSpec, registerComponent: registerComponent, validateSpec: validateSpec,
+      listComponentTypes: listComponentTypes, BUILT_IN_COMPONENTS: BUILT_IN_COMPONENTS,
       html: html, dom: dom };
   } else {
     return { renderElement: renderElement, renderElements: renderElements, createRenderer: createRenderer,

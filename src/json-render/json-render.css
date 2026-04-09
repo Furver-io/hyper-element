@@ -1,0 +1,378 @@
+/**
+ * json-render Component Styles
+ *
+ * Default visual styles for json-render components (Card, Button,
+ * Alert, etc.). Ships with hyper-element as a standalone CSS file.
+ *
+ * Design principles:
+ *   - Self-contained: defines its own CSS custom properties
+ *   - Dark-mode compatible: uses rgba/hsla, no hard-coded colors
+ *   - Themeable: override --jr-* variables to customize
+ *   - Namespaced: all classes prefixed with .jr-
+ *   - Animation-friendly: transitions on interactive elements
+ *
+ * Usage:
+ *   <link rel="stylesheet" href="hyper-element/src/json-render/json-render.css">
+ *   — or —
+ *   import 'hyper-element/json-render/css';
+ */
+
+/* ── Design tokens ─────────────────────────────────────── */
+:root {
+  --jr-accent: #6366f1;
+  --jr-accent-glow: rgba(99, 102, 241, 0.12);
+  --jr-bg: rgba(255, 255, 255, 0.03);
+  --jr-surface: rgba(255, 255, 255, 0.04);
+  --jr-surface-2: rgba(255, 255, 255, 0.03);
+  --jr-border: rgba(255, 255, 255, 0.08);
+  --jr-text: #e4e4e7;
+  --jr-text-dim: rgba(228, 228, 231, 0.55);
+  --jr-radius: 10px;
+  --jr-radius-sm: 8px;
+  --jr-gap: 8px;
+  --jr-font: system-ui, -apple-system, sans-serif;
+  --jr-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --jr-success: #34d399;
+  --jr-warning: #fbbf24;
+  --jr-error: #f87171;
+}
+
+/* ── Card ──────────────────────────────────────────────── */
+.jr-card {
+  background: var(--jr-surface-2);
+  border: 1px solid var(--jr-border);
+  border-radius: var(--jr-radius);
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+
+.jr-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--jr-text);
+}
+
+.jr-card-desc {
+  font-size: 13px;
+  color: var(--jr-text-dim);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.jr-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--jr-gap);
+}
+
+/* ── Row / Column ──────────────────────────────────────── */
+.jr-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--jr-gap);
+  align-items: center;
+}
+
+.jr-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--jr-gap);
+}
+
+/* ── Button ────────────────────────────────────────────── */
+.jr-btn {
+  padding: 8px 16px;
+  border-radius: var(--jr-radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--jr-font);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid var(--jr-border);
+  background: var(--jr-surface);
+  color: var(--jr-text);
+}
+
+.jr-btn:hover {
+  border-color: var(--jr-accent);
+  background: var(--jr-accent-glow);
+}
+
+.jr-btn:active {
+  transform: scale(0.97);
+}
+
+.jr-btn.primary {
+  background: var(--jr-accent);
+  border-color: var(--jr-accent);
+  color: white;
+}
+
+.jr-btn.primary:hover {
+  opacity: 0.9;
+}
+
+.jr-btn.destructive {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: var(--jr-error);
+  color: var(--jr-error);
+}
+
+.jr-btn.destructive:hover {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+.jr-btn.success {
+  background: transparent;
+  border-color: var(--jr-success);
+  color: var(--jr-success);
+}
+
+.jr-btn.success:hover {
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.jr-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Button loading spinner — activated by .jr-btn.loading class */
+.jr-btn.loading {
+  pointer-events: none;
+  opacity: 0.7;
+  position: relative;
+}
+
+.jr-btn.loading::after {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: jr-spin 0.6s linear infinite;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+@keyframes jr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Text ──────────────────────────────────────────────── */
+.jr-text {
+  line-height: 1.6;
+}
+.jr-text.heading,
+.jr-text.h1 {
+  font-size: 20px;
+  font-weight: 600;
+}
+.jr-text.h2 {
+  font-size: 17px;
+  font-weight: 600;
+}
+.jr-text.h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.jr-text.muted {
+  color: var(--jr-text-dim);
+  font-size: 13px;
+}
+.jr-text.bold {
+  font-weight: 600;
+}
+.jr-text.code {
+  font-family: var(--jr-mono);
+  font-size: 13px;
+  background: var(--jr-surface);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ── CodeBlock ─────────────────────────────────────────── */
+.jr-codeblock {
+  background: #0d0d11;
+  border: 1px solid var(--jr-border);
+  border-radius: var(--jr-radius-sm);
+  overflow: hidden;
+}
+
+.jr-codeblock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--jr-surface);
+  border-bottom: 1px solid var(--jr-border);
+  font-size: 11px;
+  font-family: var(--jr-mono);
+  color: var(--jr-text-dim);
+}
+
+.jr-codeblock pre {
+  padding: 12px;
+  margin: 0;
+  overflow-x: auto;
+  font-family: var(--jr-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--jr-text);
+}
+
+/* ── Divider ───────────────────────────────────────────── */
+.jr-divider {
+  height: 1px;
+  background: var(--jr-border);
+  margin: 8px 0;
+}
+
+/* ── Progress ──────────────────────────────────────────── */
+.jr-progress-bar {
+  height: 6px;
+  background: var(--jr-surface);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.jr-progress-fill {
+  height: 100%;
+  background: var(--jr-accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.jr-progress-label {
+  font-size: 12px;
+  color: var(--jr-text-dim);
+  margin-bottom: 4px;
+}
+
+/* ── Alert ─────────────────────────────────────────────── */
+.jr-alert {
+  padding: 12px 16px;
+  border-radius: var(--jr-radius-sm);
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid;
+}
+
+.jr-alert.info {
+  border-color: var(--jr-accent);
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--jr-text);
+}
+
+.jr-alert.warning {
+  border-color: var(--jr-warning);
+  background: rgba(251, 191, 36, 0.08);
+  color: var(--jr-warning);
+}
+
+.jr-alert.error {
+  border-color: var(--jr-error);
+  background: rgba(248, 113, 113, 0.08);
+  color: var(--jr-error);
+}
+
+.jr-alert.success {
+  border-color: var(--jr-success);
+  background: rgba(52, 211, 153, 0.08);
+  color: var(--jr-success);
+}
+
+/* ── Checklist ─────────────────────────────────────────── */
+.jr-checklist {
+  list-style: none;
+}
+
+.jr-checklist-label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--jr-text);
+}
+
+.jr-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.jr-checklist-item:hover {
+  opacity: 0.8;
+}
+
+.jr-checklist-item input[type='checkbox'] {
+  accent-color: var(--jr-accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.jr-checklist-item.checked label,
+.jr-checklist-item.checked span {
+  text-decoration: line-through;
+  color: var(--jr-text-dim);
+}
+
+/* ── Image ─────────────────────────────────────────────── */
+.jr-image {
+  max-width: 100%;
+  border-radius: var(--jr-radius-sm);
+}
+
+/* ── TextField ─────────────────────────────────────────── */
+.jr-textfield {
+  padding: 10px 14px;
+  background: var(--jr-surface);
+  border: 1px solid var(--jr-border);
+  border-radius: var(--jr-radius-sm);
+  color: var(--jr-text);
+  font-size: 14px;
+  width: 100%;
+  font-family: var(--jr-font);
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.jr-textfield:focus {
+  border-color: var(--jr-accent);
+  box-shadow: 0 0 0 2px var(--jr-accent-glow);
+}
+
+.jr-textfield::placeholder {
+  color: var(--jr-text-dim);
+}
+
+/* ── Loading shimmer ───────────────────────────────────── */
+@keyframes jr-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.jr-ui-shimmer .jr-card {
+  animation: jr-pulse 1.5s ease-in-out infinite;
+}
+
+/* ── Container ─────────────────────────────────────────── */
+.jr-ui-root {
+  width: 100%;
+}

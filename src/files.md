@@ -7,6 +7,7 @@ src/
 ├── attributes/
 ├── core/
 ├── html/
+├── json-render/
 ├── lifecycle/
 ├── render/
 ├── signals/
@@ -32,7 +33,11 @@ Factory function `createFunctionalElement()` that generates hyperElement classes
 
 ### `index.js`
 
-Module entry point. Wraps `hyperElement` class in a Proxy to support dual-purpose usage: as a class base for inheritance (`class X extends hyperElement`) or as a factory function (`hyperElement('tag', {...})`) for the functional API.
+Module entry point. Wraps `hyperElement` class in a Proxy to support dual-purpose usage: as a class base for inheritance (`class X extends hyperElement`) or as a factory function (`hyperElement('tag', {...})`) for the functional API. Also re-exports json-render public API: `renderSpec`, `registerComponent`, `validateSpec`.
+
+### `json-render/`
+
+Spec-driven UI rendering module. Turns flat JSON specs (`{ root, elements }`) into live DOM trees using hyper-element's tagged template rendering. Contains renderer, 12 built-in components, extensible registry, spec validator, `<jr-ui>` custom element, and default CSS. See `json-render/README.md` for full documentation.
 
 ### `package.json`
 

@@ -150,17 +150,39 @@ const attributeTemplate =
   };
 
 /**
+ * Converts a JS-style camelCase CSS property name to its kebab-case
+ * CSS form (e.g. `borderRadius` → `border-radius`, `WebkitTransform`
+ * → `-webkit-transform`). The CSSOM `setProperty()` / `removeProperty()`
+ * methods require kebab-case and SILENTLY IGNORE camelCase input — so
+ * a template like `style=${{ borderRadius: '12px' }}` would otherwise
+ * never paint. Vendor prefixes (leading uppercase letter) get a leading
+ * hyphen so `WebkitTransform` becomes `-webkit-transform` per spec.
+ *
+ * @param {string} prop - JS camelCase or already-kebab CSS property
+ * @returns {string} kebab-case CSS property
+ */
+const cssKebab = (prop) =>
+  prop.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase());
+
+/**
  * Updates style attribute - handles both strings and objects.
+ * Object keys may be camelCase (`borderRadius`) or kebab-case
+ * (`border-radius`); both forms are normalized via cssKebab() before
+ * being handed to the CSSOM, because `setProperty()` does not
+ * auto-convert camelCase and silently no-ops on unrecognized names.
+ *
  * @param {HTMLElement} node - Target element
  * @param {string|Object|null} value - Style string or object
  */
 const styleHandler = (node, value) => {
   if (value == null) node.removeAttribute('style');
   else if (typeof value === 'object') {
-    for (const [prop, val] of Object.entries(value))
+    for (const [prop, val] of Object.entries(value)) {
+      const cssProp = cssKebab(prop);
       val == null
-        ? node.style.removeProperty(prop)
-        : node.style.setProperty(prop, val);
+        ? node.style.removeProperty(cssProp)
+        : node.style.setProperty(cssProp, val);
+    }
   } else node.setAttribute('style', value);
 };
 
