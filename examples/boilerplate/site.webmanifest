@@ -1,0 +1,16 @@
+{
+  "name": "Hyper Element App",
+  "short_name": "HyperApp",
+  "description": "A web application built with hyper-element",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#fafafa",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

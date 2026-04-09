@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Async Setup - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Async Setup</h1>
+    <p>
+      Demonstrates using the setup() method for async data initialization before
+      rendering.
+    </p>
+
+    <section data-test="setup-element" data-test-result="pending">
+      <h2>Setup with Async Data</h2>
+      <p>
+        The setup() method receives onNext which triggers re-renders with new
+        data.
+      </p>
+      <pre><code>customElements.define(
+  'setup-element',
+  class extends hyperElement {
+    setup(onNext) {
+      setTimeout(onNext(() => 'loaded!'), 10);
+    }
+    render(Html, data = 'loading...') {
+      Html`Status: ${data}`;
+    }
+  }
+);
+
+const setupElem = document.createElement('setup-element');
+document.getElementById('setup-output').appendChild(setupElem);</code></pre>
+      <div id="setup-output"></div>
+      <script type="module">
+        // Single source of truth: read the example exactly as displayed
+        // and execute it. There is no second copy of the code anywhere.
+        const code = document.querySelector('[data-test="setup-element"] pre code').textContent;
+        eval(code);
+
+        // Phase-aware snapshots.
+        //
+        // Note on "phases": although the snippet uses setTimeout to *schedule*
+        // a delayed onNext invocation, the onNext call inside setup() runs
+        // synchronously. onNext synchronously replaces this.render with a
+        // version that injects the store value, so the very first render
+        // already paints with the resolved store ("loaded!"). The default
+        // 'loading...' parameter never appears in the DOM, so this example
+        // has a single stable rendered output.
+        const expectedFinal = '<setup-element><!--<>-->Status: loaded!<!--</>--></setup-element>';
+
+        const elem = document.querySelector('setup-element');
+        const section = document.querySelector('[data-test="setup-element"]');
+
+        // Poll until the final phase string matches, with a generous deadline.
+        // This is timing-stable across runs because the deadline is far longer
+        // than the example's 10ms setTimeout and any rendering microtask churn.
+        const deadline = Date.now() + 1500;
+        (function awaitFinal() {
+          if (elem.outerHTML === expectedFinal) {
+            section.dataset.testResult = 'pass';
+            return;
+          }
+          if (Date.now() > deadline) {
+            console.error('Final snapshot mismatch.\nExpected: ' + expectedFinal + '\nActual:   ' + elem.outerHTML);
+            section.dataset.testResult = 'fail';
+            return;
+          }
+          setTimeout(awaitFinal, 25);
+        })();
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

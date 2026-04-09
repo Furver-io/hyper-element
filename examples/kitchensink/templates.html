@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Templates - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Templates</h1>
+    <p>
+      Demonstrates using Html.template() to render from inline template
+      definitions.
+    </p>
+
+    <section data-test="template-element" data-test-result="pending">
+      <h2>Inline Template with Variables</h2>
+      <p>
+        Define a template in markup with {variable} placeholders, then render
+        with data.
+      </p>
+      <pre><code>customElements.define(
+  'template-element',
+  class extends hyperElement {
+    render(Html) {
+      Html`${Html.template({ name: 'World' })}`;
+    }
+  }
+);
+
+const tplElem = document.createElement('template-element');
+tplElem.setAttribute('template', '');
+tplElem.textContent = 'Hello {name}!';
+document.getElementById('template-output').appendChild(tplElem);</code></pre>
+      <div id="template-output"></div>
+      <script type="module">
+        // Single source of truth: read the example from the <pre><code> block
+        // and execute it. The snippet itself defines the element, creates the
+        // template instance with its inline {name} placeholder, and mounts it.
+        const code = document.querySelector('[data-test="template-element"] pre code').textContent;
+        eval(code);
+
+        // Single-phase render. Snapshot pins the resolved {name} → "World"
+        // substitution and the surrounding template wrapper markers emitted
+        // by Html.template().
+        const expected = '<template-element template=""><!--<>--><!--<>-->Hello World!<!--</>--><!--</>--></template-element>';
+        requestAnimationFrame(() => {
+          window.assertSnapshot('template-element', document.querySelector('template-element'), expected);
+        });
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

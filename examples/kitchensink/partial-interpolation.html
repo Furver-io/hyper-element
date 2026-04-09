@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Partial Interpolation - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Partial Interpolation (Issue #21)</h1>
+    <p>Demonstrates partial attribute interpolation like class="prefix-${value}".</p>
+
+    <section data-test="simple-partial" data-test-result="pending">
+      <h2>Simple Partial Interpolation</h2>
+      <p>Attribute values with static prefix and dynamic suffix.</p>
+      <pre><code>customElements.define(
+  'simple-partial',
+  class extends hyperElement {
+    render(Html) {
+      const type = 'primary';
+      Html`&lt;div class="btn-${type}" id="simple-partial-target"&gt;&lt;/div&gt;`;
+    }
+  }
+);
+
+document.getElementById('simple-partial-output').appendChild(
+  document.createElement('simple-partial')
+);</code></pre>
+      <div id="simple-partial-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="simple-partial"] pre code').textContent;
+        eval(code);
+        // Single-phase render. Pins the resolved partial-interpolated class.
+        const expected = '<div id="simple-partial-output"><simple-partial><div id="simple-partial-target" class="btn-primary"></div></simple-partial></div>';
+        requestAnimationFrame(() => {
+          window.assertSnapshot('simple-partial', document.getElementById('simple-partial-output'), expected);
+        });
+      </script>
+    </section>
+
+    <section data-test="multiple-holes" data-test-result="pending">
+      <h2>Multiple Holes in One Attribute</h2>
+      <p>Attribute with multiple interpolations.</p>
+      <pre><code>customElements.define(
+  'multiple-holes',
+  class extends hyperElement {
+    render(Html) {
+      const a = 'flex';
+      const b = 'items-center';
+      const c = 'gap-2';
+      Html`&lt;div class="${a} ${b} ${c}" id="multiple-holes-target"&gt;&lt;/div&gt;`;
+    }
+  }
+);
+
+document.getElementById('multiple-holes-output').appendChild(
+  document.createElement('multiple-holes')
+);</code></pre>
+      <div id="multiple-holes-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="multiple-holes"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="multiple-holes-output"><multiple-holes><div id="multiple-holes-target" class="flex items-center gap-2"></div></multiple-holes></div>';
+        requestAnimationFrame(() => {
+          window.assertSnapshot('multiple-holes', document.getElementById('multiple-holes-output'), expected);
+        });
+      </script>
+    </section>
+
+    <section data-test="conditional-class" data-test-result="pending">
+      <h2>Conditional Classes</h2>
+      <p>Common pattern for conditional CSS classes.</p>
+      <pre><code>customElements.define(
+  'conditional-class',
+  class extends hyperElement {
+    render(Html) {
+      const active = true;
+      Html`&lt;button class="btn ${active ? 'active' : ''}" id="conditional-class-target"&gt;Click&lt;/button&gt;`;
+    }
+  }
+);
+
+document.getElementById('conditional-class-output').appendChild(
+  document.createElement('conditional-class')
+);</code></pre>
+      <div id="conditional-class-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="conditional-class"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="conditional-class-output"><conditional-class><button id="conditional-class-target" class="btn active">Click</button></conditional-class></div>';
+        requestAnimationFrame(() => {
+          window.assertSnapshot('conditional-class', document.getElementById('conditional-class-output'), expected);
+        });
+      </script>
+    </section>
+
+    <section data-test="mixed-attrs" data-test-result="pending">
+      <h2>Mixed Partial and Full Interpolations</h2>
+      <p>Partial interpolation with other dynamic attributes.</p>
+      <pre><code>window.__mixedClicked = false;
+customElements.define(
+  'mixed-attrs',
+  class extends hyperElement {
+    render(Html) {
+      const classVal = 'suffix';
+      const titleVal = 'My Title';
+      const clickHandler = () => { window.__mixedClicked = true; };
+      const content = 'Content Here';
+      Html`&lt;div class="prefix-${classVal}" title="${titleVal}" @click=${clickHandler} id="mixed-attrs-target"&gt;${content}&lt;/div&gt;`;
+    }
+  }
+);
+
+document.getElementById('mixed-attrs-output').appendChild(
+  document.createElement('mixed-attrs')
+);</code></pre>
+      <div id="mixed-attrs-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="mixed-attrs"] pre code').textContent;
+        eval(code);
+
+        // Multi-phase example.
+        //   Phase Mounted — initial render with all interpolations resolved.
+        //   Phase Clicked — synthetic click flips window.__mixedClicked.
+        const expectedMounted = '<div id="mixed-attrs-output"><mixed-attrs><div id="mixed-attrs-target" title="My Title" class="prefix-suffix">Content Here</div></mixed-attrs></div>';
+        requestAnimationFrame(() => {
+          const container = document.getElementById('mixed-attrs-output');
+          const mountedOk = container.outerHTML === expectedMounted;
+          if (!mountedOk) {
+            console.error('Phase Mounted mismatch (mixed-attrs)\nExpected: ' + expectedMounted + '\nActual:   ' + container.outerHTML);
+          }
+          document.getElementById('mixed-attrs-target').click();
+          const clickOk = window.__mixedClicked === true;
+          const section = document.querySelector('[data-test="mixed-attrs"]');
+          section.dataset.testResult = (mountedOk && clickOk) ? 'pass' : 'fail';
+        });
+      </script>
+    </section>
+
+    <section data-test="cascade-test" data-test-result="pending">
+      <h2>Cascade Test (Issue #21 Original Bug)</h2>
+      <p>Verifies holes don't get offset by partial interpolation.</p>
+      <pre><code>window.__cascadeClicked = false;
+customElements.define(
+  'cascade-test',
+  class extends hyperElement {
+    render(Html) {
+      const node = { earned: false, id: 'skill-1', label: 'RPC' };
+      Html`&lt;button
+        class="skill-node ${node.earned ? 'earned' : 'locked'}"
+        title="${node.id}"
+        @click=${() => { window.__cascadeClicked = true; }}
+        id="cascade-test-target"&gt;${node.label}&lt;/button&gt;`;
+    }
+  }
+);
+
+document.getElementById('cascade-test-output').appendChild(
+  document.createElement('cascade-test')
+);</code></pre>
+      <div id="cascade-test-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="cascade-test"] pre code').textContent;
+        eval(code);
+
+        // Multi-phase example.
+        //   Phase Mounted — partial interpolation produces locked class etc.
+        //   Phase Clicked — synthetic click flips window.__cascadeClicked.
+        const expectedMounted = '<div id="cascade-test-output"><cascade-test><button id="cascade-test-target" title="skill-1" class="skill-node locked">RPC</button></cascade-test></div>';
+        requestAnimationFrame(() => {
+          const container = document.getElementById('cascade-test-output');
+          const mountedOk = container.outerHTML === expectedMounted;
+          if (!mountedOk) {
+            console.error('Phase Mounted mismatch (cascade-test)\nExpected: ' + expectedMounted + '\nActual:   ' + container.outerHTML);
+          }
+          document.getElementById('cascade-test-target').click();
+          const clickOk = window.__cascadeClicked === true;
+          const section = document.querySelector('[data-test="cascade-test"]');
+          section.dataset.testResult = (mountedOk && clickOk) ? 'pass' : 'fail';
+        });
+      </script>
+    </section>
+
+    <section data-test="update-partial" data-test-result="pending">
+      <h2>Re-render with Updated Values</h2>
+      <p>Verifies partial interpolation works across multiple renders.</p>
+      <pre><code>window.__updatePartialState = { count: 0 };
+window.__updatePartialCount = 0;
+
+customElements.define(
+  'update-partial',
+  class extends hyperElement {
+    render(Html) {
+      window.__updatePartialCount++;
+      const count = window.__updatePartialState.count;
+      Html`&lt;div class="counter-${count}" id="update-partial-target"&gt;${count}&lt;/div&gt;`;
+    }
+  }
+);
+
+const updElem = document.createElement('update-partial');
+document.getElementById('update-partial-output').appendChild(updElem);
+window.__updatePartialElem = updElem;</code></pre>
+      <div id="update-partial-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="update-partial"] pre code').textContent;
+        eval(code);
+
+        // Multi-phase example.
+        //   Phase Initial — counter-0
+        //   Phase Updated — after mutating state and re-rendering, counter-5
+        const expectedInitial = '<div id="update-partial-output"><update-partial><div id="update-partial-target" class="counter-0">0</div></update-partial></div>';
+        const expectedUpdated = '<div id="update-partial-output"><update-partial><div id="update-partial-target" class="counter-5">5</div></update-partial></div>';
+
+        requestAnimationFrame(() => {
+          const container = document.getElementById('update-partial-output');
+          const initialOk = container.outerHTML === expectedInitial;
+          if (!initialOk) {
+            console.error('Phase Initial mismatch (update-partial)\nExpected: ' + expectedInitial + '\nActual:   ' + container.outerHTML);
+          }
+          window.__updatePartialState.count = 5;
+          window.__updatePartialElem.render();
+          requestAnimationFrame(() => {
+            const updatedOk = container.outerHTML === expectedUpdated;
+            if (!updatedOk) {
+              console.error('Phase Updated mismatch (update-partial)\nExpected: ' + expectedUpdated + '\nActual:   ' + container.outerHTML);
+            }
+            const section = document.querySelector('[data-test="update-partial"]');
+            section.dataset.testResult = (initialOk && updatedOk) ? 'pass' : 'fail';
+          });
+        });
+      </script>
+    </section>
+
+    <section data-test="empty-result" data-test-result="pending">
+      <h2>Empty Result Removes Attribute</h2>
+      <p>When partial interpolation results in empty string, attribute is removed.</p>
+      <pre><code>customElements.define(
+  'empty-result',
+  class extends hyperElement {
+    render(Html) {
+      const state = { a: '', b: '' };
+      // ${a}${b} with both empty = '' which removes attribute
+      Html`&lt;div class="${state.a}${state.b}" id="empty-result-target"&gt;Content&lt;/div&gt;`;
+    }
+  }
+);
+
+document.getElementById('empty-result-output').appendChild(
+  document.createElement('empty-result')
+);</code></pre>
+      <div id="empty-result-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="empty-result"] pre code').textContent;
+        eval(code);
+        // Single-phase render. The class attribute is fully removed because
+        // both interpolation slots resolve to empty strings.
+        const expected = '<div id="empty-result-output"><empty-result><div id="empty-result-target">Content</div></empty-result></div>';
+        requestAnimationFrame(() => {
+          window.assertSnapshot('empty-result', document.getElementById('empty-result-output'), expected);
+        });
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

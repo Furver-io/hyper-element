@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Event Callbacks - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Event Callbacks</h1>
+    <p>
+      Demonstrates using attachStore() without arguments for external event
+      callbacks.
+    </p>
+
+    <section data-test="event-callback-no-store" data-test-result="pending">
+      <h2>External Event Trigger (No Store)</h2>
+      <p>
+        Calling attachStore() without arguments returns a trigger function for
+        re-rendering.
+      </p>
+      <pre><code id="code-no-store">const eventCallbacks = [];
+function onExternalEvent(cb) {
+  eventCallbacks.push(cb);
+}
+function emitExternalEvent(data) {
+  eventCallbacks.forEach((cb) => cb(data));
+}
+
+customElements.define(
+  'event-elem',
+  class extends hyperElement {
+    constructor() {
+      super();
+      this.count = 0;
+    }
+
+    setup(attachStore) {
+      // Use attachStore without arguments - should return a trigger function
+      const triggerRender = attachStore();
+
+      onExternalEvent((data) => {
+        this.count = data;
+        triggerRender();
+      });
+    }
+
+    render(Html) {
+      Html`&lt;div id="event-result"&gt;Count: ${this.count}&lt;/div&gt;`;
+    }
+  }
+);</code></pre>
+      <event-elem></event-elem>
+      <script type="module">
+        {
+          const code = document.querySelector('#code-no-store').textContent;
+          const script = document.createElement('script');
+          script.type = 'module';
+          script.textContent = code + `
+          {
+            // Test: emit events and verify re-render
+            setTimeout(() => {
+              emitExternalEvent(5);
+              setTimeout(() => {
+                emitExternalEvent(10);
+                setTimeout(() => {
+                  const section = document.querySelector(
+                    '[data-test="event-callback-no-store"]'
+                  );
+                  const result = document.querySelector('#event-result');
+                  if (result && result.textContent.includes('Count: 10')) {
+                    section.dataset.testResult = 'pass';
+                  } else {
+                    section.dataset.testResult = 'fail';
+                  }
+                }, 100);
+              }, 100);
+            }, 100);
+          }
+          `;
+          document.body.appendChild(script);
+        }
+      </script>
+    </section>
+
+    <section data-test="event-callback-with-data" data-test-result="pending">
+      <h2>External Event with Data Passed to Render</h2>
+      <p>The trigger function can also pass data directly to render().</p>
+      <pre><code id="code-with-data">const dataEventCallbacks = [];
+function onDataEvent(cb) {
+  dataEventCallbacks.push(cb);
+}
+function emitDataEvent(data) {
+  dataEventCallbacks.forEach((cb) => cb(data));
+}
+
+customElements.define(
+  'event-data-elem',
+  class extends hyperElement {
+    setup(attachStore) {
+      const triggerRender = attachStore();
+
+      onDataEvent((data) => {
+        triggerRender(data); // Pass data directly to render
+      });
+    }
+
+    render(Html, data) {
+      Html`&lt;div id="event-data-result"&gt;Data: ${data || 'none'}&lt;/div&gt;`;
+    }
+  }
+);</code></pre>
+      <event-data-elem></event-data-elem>
+      <script type="module">
+        {
+          const code = document.querySelector('#code-with-data').textContent;
+          const script = document.createElement('script');
+          script.type = 'module';
+          script.textContent = code + `
+          {
+            setTimeout(() => {
+              emitDataEvent('PASS');
+              setTimeout(() => {
+                const section = document.querySelector(
+                  '[data-test="event-callback-with-data"]'
+                );
+                const result = document.querySelector('#event-data-result');
+                if (result && result.textContent.includes('Data: PASS')) {
+                  section.dataset.testResult = 'pass';
+                } else {
+                  section.dataset.testResult = 'fail';
+                }
+              }, 100);
+            }, 200);
+          }
+          `;
+          document.body.appendChild(script);
+        }
+      </script>
+    </section>
+
+    <!-- Test: Event handler with options array -->
+    <section data-test="event-handler-array" data-test-result="pending">
+      <h2>Event Handler Array with Options</h2>
+      <p>
+        Tests event handlers passed as arrays with options: @click=${[handler, { capture: true }]}
+      </p>
+      <pre><code id="code-handler-array">let capturePhaseClicked = false;
+let onceClicked = 0;
+
+customElements.define(
+  'event-array-elem',
+  class extends hyperElement {
+    setup(attachStore) {
+      this.element._trigger = attachStore();
+    }
+
+    handleCapture(e) {
+      capturePhaseClicked = true;
+    }
+
+    handleOnce(e) {
+      onceClicked++;
+    }
+
+    render(Html) {
+      Html`&lt;div&gt;
+        &lt;button id="capture-btn" @click=${[() => this.handleCapture(), { capture: true }]}&gt;Capture&lt;/button&gt;
+        &lt;button id="once-btn" @click=${[() => this.handleOnce(), { once: true }]}&gt;Once&lt;/button&gt;
+      &lt;/div&gt;`;
+    }
+  }
+);</code></pre>
+      <div id="event-handler-array-output"></div>
+      <script type="module">
+        {
+          const code = document.querySelector('#code-handler-array').textContent;
+          const script = document.createElement('script');
+          script.type = 'module';
+          script.textContent = code + `
+          {
+            const section = document.querySelector('[data-test="event-handler-array"]');
+            const elem = document.createElement('event-array-elem');
+            document.getElementById('event-handler-array-output').appendChild(elem);
+
+            setTimeout(() => {
+              const captureBtn = document.getElementById('capture-btn');
+              const onceBtn = document.getElementById('once-btn');
+
+              // Click capture button
+              captureBtn?.click();
+
+              // Click once button multiple times
+              onceBtn?.click();
+              onceBtn?.click();
+              onceBtn?.click();
+
+              setTimeout(() => {
+                // Capture should have fired, once should only count 1
+                const pass = capturePhaseClicked && onceClicked === 1;
+                section.dataset.testResult = pass ? 'pass' : 'fail';
+              }, 50);
+            }, 100);
+          }
+          `;
+          document.body.appendChild(script);
+        }
+      </script>
+    </section>
+
+    <!-- Test: Event handler array replacement -->
+    <section data-test="event-handler-array-replace" data-test-result="pending">
+      <h2>Event Handler Array Replacement</h2>
+      <p>
+        Tests that event handler arrays can be replaced (removes old, adds new).
+      </p>
+      <pre><code id="code-handler-replace">let handlerAClicks = 0;
+let handlerBClicks = 0;
+
+customElements.define(
+  'event-replace-elem',
+  class extends hyperElement {
+    setup(attachStore) {
+      this.element._useHandlerA = true;
+      this.element._trigger = attachStore();
+    }
+
+    handlerA() {
+      handlerAClicks++;
+    }
+
+    handlerB() {
+      handlerBClicks++;
+    }
+
+    render(Html) {
+      const handler = this.element._useHandlerA
+        ? [() => this.handlerA(), { capture: true }]
+        : [() => this.handlerB(), { capture: false }];
+      Html`&lt;button id="replace-btn" @click=${handler}&gt;Click&lt;/button&gt;`;
+    }
+  }
+);</code></pre>
+      <div id="event-handler-array-replace-output"></div>
+      <script type="module">
+        {
+          const code = document.querySelector('#code-handler-replace').textContent;
+          const script = document.createElement('script');
+          script.type = 'module';
+          script.textContent = code + `
+          {
+            const section = document.querySelector('[data-test="event-handler-array-replace"]');
+            const elem = document.createElement('event-replace-elem');
+            document.getElementById('event-handler-array-replace-output').appendChild(elem);
+
+            setTimeout(() => {
+              const btn = document.getElementById('replace-btn');
+
+              // Click with handler A
+              btn?.click();
+              const afterA = handlerAClicks;
+
+              // Switch to handler B and re-render
+              elem._useHandlerA = false;
+              elem._trigger();
+
+              setTimeout(() => {
+                // Click with handler B
+                btn?.click();
+
+                setTimeout(() => {
+                  // Handler A should have 1 click, handler B should have 1 click
+                  const pass = afterA === 1 && handlerAClicks === 1 && handlerBClicks === 1;
+                  section.dataset.testResult = pass ? 'pass' : 'fail';
+                }, 50);
+              }, 50);
+            }, 100);
+          }
+          `;
+          document.body.appendChild(script);
+        }
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

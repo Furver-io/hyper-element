@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fragment Templates - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Fragment Templates</h1>
+    <p>Demonstrates fragments with template strings and value objects.</p>
+
+    <section data-test="fragment-template-basic" data-test-result="pending">
+      <h2>Basic Fragment Template</h2>
+      <p>Fragment methods can return a template string with {placeholders}.</p>
+      <pre><code>customElements.define('fragments-element2', class extends hyperElement {
+  Button(values) {
+    return {
+      template: '&lt;button&gt;{text}&lt;/button&gt;'
+    }
+  }
+  render(Html) {
+    Html`${{ Button: { text: "Click me" } }}`
+  }
+});</code></pre>
+      <fragments-element2></fragments-element2>
+      <script type="module">
+        const section = document.querySelector('[data-test="fragment-template-basic"]');
+        const code = section.querySelector('code').textContent;
+        eval(code);
+
+        // Single-phase render. Snapshot pins the fragment-template button output.
+        const expected = '<fragments-element2><!--<>--><!--<>--><button>Click me</button><!--</>--><!--</>--></fragments-element2>';
+        requestAnimationFrame(() => {
+          window.assertSnapshot('fragment-template-basic', document.querySelector('fragments-element2'), expected);
+        });
+      </script>
+    </section>
+
+    <section data-test="fragment-template-values" data-test-result="pending">
+      <h2>Fragment with Custom Values</h2>
+      <p>Fragment methods can compute values from input data.</p>
+      <pre><code>customElements.define('fragments-element3', class extends hyperElement {
+  Status({ data }) {
+    return {
+      template: '&lt;span&gt;{status}&lt;/span&gt;',
+      values: { status: data === "ok" ? "PASS" : "FAIL" }
+    }
+  }
+  render(Html) {
+    Html`${{ Status: { data: "ok" } }}`
+  }
+});</code></pre>
+      <fragments-element3></fragments-element3>
+      <script type="module">
+        const section = document.querySelector('[data-test="fragment-template-values"]');
+        const code = section.querySelector('code').textContent;
+        eval(code);
+
+        // Single-phase render. PASS proves the fragment values map fed into
+        // the {status} placeholder via the data argument.
+        const expected = '<fragments-element3><!--<>--><!--<>--><span>PASS</span><!--</>--><!--</>--></fragments-element3>';
+        requestAnimationFrame(() => {
+          window.assertSnapshot('fragment-template-values', document.querySelector('fragments-element3'), expected);
+        });
+      </script>
+    </section>
+
+    <section data-test="fragment-template-events" data-test-result="pending">
+      <h2>Fragment with Events and Attributes</h2>
+      <p>Fragment values can include functions for event handlers.</p>
+      <pre><code>customElements.define('fragments-element4', class extends hyperElement {
+  Input({ data }) {
+    return {
+      template: '&lt;input placeholder={ph} oninput={handler}/&gt;{text}',
+      values: {
+        ph: "Type here",
+        handler: (e) => console.log(e.target.value),
+        text: data === "ok" ? "PASS" : "FAIL"
+      }
+    }
+  }
+  render(Html) {
+    Html`${{ Input: { data: "ok" } }}`
+  }
+});</code></pre>
+      <fragments-element4></fragments-element4>
+      <script type="module">
+        const section = document.querySelector('[data-test="fragment-template-events"]');
+        const code = section.querySelector('code').textContent;
+        eval(code);
+
+        // Single-phase render. The handler function is wired but not invoked
+        // in this snapshot; the placeholder & text content prove the values
+        // map propagated through the fragment template renderer.
+        const expected = '<fragments-element4><!--<>--><!--<>--><!--<>--><input placeholder="Type here">PASS<!--</>--><!--</>--><!--</>--></fragments-element4>';
+        requestAnimationFrame(() => {
+          window.assertSnapshot('fragment-template-events', document.querySelector('fragments-element4'), expected);
+        });
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

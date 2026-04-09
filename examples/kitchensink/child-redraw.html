@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Child Redraw - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Child Redraw</h1>
+    <p>Tests that child elements re-render when parent passes new values.</p>
+
+    <!-- Issue #11: Child element NOT re-drawing -->
+    <section
+      data-test="child-redraw-on-parent-update"
+      data-test-result="pending"
+    >
+      <h2>Issue #11: Child Re-draws on Parent Update</h2>
+      <p>
+        When a parent element updates and passes new attribute values, the child
+        should re-render.
+      </p>
+      <pre><code>class ChildElem extends hyperElement {
+  render(Html) {
+    Html`&lt;span id="child-display"&gt;Name: ${this.attrs.name}&lt;/span&gt;`;
+  }
+}
+
+class ParentElem extends hyperElement {
+  setup(attachStore) {
+    let counter = 0;
+    const interval = setInterval(() => {
+      counter++;
+      attachStore(() => counter)();
+    }, 200);
+
+    return () => clearInterval(interval);
+  }
+
+  render(Html, state) {
+    const counter = state || 0;
+    Html`&lt;child-elem name="${'value-' + counter}"&gt;&lt;/child-elem&gt;`;
+  }
+}
+
+customElements.define('child-elem', ChildElem);
+customElements.define('parent-elem', ParentElem);</code></pre>
+      <div id="redraw-container"></div>
+      <div id="redraw-log"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="child-redraw-on-parent-update"] code').textContent;
+        eval(code);
+
+        const parent = document.createElement('parent-elem');
+        document.getElementById('redraw-container').appendChild(parent);
+
+        const expectedPhase1 = '<parent-elem><child-elem name="value-0"><span id="child-display">Name: value-0</span></child-elem></parent-elem>';
+        const expectedPhaseFinal = '<parent-elem><child-elem name="value-3"><span id="child-display">Name: value-3</span></child-elem></parent-elem>';
+        
+        let phase1Passed = false;
+        let p1Actual = "";
+        
+        requestAnimationFrame(() => {
+          p1Actual = parent.outerHTML;
+          phase1Passed = p1Actual === expectedPhase1;
+        });
+
+        // Wait to hit the final milestone snapshot dynamically to ensure test stability
+        const observer = new MutationObserver(() => {
+          if (parent.outerHTML === expectedPhaseFinal) {
+            observer.disconnect();
+            
+            const section = document.querySelector('[data-test="child-redraw-on-parent-update"]');
+            if (!phase1Passed) {
+              console.error("Snapshot mismatch at Phase 1.\\nExpected: " + expectedPhase1 + "\\nActual: " + p1Actual);
+              section.dataset.testResult = 'fail';
+            } else {
+              section.dataset.testResult = 'pass';
+            }
+          }
+        });
+        
+        observer.observe(parent, { childList: true, subtree: true, attributes: true });
+
+        // Fallback timeout to fail test if Phase Final is never reached
+        setTimeout(() => {
+          const section = document.querySelector(
+            '[data-test="child-redraw-on-parent-update"]'
+          );
+          if (section.dataset.testResult !== 'pass') {
+            console.error("Timeout waiting for final snapshot.\\nExpected: " + expectedPhaseFinal + "\\nActual: " + parent.outerHTML);
+            section.dataset.testResult = 'fail';
+          }
+        }, 1500);
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

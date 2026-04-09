@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Child Styles - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Child Styles</h1>
+    <p>Tests passing style objects to custom child elements.</p>
+
+    <!-- Issue #12: Style not applied to custom child elements -->
+    <section data-test="style-object-child" data-test-result="pending">
+      <h2>Issue #12: Style Object on Child Element</h2>
+      <p>
+        Passing a style object to a custom child element should apply the
+        styles.
+      </p>
+      <pre><code>customElements.define(
+  'child-style-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;span id="styled-content"&gt;I should be RED&lt;/span&gt;`;
+    }
+  }
+);
+
+customElements.define(
+  'parent-style-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;child-style-elem style=${{ color: 'red' }}&gt;&lt;/child-style-elem&gt;`;
+    }
+  }
+);</code></pre>
+      <parent-style-elem></parent-style-elem>
+      <script type="module">
+        // Execute the exact snippet defined in the <pre><code> block
+        const code1 = document.querySelector('[data-test="style-object-child"] pre code').textContent;
+        eval(code1);
+
+        // Single-phase example: the rendered DOM is stable after the first
+        // synchronous render. We capture the rendered output as a static
+        // snapshot and assert against it in addition to the computed-style
+        // check.
+        const expectedSnapshot1 = '<parent-style-elem><child-style-elem style="color: red;"><span id="styled-content">I should be RED</span></child-style-elem></parent-style-elem>';
+
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const section = document.querySelector(
+              '[data-test="style-object-child"]'
+            );
+            const parent = document.querySelector('parent-style-elem');
+            const child = document.querySelector('child-style-elem');
+            const computedColor = child ? getComputedStyle(child).color : '';
+            // Red is rgb(255, 0, 0)
+            const isRed = computedColor === 'rgb(255, 0, 0)';
+            const snapshotOk = parent && parent.outerHTML === expectedSnapshot1;
+            if (!snapshotOk) {
+              console.error('Snapshot mismatch for style-object-child.\nExpected: ' + expectedSnapshot1 + '\nActual:   ' + (parent && parent.outerHTML));
+            }
+            section.dataset.testResult = (isRed && snapshotOk) ? 'pass' : 'fail';
+          }, 100);
+        });
+      </script>
+    </section>
+
+    <section data-test="style-object-with-callback" data-test-result="pending">
+      <h2>Style Object Combined with Function</h2>
+      <p>Passing both a style object and a callback function should work.</p>
+      <pre><code>customElements.define(
+  'child-style-fn-elem',
+  class extends hyperElement {
+    render(Html) {
+      const msg =
+        typeof this.attrs.callback === 'function'
+          ? this.attrs.callback()
+          : 'no fn';
+      Html`&lt;span id="styled-fn-content"&gt;${msg}&lt;/span&gt;`;
+    }
+  }
+);
+
+customElements.define(
+  'parent-style-fn-elem',
+  class extends hyperElement {
+    getMessage() {
+      return 'PASS';
+    }
+    render(Html) {
+      Html`&lt;child-style-fn-elem callback=${this.getMessage} style=${{ color: 'blue' }}&gt;&lt;/child-style-fn-elem&gt;`;
+    }
+  }
+);</code></pre>
+      <parent-style-fn-elem></parent-style-fn-elem>
+      <script type="module">
+        // Execute the exact snippet defined in the <pre><code> block
+        const code2 = document.querySelector('[data-test="style-object-with-callback"] pre code').textContent;
+        eval(code2);
+
+        // Single-phase example. The callback attribute is rendered as a
+        // generated id of the form fn-<random> by hyper-element, so we
+        // canonicalize that segment when comparing the snapshot.
+        const expectedSnapshot2 = '<parent-style-fn-elem><child-style-fn-elem callback="fn-XXX" style="color: blue;"><span id="styled-fn-content">PASS</span></child-style-fn-elem></parent-style-fn-elem>';
+
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const section = document.querySelector(
+              '[data-test="style-object-with-callback"]'
+            );
+            const parent = document.querySelector('parent-style-fn-elem');
+            const child = document.querySelector('child-style-fn-elem');
+            const content = document.querySelector('#styled-fn-content');
+            const computedColor = child ? getComputedStyle(child).color : '';
+            const isBlue = computedColor === 'rgb(0, 0, 255)';
+            const textOk = content && content.textContent === 'PASS';
+            const normalized = parent && parent.outerHTML.replace(/callback="fn-[^"]+"/, 'callback="fn-XXX"');
+            const snapshotOk = normalized === expectedSnapshot2;
+            if (!snapshotOk) {
+              console.error('Snapshot mismatch for style-object-with-callback.\nExpected: ' + expectedSnapshot2 + '\nActual:   ' + normalized);
+            }
+            section.dataset.testResult = (isBlue && textOk && snapshotOk) ? 'pass' : 'fail';
+          }, 100);
+        });
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

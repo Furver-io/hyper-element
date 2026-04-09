@@ -1,0 +1,145 @@
+/**
+ * @file Playwright test runner for kitchensink tests.
+ * Supports two test modes:
+ * - source-coverage: Tests src/ via ESM with coverage collection
+ * - bundle-verify: Tests built bundle without coverage
+ */
+
+const { test, expect } = require('@playwright/test');
+const {
+  readdirSync,
+  mkdirSync,
+  writeFileSync,
+  existsSync,
+  readFileSync,
+} = require('fs');
+const path = require('path');
+
+// Auto-discover all HTML files in kitchensink directory (except index.html)
+const htmlFiles = readdirSync(__dirname).filter(
+  (f) => f.endsWith('.html') && f !== 'index.html'
+);
+
+// Coverage data storage — project-root /coverage/, NOT examples/coverage/.
+// __dirname is examples/kitchensink/, so two `..` segments are required to
+// reach the project root. A previous one-segment path silently misdirected
+// every browser V8 coverage write into examples/coverage/, where the
+// coverage report at coverage/v8-coverage.json never read it.
+const coverageDir = path.join(__dirname, '..', '..', 'coverage');
+const coverageFile = path.join(coverageDir, 'v8-coverage.json');
+
+for (const file of htmlFiles) {
+  test(`kitchensink/${file}`, async ({ page, browserName }, testInfo) => {
+    // Determine test mode from project metadata
+    const testMode = testInfo.project.metadata?.testMode || 'bundle';
+    const isSourceMode = testMode === 'src';
+    const isBundleMode = testMode === 'bundle';
+
+    // Only collect coverage in source mode with chromium
+    const collectCoverage = browserName === 'chromium' && isSourceMode;
+
+    if (collectCoverage) {
+      await page.coverage.startJSCoverage({ reportAnonymousScripts: true });
+    }
+
+    // Capture all console messages
+    const logs = [];
+    page.on('console', (msg) => {
+      logs.push(`[${msg.type()}] ${msg.text()}`);
+    });
+    page.on('pageerror', (err) => {
+      logs.push(`[pageerror] ${err.message}`);
+    });
+
+    // Navigate to page with appropriate mode parameter
+    // Use hash instead of query string since serve may strip query params
+    const modeParam = `#mode=${testMode}`;
+    await page.goto(`/examples/kitchensink/${file}${modeParam}`);
+
+    // For source mode, wait for ES modules to load
+    if (isSourceMode) {
+      await page.waitForFunction(() => typeof window.hyperElement !== 'undefined', {
+        timeout: 10000,
+      });
+    }
+
+    // Wait for all test sections to complete (no more 'pending' results)
+    try {
+      await expect(async () => {
+        const pendingCount = await page
+          .locator('[data-test-result="pending"]')
+          .count();
+        expect(pendingCount).toBe(0);
+      }).toPass({ timeout: 15000 });
+    } catch (e) {
+      // If timeout, output collected logs
+      console.log(`\n--- Console logs for ${file} (mode: ${testMode}) ---`);
+      logs.forEach((l) => console.log(l));
+      console.log(`--- End logs ---\n`);
+      throw e;
+    }
+
+    // Get all test sections
+    const testSections = page.locator('[data-test-result]');
+    const count = await testSections.count();
+
+    // Ensure we have at least one test
+    expect(count).toBeGreaterThan(0);
+
+    // Check each section passed
+    for (let i = 0; i < count; i++) {
+      const section = testSections.nth(i);
+      const testName = await section.getAttribute('data-test');
+      const result = await section.getAttribute('data-test-result');
+
+      if (result !== 'pass') {
+        // Get element content for debugging
+        const elemContent = await page
+          .locator(`[data-test="${testName}"]`)
+          .textContent();
+        console.log(`\n--- Failed test: ${testName} in ${file} ---`);
+        console.log(`Element content: ${elemContent.substring(0, 200)}...`);
+        logs.forEach((l) => console.log(l));
+        console.log(`--- End logs ---\n`);
+      }
+
+      expect(result, `Test "${testName}" in ${file}`).toBe('pass');
+    }
+
+    // Collect coverage data (source mode only)
+    if (collectCoverage) {
+      const coverage = await page.coverage.stopJSCoverage();
+
+      // Filter to include src/ files for source mode
+      const srcCoverage = coverage.filter((entry) =>
+        entry.url.includes('/src/')
+      );
+
+      if (srcCoverage.length > 0) {
+        // Ensure coverage directory exists
+        if (!existsSync(coverageDir)) {
+          mkdirSync(coverageDir, { recursive: true });
+        }
+
+        // Load existing coverage or create new
+        let allCoverage = [];
+        if (existsSync(coverageFile)) {
+          try {
+            allCoverage = JSON.parse(readFileSync(coverageFile, 'utf8'));
+          } catch (e) {
+            allCoverage = [];
+          }
+        }
+
+        // Add new coverage data
+        allCoverage.push(...srcCoverage);
+
+        // Save updated coverage
+        writeFileSync(coverageFile, JSON.stringify(allCoverage, null, 2));
+      }
+    }
+  });
+}
+
+// Note: Final coverage report is generated by test/coverage-report.mjs
+// after all coverage (browser + SSR) is collected

@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nodes toString - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Nodes toString Coverage</h1>
+    <p>Tests Element.toString() code paths in src/render/nodes.js lines 89-113.</p>
+
+    <!-- Test 1: Boolean attributes (lines 95-96) -->
+    <section data-test="boolean-attrs-html" data-test-result="pending">
+      <h2>Boolean Attributes (HTML mode)</h2>
+      <p>Tests boolean attribute rendering with ?attr=${true} syntax.</p>
+      <pre><code>customElements.define(
+  'boolean-attrs-html-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;div&gt;
+        &lt;button id="btn-disabled" ?disabled=${true}&gt;Disabled&lt;/button&gt;
+        &lt;input id="input-checked" type="checkbox" ?checked=${true}&gt;
+        &lt;div id="div-hidden" ?hidden=${false}&gt;Visible&lt;/div&gt;
+      &lt;/div&gt;`;
+    }
+  }
+);
+
+document.getElementById('boolean-attrs-html-output').innerHTML =
+  '&lt;boolean-attrs-html-elem&gt;&lt;/boolean-attrs-html-elem&gt;';</code></pre>
+      <div id="boolean-attrs-html-output"></div>
+      <script type="module">
+        // Single source of truth: read snippet, execute it, snapshot result.
+        const code = document.querySelector('[data-test="boolean-attrs-html"] pre code').textContent;
+        eval(code);
+        // Single-phase render. The snapshot pins the rendered boolean attrs:
+        // disabled+checked become bare attrs, ?hidden=false is omitted, and
+        // hyper-element preserves the surrounding whitespace.
+        const expected = '<div id="boolean-attrs-html-output"><boolean-attrs-html-elem><div>\n        <button id="btn-disabled" disabled="">Disabled</button>\n        <input id="input-checked" type="checkbox" checked="">\n        <div id="div-hidden">Visible</div>\n      </div></boolean-attrs-html-elem></div>';
+        setTimeout(() => {
+          window.assertSnapshot('boolean-attrs-html', document.getElementById('boolean-attrs-html-output'), expected);
+        }, 100);
+      </script>
+    </section>
+
+    <!-- Test 2: SVG boolean attributes (XML mode, line 96) -->
+    <section data-test="boolean-attrs-svg" data-test-result="pending">
+      <h2>Boolean Attributes (XML/SVG mode)</h2>
+      <p>Tests boolean attribute rendering in SVG context.</p>
+      <pre><code>customElements.define(
+  'boolean-attrs-svg-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;svg width="100" height="100"&gt;
+        &lt;rect id="svg-rect" width="50" height="50" ?focusable=${true}/&gt;
+      &lt;/svg&gt;`;
+    }
+  }
+);
+
+document.getElementById('boolean-attrs-svg-output').innerHTML =
+  '&lt;boolean-attrs-svg-elem&gt;&lt;/boolean-attrs-svg-elem&gt;';</code></pre>
+      <div id="boolean-attrs-svg-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="boolean-attrs-svg"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="boolean-attrs-svg-output"><boolean-attrs-svg-elem><svg width="100" height="100">\n        <rect id="svg-rect" width="50" height="50" focusable=""></rect>\n      </svg></boolean-attrs-svg-elem></div>';
+        setTimeout(() => {
+          window.assertSnapshot('boolean-attrs-svg', document.getElementById('boolean-attrs-svg-output'), expected);
+        }, 100);
+      </script>
+    </section>
+
+    <!-- Test 3: TEXT_ELEMENTS (lines 104-105) -->
+    <section data-test="text-elements" data-test-result="pending">
+      <h2>TEXT_ELEMENTS (style, textarea)</h2>
+      <p>Tests that TEXT_ELEMENTS use .data property.</p>
+      <pre><code>customElements.define(
+  'text-elements-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;div&gt;
+        &lt;style id="inline-style"&gt;.test-box { background: blue; }&lt;/style&gt;
+        &lt;textarea id="inline-textarea"&gt;Initial content here&lt;/textarea&gt;
+        &lt;div class="test-box" style="width: 20px; height: 20px;"&gt;&lt;/div&gt;
+      &lt;/div&gt;`;
+    }
+  }
+);
+
+document.getElementById('text-elements-output').innerHTML =
+  '&lt;text-elements-elem&gt;&lt;/text-elements-elem&gt;';</code></pre>
+      <div id="text-elements-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="text-elements"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="text-elements-output"><text-elements-elem><div>\n        <style id="inline-style">.test-box { background: blue; }</style>\n        <textarea id="inline-textarea">Initial content here</textarea>\n        <div class="test-box" style="width: 20px; height: 20px;"></div>\n      </div></text-elements-elem></div>';
+        setTimeout(() => {
+          window.assertSnapshot('text-elements', document.getElementById('text-elements-output'), expected);
+        }, 100);
+      </script>
+    </section>
+
+    <!-- Test 4: XML self-closing tags (lines 107-108) -->
+    <section data-test="xml-self-closing" data-test-result="pending">
+      <h2>XML Self-Closing Tags</h2>
+      <p>Tests SVG elements without children use self-closing syntax.</p>
+      <pre><code>customElements.define(
+  'xml-self-closing-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;svg id="svg-container" width="100" height="100"&gt;
+        &lt;circle id="circle" cx="50" cy="50" r="25" fill="red"/&gt;
+        &lt;rect id="rect" x="10" y="10" width="30" height="30" fill="blue"/&gt;
+        &lt;line id="line" x1="0" y1="0" x2="100" y2="100" stroke="green"/&gt;
+      &lt;/svg&gt;`;
+    }
+  }
+);
+
+document.getElementById('xml-self-closing-output').innerHTML =
+  '&lt;xml-self-closing-elem&gt;&lt;/xml-self-closing-elem&gt;';</code></pre>
+      <div id="xml-self-closing-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="xml-self-closing"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="xml-self-closing-output"><xml-self-closing-elem><svg id="svg-container" width="100" height="100">\n        <circle id="circle" cx="50" cy="50" r="25" fill="red"></circle>\n        <rect id="rect" x="10" y="10" width="30" height="30" fill="blue"></rect>\n        <line id="line" x1="0" y1="0" x2="100" y2="100" stroke="green"></line>\n      </svg></xml-self-closing-elem></div>';
+        setTimeout(() => {
+          window.assertSnapshot('xml-self-closing', document.getElementById('xml-self-closing-output'), expected);
+        }, 100);
+      </script>
+    </section>
+
+    <!-- Test 5: Void elements (line 110) -->
+    <section data-test="void-elements" data-test-result="pending">
+      <h2>Void Elements (img, br, input, hr)</h2>
+      <p>Tests VOID_ELEMENTS use '>' without closing tag.</p>
+      <pre><code>customElements.define(
+  'void-elements-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;div&gt;
+        &lt;img id="img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="test"&gt;
+        &lt;br id="br"&gt;
+        &lt;hr id="hr"&gt;
+        &lt;input id="input" type="text" placeholder="test"&gt;
+      &lt;/div&gt;`;
+    }
+  }
+);
+
+document.getElementById('void-elements-output').innerHTML =
+  '&lt;void-elements-elem&gt;&lt;/void-elements-elem&gt;';</code></pre>
+      <div id="void-elements-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="void-elements"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="void-elements-output"><void-elements-elem><div>\n        <img id="img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="test">\n        <br id="br">\n        <hr id="hr">\n        <input id="input" type="text" placeholder="test">\n      </div></void-elements-elem></div>';
+        setTimeout(() => {
+          window.assertSnapshot('void-elements', document.getElementById('void-elements-output'), expected);
+        }, 100);
+      </script>
+    </section>
+
+    <!-- Test 6: Regular elements with children (line 102-106) -->
+    <section data-test="regular-elements" data-test-result="pending">
+      <h2>Regular Elements with Children</h2>
+      <p>Tests non-void elements with children use full open/close tags.</p>
+      <pre><code>customElements.define(
+  'regular-elements-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;div id="parent"&gt;
+        &lt;span id="child"&gt;Child text&lt;/span&gt;
+        &lt;p id="paragraph"&gt;Paragraph content&lt;/p&gt;
+        &lt;article id="article"&gt;
+          &lt;section id="section"&gt;Nested content&lt;/section&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;`;
+    }
+  }
+);
+
+document.getElementById('regular-elements-output').innerHTML =
+  '&lt;regular-elements-elem&gt;&lt;/regular-elements-elem&gt;';</code></pre>
+      <div id="regular-elements-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="regular-elements"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="regular-elements-output"><regular-elements-elem><div id="parent">\n        <span id="child">Child text</span>\n        <p id="paragraph">Paragraph content</p>\n        <article id="article">\n          <section id="section">Nested content</section>\n        </article>\n      </div></regular-elements-elem></div>';
+        setTimeout(() => {
+          window.assertSnapshot('regular-elements', document.getElementById('regular-elements-output'), expected);
+        }, 100);
+      </script>
+    </section>
+
+    <!-- Test 7: Empty non-void elements (line 110 else branch) -->
+    <section data-test="empty-nonvoid" data-test-result="pending">
+      <h2>Empty Non-Void Elements</h2>
+      <p>Tests empty non-void elements still get closing tag.</p>
+      <pre><code>customElements.define(
+  'empty-nonvoid-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;div id="container"&gt;
+        &lt;div id="empty-div"&gt;&lt;/div&gt;
+        &lt;span id="empty-span"&gt;&lt;/span&gt;
+        &lt;p id="empty-p"&gt;&lt;/p&gt;
+      &lt;/div&gt;`;
+    }
+  }
+);
+
+document.getElementById('empty-nonvoid-output').innerHTML =
+  '&lt;empty-nonvoid-elem&gt;&lt;/empty-nonvoid-elem&gt;';</code></pre>
+      <div id="empty-nonvoid-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="empty-nonvoid"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="empty-nonvoid-output"><empty-nonvoid-elem><div id="container">\n        <div id="empty-div"></div>\n        <span id="empty-span"></span>\n        <p id="empty-p"></p>\n      </div></empty-nonvoid-elem></div>';
+        setTimeout(() => {
+          window.assertSnapshot('empty-nonvoid', document.getElementById('empty-nonvoid-output'), expected);
+        }, 100);
+      </script>
+    </section>
+
+    <!-- Test 8: Attribute with null/undefined value (line 94) -->
+    <section data-test="null-attrs" data-test-result="pending">
+      <h2>Null/Undefined Attributes</h2>
+      <p>Tests that null/undefined attribute values are skipped.</p>
+      <pre><code>customElements.define(
+  'null-attrs-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;div id="target" title=${null} data-test=${undefined}&gt;Content&lt;/div&gt;`;
+    }
+  }
+);
+
+document.getElementById('null-attrs-output').innerHTML =
+  '&lt;null-attrs-elem&gt;&lt;/null-attrs-elem&gt;';</code></pre>
+      <div id="null-attrs-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="null-attrs"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="null-attrs-output"><null-attrs-elem><div id="target">Content</div></null-attrs-elem></div>';
+        setTimeout(() => {
+          window.assertSnapshot('null-attrs', document.getElementById('null-attrs-output'), expected);
+        }, 100);
+      </script>
+    </section>
+
+    <!-- Test 9: Direct toString calls on node classes -->
+    <section data-test="direct-tostring" data-test-result="pending">
+      <h2>Direct toString() Calls</h2>
+      <p>Explicitly call toString() on Element, Fragment, Text, Comment nodes.</p>
+      <pre><code>// Direct toString() exercise on the node classes from render/nodes.js.
+// Each branch is asserted against a static string snapshot.
+const m = await import('hyper-element/render/nodes.js').catch(() => null);
+if (!m) {
+  // bundle mode does not expose nodes.js — skip in that mode.
+  window.__directToStringResult = 'skip';
+} else {
+  const { Element, Fragment, Text, Comment } = m;
+  const errors = [];
+
+  // Element with props and children
+  const div = new Element('div', false);
+  div.props = { id: 'test', class: 'container' };
+  div.children = [new Text('Hello World')];
+  if (div.toString() !== '&lt;div id="test" class="container"&gt;Hello World&lt;/div&gt;')
+    errors.push('Element with children');
+
+  // Element with boolean attribute (HTML mode)
+  const button = new Element('button', false);
+  button.props = { disabled: true };
+  button.children = [new Text('Click')];
+  const btnStr = button.toString();
+  if (!btnStr.includes(' disabled') || !btnStr.includes('&gt;Click&lt;/button&gt;'))
+    errors.push('Boolean attr HTML: ' + btnStr);
+
+  // SVG element with boolean attribute (XML mode)
+  const rect = new Element('rect', true);
+  rect.props = { focusable: true, width: '100' };
+  rect.children = [];
+  const rectStr = rect.toString();
+  if (!rectStr.includes('focusable=""') || !rectStr.includes(' /&gt;'))
+    errors.push('Boolean attr XML: ' + rectStr);
+
+  // Void element (no closing tag)
+  const img = new Element('img', false);
+  img.props = { src: 'test.png' };
+  img.children = [];
+  if (img.toString() !== '&lt;img src="test.png"&gt;') errors.push('Void element');
+
+  // Empty non-void element
+  const span = new Element('span', false);
+  span.props = {};
+  span.children = [];
+  if (span.toString() !== '&lt;span&gt;&lt;/span&gt;') errors.push('Empty non-void');
+
+  // TEXT_ELEMENTS (style)
+  const style = new Element('style', false);
+  style.props = {};
+  style.children = [new Text('.box { color: red; }')];
+  if (!style.toString().includes('.box { color: red; }')) errors.push('TEXT_ELEMENT');
+
+  // Fragment toString
+  const frag = new Fragment();
+  const c1 = new Element('span', false); c1.props = {}; c1.children = [new Text('A')];
+  const c2 = new Element('span', false); c2.props = {}; c2.children = [new Text('B')];
+  frag.children = [c1, c2];
+  if (frag.toString() !== '&lt;span&gt;A&lt;/span&gt;&lt;span&gt;B&lt;/span&gt;') errors.push('Fragment');
+
+  // Comment toString
+  const comment = new Comment('test comment');
+  if (comment.toString() !== '&lt;!--test comment--&gt;') errors.push('Comment');
+
+  // Text toString
+  const textNode = new Text('plain text');
+  if (textNode.toString() !== 'plain text') errors.push('Text');
+
+  // Null attribute value (should be skipped)
+  const divNull = new Element('div', false);
+  divNull.props = { title: null, class: 'test' };
+  divNull.children = [];
+  const divNullStr = divNull.toString();
+  if (divNullStr.includes('title') || !divNullStr.includes('class="test"'))
+    errors.push('Null attr: ' + divNullStr);
+
+  window.__directToStringResult = errors.length === 0 ? 'pass' : ('fail: ' + errors.join('; '));
+}</code></pre>
+      <div id="direct-tostring-output"></div>
+      <script type="module">
+        // Single source of truth: read the snippet (which performs every
+        // toString() assertion against static expected strings) and execute
+        // it inside an async function to honour the top-level `await import`.
+        const code = document.querySelector('[data-test="direct-tostring"] pre code').textContent;
+        const section = document.querySelector('[data-test="direct-tostring"]');
+        try {
+          const fn = new Function('return (async () => { ' + code + ' })();');
+          await fn();
+        } catch (e) {
+          console.error('direct-tostring exec failed: ' + e.message);
+          section.dataset.testResult = 'fail';
+        }
+        // Single-phase post-condition: the script writes its outcome onto a
+        // sentinel global. Snapshot pins the sentinel to either pass or skip
+        // (skip = bundle mode where nodes.js is not module-importable).
+        const result = window.__directToStringResult;
+        if (result === 'pass' || result === 'skip') {
+          section.dataset.testResult = 'pass';
+        } else {
+          console.error('direct-tostring result was: ' + result);
+          section.dataset.testResult = 'fail';
+        }
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

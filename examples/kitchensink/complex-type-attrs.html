@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Complex Type Attributes - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Complex Type Attributes</h1>
+    <p>
+      Tests passing objects, functions, and booleans to custom child elements.
+    </p>
+
+    <!-- Issue #9: Bug passing complex type without function -->
+    <section data-test="object-only-attr" data-test-result="pending">
+      <h2>Issue #9: Object Attribute Without Function</h2>
+      <p>
+        Passing only an object (no function) to a custom element should work.
+      </p>
+      <pre><code>customElements.define(
+  'child-obj-elem',
+  class extends hyperElement {
+    render(Html) {
+      const config = this.attrs.config;
+      const isObject = config && typeof config === 'object';
+      const hasProperty = isObject && config.a === 2;
+      Html`&lt;span id="obj-result"&gt;${hasProperty ? 'PASS' : 'FAIL: ' + JSON.stringify(config)}&lt;/span&gt;`;
+    }
+  }
+);
+
+customElements.define(
+  'parent-obj-elem',
+  class extends hyperElement {
+    render(Html) {
+      // Pass ONLY an object, no function
+      Html`&lt;child-obj-elem config=${{ a: 2 }} name="test"&gt;&lt;/child-obj-elem&gt;`;
+    }
+  }
+);</code></pre>
+      
+      <parent-obj-elem></parent-obj-elem>
+      <script type="module">
+        const code = document.querySelector('[data-test="object-only-attr"] code').textContent;
+        eval(code);
+
+        // Single-phase render. The static snapshot embeds the canonical
+        // ob-RND placeholder for object-typed attribute references and the
+        // PASS marker which the child writes only when its attrs.config is
+        // a real object with a === 2.
+        const expected = '<parent-obj-elem><child-obj-elem name="test" config="ob-RND"><span id="obj-result">PASS</span></child-obj-elem></parent-obj-elem>';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            window.assertSnapshot('object-only-attr', document.querySelector('parent-obj-elem'), expected);
+          }, 100);
+        });
+      </script>
+    </section>
+
+    <!-- Issue #10: Bug passing complex type with preceding element -->
+    <section data-test="complex-with-preceding" data-test-result="pending">
+      <h2>Issue #10: Complex Types After Preceding Element</h2>
+      <p>
+        Complex types should work even when another element precedes in the
+        template.
+      </p>
+      <pre><code>customElements.define(
+  'child-preceding-elem',
+  class extends hyperElement {
+    render(Html) {
+      const fn = this.attrs.callback;
+      const config = this.attrs.config;
+      const fnWorks = typeof fn === 'function' && fn() === 'OK';
+      const configWorks =
+        config && typeof config === 'object' && config.value === 42;
+      Html`&lt;span id="preceding-result"&gt;${fnWorks && configWorks ? 'PASS' : 'FAIL fn:' + typeof fn + ' config:' + JSON.stringify(config)}&lt;/span&gt;`;
+    }
+  }
+);
+
+customElements.define(
+  'parent-preceding-elem',
+  class extends hyperElement {
+    getValue() {
+      return 'OK';
+    }
+    render(Html) {
+      // Element before the custom element with complex attrs
+      Html`&lt;span&gt;Before&lt;/span&gt;&lt;child-preceding-elem callback=${this.getValue} config=${{ value: 42 }}&gt;&lt;/child-preceding-elem&gt;`;
+    }
+  }
+);</code></pre>
+      
+      <parent-preceding-elem></parent-preceding-elem>
+      <script type="module">
+        const code = document.querySelector('[data-test="complex-with-preceding"] code').textContent;
+        eval(code);
+
+        // Single-phase render. PASS proves both the function callback and the
+        // object config attribute traversed the parent->child boundary correctly
+        // even with a preceding element in the same template.
+        const expected = '<parent-preceding-elem><!--<>--><span>Before</span><child-preceding-elem config="ob-RND" callback="fn-RND"><span id="preceding-result">PASS</span></child-preceding-elem><!--</>--></parent-preceding-elem>';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            window.assertSnapshot('complex-with-preceding', document.querySelector('parent-preceding-elem'), expected);
+          }, 100);
+        });
+      </script>
+    </section>
+
+    <!-- Combined test: object only + preceding -->
+    <section data-test="object-only-with-preceding" data-test-result="pending">
+      <h2>Combined: Object Only + Preceding Element</h2>
+      <p>Passing only an object after a preceding element should work.</p>
+      <pre><code>customElements.define(
+  'child-combo-elem',
+  class extends hyperElement {
+    render(Html) {
+      const data = this.attrs.config;
+      const isObject = data && typeof data === 'object';
+      const hasProperties = isObject && data.x === 1 && data.y === 2;
+      Html`&lt;span id="combo-result"&gt;${hasProperties ? 'PASS' : 'FAIL: ' + JSON.stringify(data)}&lt;/span&gt;`;
+    }
+  }
+);
+
+customElements.define(
+  'parent-combo-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;div&gt;Header&lt;/div&gt;&lt;child-combo-elem config=${{ x: 1, y: 2 }}&gt;&lt;/child-combo-elem&gt;`;
+    }
+  }
+);</code></pre>
+      
+      <parent-combo-elem></parent-combo-elem>
+      <script type="module">
+        const code = document.querySelector('[data-test="object-only-with-preceding"] code').textContent;
+        eval(code);
+
+        // Single-phase render. Only the object attribute is passed and a
+        // preceding <div>Header</div> sits in the same template.
+        const expected = '<parent-combo-elem><!--<>--><div>Header</div><child-combo-elem config="ob-RND"><span id="combo-result">PASS</span></child-combo-elem><!--</>--></parent-combo-elem>';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            window.assertSnapshot('object-only-with-preceding', document.querySelector('parent-combo-elem'), expected);
+          }, 100);
+        });
+      </script>
+    </section>
+
+    <!-- Boolean attribute passing -->
+    <section data-test="boolean-attr" data-test-result="pending">
+      <h2>Boolean Attribute Passing</h2>
+      <p>Boolean values passed to custom elements should remain as booleans.</p>
+      <pre><code>customElements.define(
+  'child-bool-elem',
+  class extends hyperElement {
+    render(Html) {
+      const enabled = this.attrs.enabled;
+      const disabled = this.attrs.disabled;
+      const enabledIsBool = enabled === true;
+      const disabledIsBool = disabled === false;
+      const pass = enabledIsBool && disabledIsBool;
+      Html`&lt;span id="bool-result"&gt;${pass ? 'PASS' : 'FAIL: enabled=' + JSON.stringify(enabled) + '(' + typeof enabled + ') disabled=' + JSON.stringify(disabled) + '(' + typeof disabled + ')'}&lt;/span&gt;`;
+    }
+  }
+);
+
+customElements.define(
+  'parent-bool-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;child-bool-elem enabled=${true} disabled=${false}&gt;&lt;/child-bool-elem&gt;`;
+    }
+  }
+);</code></pre>
+      
+      <parent-bool-elem></parent-bool-elem>
+      <script type="module">
+        const code = document.querySelector('[data-test="boolean-attr"] code').textContent;
+        eval(code);
+
+        // Single-phase render. Booleans are passed as object placeholders so
+        // both attributes carry the canonical ob-RND token; PASS proves the
+        // child saw the literal `true`/`false` values, not strings.
+        const expected = '<parent-bool-elem><child-bool-elem disabled="ob-RND" enabled="ob-RND"><span id="bool-result">PASS</span></child-bool-elem></parent-bool-elem>';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            window.assertSnapshot('boolean-attr', document.querySelector('parent-bool-elem'), expected);
+          }, 100);
+        });
+      </script>
+    </section>
+
+    <!-- Number attribute passing -->
+    <section data-test="number-attr" data-test-result="pending">
+      <h2>Number Attribute Passing</h2>
+      <p>Number values passed to custom elements should remain as numbers.</p>
+      <pre><code>customElements.define(
+  'child-num-elem',
+  class extends hyperElement {
+    render(Html) {
+      const count = this.attrs.count;
+      const pi = this.attrs.pi;
+      const countIsNum = count === 42 && typeof count === 'number';
+      const piIsNum = pi === 3.14 && typeof pi === 'number';
+      const pass = countIsNum && piIsNum;
+      Html`&lt;span id="num-result"&gt;${pass ? 'PASS' : 'FAIL: count=' + count + '(' + typeof count + ') pi=' + pi + '(' + typeof pi + ')'}&lt;/span&gt;`;
+    }
+  }
+);
+
+customElements.define(
+  'parent-num-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;child-num-elem count=${42} pi=${3.14}&gt;&lt;/child-num-elem&gt;`;
+    }
+  }
+);</code></pre>
+      
+      <parent-num-elem></parent-num-elem>
+      <script type="module">
+        const code = document.querySelector('[data-test="number-attr"] code').textContent;
+        eval(code);
+
+        // Single-phase render. Numbers are passed via the same ob-RND object
+        // placeholder mechanism; PASS proves typeof number, not coerced string.
+        const expected = '<parent-num-elem><child-num-elem pi="ob-RND" count="ob-RND"><span id="num-result">PASS</span></child-num-elem></parent-num-elem>';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            window.assertSnapshot('number-attr', document.querySelector('parent-num-elem'), expected);
+          }, 100);
+        });
+      </script>
+    </section>
+
+    <!-- Multiline template with newline after tag name -->
+    <section data-test="multiline-attr" data-test-result="pending">
+      <h2>Multiline Template: Newline After Tag Name</h2>
+      <p>Boolean values should work when tag name is followed by newline.</p>
+      <pre><code>customElements.define(
+  'child-multiline-elem',
+  class extends hyperElement {
+    render(Html) {
+      const expanded = this.attrs.expanded;
+      const config = this.attrs.config;
+      const expandedIsBool = expanded === true;
+      const configIsObj =
+        config && typeof config === 'object' && config.a === 1;
+      const pass = expandedIsBool && configIsObj;
+      Html`&lt;span id="multiline-result"&gt;${pass ? 'PASS' : 'FAIL: expanded=' + JSON.stringify(expanded) + '(' + typeof expanded + ') config=' + JSON.stringify(config)}&lt;/span&gt;`;
+    }
+  }
+);
+
+customElements.define(
+  'parent-multiline-elem',
+  class extends hyperElement {
+    render(Html) {
+      // Critical: tag name followed by NEWLINE, not space
+      Html`&lt;child-multiline-elem
+        expanded=${true}
+        config=${{ a: 1 }}
+      &gt;&lt;/child-multiline-elem&gt;`;
+    }
+  }
+);</code></pre>
+      
+      <parent-multiline-elem></parent-multiline-elem>
+      <script type="module">
+        const code = document.querySelector('[data-test="multiline-attr"] code').textContent;
+        eval(code);
+
+        // Single-phase render. Same canonical placeholders. PASS guards the
+        // newline-after-tag-name parsing path the issue specifically tracked.
+        const expected = '<parent-multiline-elem><child-multiline-elem config="ob-RND" expanded="ob-RND"><span id="multiline-result">PASS</span></child-multiline-elem></parent-multiline-elem>';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            window.assertSnapshot('multiline-attr', document.querySelector('parent-multiline-elem'), expected);
+          }, 100);
+        });
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

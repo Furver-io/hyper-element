@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dataset - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Dataset</h1>
+    <p>Demonstrates using data-* attributes with automatic JSON parsing.</p>
+
+    <section data-test="dataset-json" data-test-result="pending">
+      <h2>JSON Array Parsing</h2>
+      <p>Data attributes containing JSON are automatically parsed.</p>
+      <pre><code>customElements.define(
+  'data-set-element',
+  class extends hyperElement {
+    render(Html) {
+      // this.dataset.users is automatically parsed from JSON
+      let ok = 'fail';
+      if (Array.isArray(this.dataset.users) && this.dataset.users.length) {
+        ok = 'pass';
+      }
+      Html`Users: ${this.dataset.users ? this.dataset.users.join(', ') : 'none'} (${ok})`;
+    }
+  }
+);
+
+const dataElem = document.createElement('data-set-element');
+dataElem.setAttribute('data-users', '["ann","bob"]');
+document.getElementById('dataset-json-output').appendChild(dataElem);</code></pre>
+      <div id="dataset-json-output"></div>
+      <script type="module">
+        const codeJson = document.querySelector('[data-test="dataset-json"] code').textContent;
+        eval(codeJson);
+
+        // Single-phase render. The expected snapshot encodes the JSON-quoted
+        // data-users attribute (HTML escapes &quot;) and the joined output
+        // text plus the inline pass marker the render() method writes.
+        const expected = '<data-set-element data-users="[&quot;ann&quot;,&quot;bob&quot;]"><!--<>-->Users: ann, bob (pass)<!--</>--></data-set-element>';
+        requestAnimationFrame(() => {
+          window.assertSnapshot('dataset-json', document.querySelector('data-set-element'), expected);
+        });
+      </script>
+    </section>
+
+    <section data-test="dataset-check" data-test-result="pending">
+      <h2>Dataset Check Element</h2>
+      <p>Verifies both attrs and dataset contain expected values.</p>
+      <pre><code>customElements.define(
+  'dataset-check-element',
+  class extends hyperElement {
+    render(Html) {
+      // this.attrs["data-json"] === "[1,2,3]" (string)
+      // this.dataset.json === [1,2,3] (parsed array)
+      if (
+        this.attrs['data-json'] !== '[1,2,3]' ||
+        !Array.isArray(this.dataset.json) ||
+        this.dataset.json.length !== 3
+      ) {
+        Html`dataset-check-element: FAIL`;
+        return;
+      }
+      Html`dataset-check-element: PASS (array has ${this.dataset.json.length} items)`;
+    }
+  }
+);</code></pre>
+      <dataset-check-element data-json="[1,2,3]"></dataset-check-element>
+      <script type="module">
+        const codeCheck = document.querySelector('[data-test="dataset-check"] code').textContent;
+        eval(codeCheck);
+
+        // Single-phase render. PASS proves attrs is the raw string while
+        // dataset.json is the parsed array; the snapshot pins both branches.
+        const expected = '<dataset-check-element data-json="[1,2,3]"><!--<>-->dataset-check-element: PASS (array has 3 items)<!--</>--></dataset-check-element>';
+        requestAnimationFrame(() => {
+          window.assertSnapshot('dataset-check', document.querySelector('dataset-check-element'), expected);
+        });
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>
