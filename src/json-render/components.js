@@ -49,6 +49,11 @@ function dispatchAction(hostEl, action, params) {
 /**
  * Card — container with optional title, description, and body.
  * Props: title (string), description (string)
+ * @param {Function} Html - Tagged template function with .wire()
+ * @param {Object} def - Element definition { type, props, children, on }
+ * @param {string} key - Unique key for Html.wire() identity
+ * @param {Array} kids - Pre-rendered child DOM nodes
+ * @returns {Object} Html wire template result
  */
 function renderCard(Html, def, key, kids) {
   return Html.wire(def, ':' + key)`
@@ -62,6 +67,11 @@ function renderCard(Html, def, key, kids) {
 /**
  * Row — horizontal flex container with configurable gap.
  * Props: gap (number, pixels)
+ * @param {Function} Html - Tagged template function with .wire()
+ * @param {Object} def - Element definition { type, props, children, on }
+ * @param {string} key - Unique key for Html.wire() identity
+ * @param {Array} kids - Pre-rendered child DOM nodes
+ * @returns {Object} Html wire template result
  */
 function renderRow(Html, def, key, kids) {
   return Html.wire(def, ':' + key)`
@@ -71,6 +81,11 @@ function renderRow(Html, def, key, kids) {
 /**
  * Column — vertical flex container with configurable gap.
  * Props: gap (number, pixels)
+ * @param {Function} Html - Tagged template function with .wire()
+ * @param {Object} def - Element definition { type, props, children, on }
+ * @param {string} key - Unique key for Html.wire() identity
+ * @param {Array} kids - Pre-rendered child DOM nodes
+ * @returns {Object} Html wire template result
  */
 function renderColumn(Html, def, key, kids) {
   return Html.wire(def, ':' + key)`
@@ -81,6 +96,12 @@ function renderColumn(Html, def, key, kids) {
  * Button — clickable action trigger with variant styling.
  * Props: label (string), variant (string), disabled (boolean), loading (boolean)
  * Events: on.press → { action, params } dispatched as jr-action
+ * @param {Function} Html - Tagged template function with .wire()
+ * @param {Object} def - Element definition { type, props, children, on }
+ * @param {string} key - Unique key for Html.wire() identity
+ * @param {Array} kids - Pre-rendered child DOM nodes
+ * @param {HTMLElement} hostEl - Host element for event dispatch
+ * @returns {Object} Html wire template result
  */
 function renderButton(Html, def, key, kids, hostEl) {
   const variant = def.props?.variant || '';
@@ -96,17 +117,17 @@ function renderButton(Html, def, key, kids, hostEl) {
     <button class="${classes}"
       disabled=${disabled || loading}
       onclick=${() =>
-        dispatchAction(
-          hostEl,
-          actionData.action || 'press',
-          actionData.params
-        )}
+        dispatchAction(hostEl, actionData.action || 'press', actionData.params)}
     >${label}</button>`;
 }
 
 /**
  * Text — styled text block with variant support.
  * Props: content (string), variant (string: muted, bold, heading)
+ * @param {Function} Html - Tagged template function with .wire()
+ * @param {Object} def - Element definition { type, props, children, on }
+ * @param {string} key - Unique key for Html.wire() identity
+ * @returns {Object} Html wire template result
  */
 function renderText(Html, def, key) {
   return Html.wire(def, ':' + key)`
@@ -116,6 +137,10 @@ function renderText(Html, def, key) {
 /**
  * Alert — notification banner with variant-specific icon and color.
  * Props: variant (string: info, success, warning, error), message (string)
+ * @param {Function} Html - Tagged template function with .wire()
+ * @param {Object} def - Element definition { type, props, children, on }
+ * @param {string} key - Unique key for Html.wire() identity
+ * @returns {Object} Html wire template result
  */
 function renderAlert(Html, def, key) {
   // Icon prefix per variant for quick visual identification
@@ -129,6 +154,10 @@ function renderAlert(Html, def, key) {
 /**
  * Progress — horizontal progress bar with label and percentage.
  * Props: label (string), value (number 0-100)
+ * @param {Function} Html - Tagged template function with .wire()
+ * @param {Object} def - Element definition { type, props, children, on }
+ * @param {string} key - Unique key for Html.wire() identity
+ * @returns {Object} Html wire template result
  */
 function renderProgress(Html, def, key) {
   // Clamp value to 0–100 range for visual correctness
@@ -142,6 +171,10 @@ function renderProgress(Html, def, key) {
 
 /**
  * Divider — horizontal rule separator.
+ * @param {Function} Html - Tagged template function with .wire()
+ * @param {Object} def - Element definition { type, props, children, on }
+ * @param {string} key - Unique key for Html.wire() identity
+ * @returns {Object} Html wire template result
  */
 function renderDivider(Html, def, key) {
   return Html.wire(def, ':' + key)`<div class="jr-divider"></div>`;
@@ -150,6 +183,10 @@ function renderDivider(Html, def, key) {
 /**
  * CodeBlock — syntax-highlighted code display with language label.
  * Props: language (string), code (string)
+ * @param {Function} Html - Tagged template function with .wire()
+ * @param {Object} def - Element definition { type, props, children, on }
+ * @param {string} key - Unique key for Html.wire() identity
+ * @returns {Object} Html wire template result
  */
 function renderCodeBlock(Html, def, key) {
   return Html.wire(def, ':' + key)`
@@ -162,6 +199,10 @@ function renderCodeBlock(Html, def, key) {
 /**
  * Image — responsive image with optional dimension constraints.
  * Props: src (string), alt (string), width (number), height (number)
+ * @param {Function} Html - Tagged template function with .wire()
+ * @param {Object} def - Element definition { type, props, children, on }
+ * @param {string} key - Unique key for Html.wire() identity
+ * @returns {Object} Html wire template result
  */
 function renderImage(Html, def, key) {
   // Support optional width/height constraints via inline style
@@ -179,13 +220,23 @@ function renderImage(Html, def, key) {
  * Checklist — vertical list of checkbox items with toggle events.
  * Props: label (string), items (Array<{ label: string, checked: boolean }>)
  * Events: checkbox change → jr-action with { index, checked, label }
+ * @param {Function} Html - Tagged template function with .wire()
+ * @param {Object} def - Element definition { type, props, children, on }
+ * @param {string} key - Unique key for Html.wire() identity
+ * @param {Array} kids - Pre-rendered child DOM nodes
+ * @param {HTMLElement} hostEl - Host element for event dispatch
+ * @returns {Object} Html wire template result
  */
 function renderChecklist(Html, def, key, kids, hostEl) {
   return Html.wire(def, ':' + key)`
     <div class="jr-checklist">
       ${def.props?.label ? Html.wire(def, ':cl')`<div class="jr-checklist-label">${def.props.label}</div>` : ''}
-      ${(def.props?.items || []).map((item, i) =>
-        Html.wire(item, ':ci' + i)`<label class="jr-checklist-item ${item.checked ? 'checked' : ''}">
+      ${(def.props?.items || []).map(
+        (item, i) =>
+          Html.wire(
+            item,
+            ':ci' + i
+          )`<label class="jr-checklist-item ${item.checked ? 'checked' : ''}">
           <input type="checkbox" checked=${item.checked}
             onchange=${(e) =>
               dispatchAction(hostEl, 'checklist_toggle', {
@@ -202,6 +253,12 @@ function renderChecklist(Html, def, key, kids, hostEl) {
  * TextField — text input with label, placeholder, and submit event.
  * Props: label (string), placeholder (string), maxLength (number)
  * Events: on.submit → jr-action with { value } on Enter key
+ * @param {Function} Html - Tagged template function with .wire()
+ * @param {Object} def - Element definition { type, props, children, on }
+ * @param {string} key - Unique key for Html.wire() identity
+ * @param {Array} kids - Pre-rendered child DOM nodes
+ * @param {HTMLElement} hostEl - Host element for event dispatch
+ * @returns {Object} Html wire template result
  */
 function renderTextField(Html, def, key, kids, hostEl) {
   const submitData = def.on?.submit || {};
@@ -226,21 +283,37 @@ function renderTextField(Html, def, key, kids, hostEl) {
 
 /**
  * Registry of all built-in component types.
- * Maps type name (string) → render function.
  *
- * @type {Map<string, Function>}
+ * Each entry maps a type name to an object with:
+ *   - render: the component render function (defined above)
+ *   - catalog: structured metadata (imported from catalog.js)
+ *
+ * @type {Map<string, { render: Function, catalog: Object }>}
  */
+import { CATALOG } from './catalog.js';
+
+/**
+ * Pair a render function with its catalog entry from the CATALOG map.
+ * @param {string} name - Component type name (must exist in CATALOG)
+ * @param {Function} renderFn - Render function for this component
+ * @returns {[string, { render: Function, catalog: Object }]} Map entry tuple
+ */
+const entry = (name, renderFn) => [
+  name,
+  { render: renderFn, catalog: CATALOG[name] },
+];
+
 export const BUILT_IN_COMPONENTS = new Map([
-  ['Card', renderCard],
-  ['Row', renderRow],
-  ['Column', renderColumn],
-  ['Button', renderButton],
-  ['Text', renderText],
-  ['Alert', renderAlert],
-  ['Progress', renderProgress],
-  ['Divider', renderDivider],
-  ['CodeBlock', renderCodeBlock],
-  ['Image', renderImage],
-  ['Checklist', renderChecklist],
-  ['TextField', renderTextField],
+  entry('Card', renderCard),
+  entry('Row', renderRow),
+  entry('Column', renderColumn),
+  entry('Button', renderButton),
+  entry('Text', renderText),
+  entry('Alert', renderAlert),
+  entry('Progress', renderProgress),
+  entry('Divider', renderDivider),
+  entry('CodeBlock', renderCodeBlock),
+  entry('Image', renderImage),
+  entry('Checklist', renderChecklist),
+  entry('TextField', renderTextField),
 ]);

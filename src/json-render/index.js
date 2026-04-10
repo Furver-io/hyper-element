@@ -21,27 +21,32 @@
  */
 
 import { BUILT_IN_COMPONENTS } from './components.js';
-import { renderNode, renderSpecTree } from './renderer.js';
-import { validateSpec } from './validator.js';
+import { renderSpecTree } from './renderer.js';
 
 /**
- * Component registry — maps type names to render functions.
+ * Component registry — maps type names to component entries.
+ *
+ * Each entry is either:
+ *   - { render: Function, catalog: Object } — built-in or catalog-registered
+ *   - Function — legacy registerComponent(type, fn) for backward compat
  *
  * Initialized with all built-in types (Card, Button, Text, etc.).
  * Custom types can be added via registerComponent() and will be
  * available to all specs rendered after registration.
  *
- * @type {Map<string, Function>}
+ * @type {Map<string, { render: Function, catalog?: Object } | Function>}
  */
 const registry = new Map(BUILT_IN_COMPONENTS);
 
 /**
- * Registry interface exposed to the renderer.
- * Wraps the Map with a .get() method matching the expected
- * interface in renderer.js.
+ * Registry interface exposed to the renderer and element.js.
+ *
+ * The .get() method returns the raw registry entry (either a
+ * { render, catalog } object or a legacy function). The renderer
+ * resolves the render function from either shape.
  */
 const registryInterface = {
-  /** Look up a render function by component type name */
+  /** Look up a registry entry by component type name */
   get: (type) => registry.get(type),
   /** List all registered type names */
   all: () => [...registry.keys()],
@@ -50,24 +55,56 @@ const registryInterface = {
 /**
  * Register a custom component type for json-render specs.
  *
- * Custom components extend the built-in set (Card, Button, etc.)
- * and can be used in any spec by setting def.type to the registered name.
+ * Accepts two signatures:
+ *   1. Legacy: registerComponent(type, renderFn) — render only, no catalog
+ *   2. Catalog: registerComponent(type, { render, catalog }) — render + metadata
+ *
+ * Catalog-registered components appear in getCatalog() output and are
+ * visible to the LLM via prompt() and toolDefinition(). Legacy
+ * function-only registrations render correctly but are invisible to
+ * the catalog (the LLM won't know about them).
  *
  * @param {string} type - The component type name (e.g. "Chart", "Map")
- * @param {Function} renderFn - Render function: (Html, def, key, kids, hostEl) => HtmlTemplate
+ * @param {Function|Object} renderFnOrEntry - Render function or { render, catalog } entry
  *
  * @example
+ * // Legacy — render only
  * registerComponent('MyChart', (Html, def, key) =>
  *   Html.wire(def, ':' + key)`<div class="chart">${def.props?.data}</div>`
  * );
+ *
+ * @example
+ * // Catalog — render + metadata for LLM schema generation
+ * registerComponent('MyChart', {
+ *   render: (Html, def, key) =>
+ *     Html.wire(def, ':' + key)`<div class="chart">${def.props?.data}</div>`,
+ *   catalog: {
+ *     description: 'Data visualization chart',
+ *     props: { data: { type: 'array', required: true } },
+ *     slots: [],
+ *     actions: {},
+ *   },
+ * });
  */
-export function registerComponent(type, renderFn) {
+export function registerComponent(type, renderFnOrEntry) {
   if (typeof type !== 'string' || !type) {
     throw new Error('registerComponent: type must be a non-empty string');
   }
-  if (typeof renderFn !== 'function') {
-    throw new Error('registerComponent: renderFn must be a function');
+
+  // Validate the entry: must be a function or an object with a render function
+  const isFunction = typeof renderFnOrEntry === 'function';
+  const isEntry =
+    renderFnOrEntry &&
+    typeof renderFnOrEntry === 'object' &&
+    typeof renderFnOrEntry.render === 'function';
+
+  if (!isFunction && !isEntry) {
+    throw new Error(
+      'registerComponent: second argument must be a render function or ' +
+        '{ render: Function, catalog?: Object }'
+    );
   }
+
   // Warn when overriding a built-in type — usually unintentional
   if (BUILT_IN_COMPONENTS.has(type)) {
     console.warn(
@@ -75,7 +112,7 @@ export function registerComponent(type, renderFn) {
         `This replaces the default implementation for all future renders.`
     );
   }
-  registry.set(type, renderFn);
+  registry.set(type, renderFnOrEntry);
 }
 
 /**
@@ -123,6 +160,10 @@ export function renderSpec(Html, spec, hostEl) {
 export function listComponentTypes() {
   return registryInterface.all();
 }
+
+// Export the shared registry interface for internal use by element.js.
+// This ensures <jr-ui> sees custom-registered components, not just built-ins.
+export { registryInterface };
 
 // Re-export for consumers who need standalone access
 export { renderNode } from './renderer.js';

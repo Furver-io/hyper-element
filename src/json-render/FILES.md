@@ -21,6 +21,15 @@ All 12 built-in component render functions: Card, Row, Column, Button,
 Text, Alert, Progress, Divider, CodeBlock, Image, Checklist, TextField.
 Each follows the signature `(Html, def, key, kids, hostEl) => template`.
 Interactive components dispatch `jr-action` CustomEvents via `dispatchAction()`.
+Exports `BUILT_IN_COMPONENTS` map pairing render functions with catalog metadata.
+
+### `catalog.js`
+
+Structured metadata for all built-in component types. Each entry describes
+the component's purpose, props (with types, constraints, defaults), slots,
+and actions — used by `getCatalog()` to generate LLM-consumable schemas
+and prompts. Separated from `components.js` to keep both files under the
+project line-count limit.
 
 ### `element.js`
 
@@ -41,3 +50,8 @@ Returns all violations, not just the first.
 Self-contained CSS for all component types. Defines its own `--jr-*`
 custom properties for colors, spacing, and typography — not dependent
 on the host application's CSS variables. Dark-mode compatible, themeable.
+
+### `FILES.md`
+
+This file. Index of every source file in the json-render module with
+its specific responsibility.

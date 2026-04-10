@@ -284,7 +284,8 @@ document.getElementById('interactive-output').appendChild(elem);</code></pre>
 const types = ['Alert', 'Button', 'Card', 'Checklist', 'CodeBlock',
   'Column', 'Divider', 'Image', 'Progress', 'Row', 'TextField', 'Text'];
 for (const type of types) {
-  const fn = window.BUILT_IN_COMPONENTS.get(type);
+  const entry = window.BUILT_IN_COMPONENTS.get(type);
+  const fn = typeof entry === 'function' ? entry : entry?.render;
   if (fn) {
     try { fn(Html, null, 'key'); } catch(e) {}
     try { fn(Html, { type }, 'key'); } catch(e) {}

@@ -35,18 +35,27 @@ export function renderNode(Html, key, elements, hostEl, registry) {
   // streaming where children keys exist but their definitions haven't
   // arrived yet via input_json_delta events.
   if (!def) {
-    return Html.wire({}, ':' + key)`<div class="jr-text muted">[loading...]</div>`;
+    return Html.wire(
+      {},
+      ':' + key
+    )`<div class="jr-text muted">[loading...]</div>`;
   }
 
   // Recursively render children into an array of DOM nodes.
   // Each child is a key reference in the flat elements map.
-  const kids = (def.children || []).map(
-    (childKey) => renderNode(Html, childKey, elements, hostEl, registry)
+  const kids = (def.children || []).map((childKey) =>
+    renderNode(Html, childKey, elements, hostEl, registry)
   );
 
   // Look up the component type in the registry. The registry maps
-  // type names (e.g. "Card", "Button") to render functions.
-  const renderFn = registry.get(def.type);
+  // type names (e.g. "Card", "Button") to entries that are either:
+  //   - { render, catalog } objects (built-ins and catalog-registered)
+  //   - plain functions (legacy registerComponent(type, fn) calls)
+  const entry = registry.get(def.type);
+
+  // Resolve the render function from the entry. Legacy registrations
+  // store a bare function; catalog registrations store { render, catalog }.
+  const renderFn = typeof entry === 'function' ? entry : entry?.render;
 
   // Unknown type — show a diagnostic placeholder instead of crashing.
   // This signals to the developer which type name isn't registered,

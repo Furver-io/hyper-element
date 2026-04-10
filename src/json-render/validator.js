@@ -20,23 +20,26 @@
 
 /**
  * Set of known built-in component types.
- * Custom types registered via registerComponent() are not checked
- * against this set — they're assumed valid by the caller.
+ *
+ * Built lazily on first validation call from the canonical
+ * BUILT_IN_COMPONENTS registry, so the validator stays in sync
+ * automatically when built-ins are added or renamed — no separate
+ * maintenance of a duplicate type list.
+ *
+ * Lazy initialization is required because in the bundled build,
+ * variable declarations execute in concatenation order and
+ * BUILT_IN_COMPONENTS may not be initialized yet at module scope.
  */
-const KNOWN_TYPES = new Set([
-  'Card',
-  'Row',
-  'Column',
-  'Button',
-  'Text',
-  'Alert',
-  'Progress',
-  'Divider',
-  'CodeBlock',
-  'Image',
-  'Checklist',
-  'TextField',
-]);
+import { BUILT_IN_COMPONENTS } from './components.js';
+let KNOWN_TYPES;
+/**
+ * Lazily build the set of known built-in types from the canonical registry.
+ * @returns {Set<string>} Set of built-in component type names
+ */
+function getKnownTypes() {
+  if (!KNOWN_TYPES) KNOWN_TYPES = new Set(BUILT_IN_COMPONENTS.keys());
+  return KNOWN_TYPES;
+}
 
 /**
  * Validate a json-render spec for structural and semantic correctness.
@@ -73,7 +76,7 @@ export function validateSpec(spec, customTypes) {
   }
 
   // Build the set of valid types (built-in + custom)
-  const validTypes = new Set(KNOWN_TYPES);
+  const validTypes = new Set(getKnownTypes());
   if (customTypes) {
     for (const t of customTypes) validTypes.add(t);
   }
@@ -148,11 +151,14 @@ export function validateSpec(spec, customTypes) {
   // Walk the tree from root, tracking visited nodes. If we visit
   // a node twice, there's a cycle.
   const visited = new Set();
+  /**
+   * Recursively walk the element tree checking for circular references.
+   * @param {string} key - Current element key to visit
+   * @param {string[]} path - Breadcrumb trail of visited keys
+   */
   function walkForCycles(key, path) {
     if (visited.has(key)) {
-      errors.push(
-        `circular reference detected: ${[...path, key].join(' → ')}`
-      );
+      errors.push(`circular reference detected: ${[...path, key].join(' → ')}`);
       return;
     }
     visited.add(key);

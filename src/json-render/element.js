@@ -23,16 +23,13 @@
  */
 
 import { createFunctionalElement } from '../functional.js';
-import { BUILT_IN_COMPONENTS } from './components.js';
 import { renderSpecTree } from './renderer.js';
 
-/**
- * Registry interface for the element's internal rendering.
- * Uses the built-in components directly.
- */
-const jrElementRegistryInterface = {
-  get: (type) => BUILT_IN_COMPONENTS.get(type),
-};
+// Import the shared registry from index.js so <jr-ui> sees custom-registered
+// components — not just built-ins. This is safe despite the circular import
+// (index.js imports this file) because registryInterface is a module-scope
+// const that's initialized before this file's render() is ever called.
+import { registryInterface } from './index.js';
 
 /**
  * The <jr-ui> custom element class.
@@ -77,9 +74,10 @@ export const jrElement = createFunctionalElement('jr-ui', {
         return Html`<div class="jr-alert warning">⚠️ Invalid spec: missing root or elements</div>`;
       }
 
-      // Delegate to the core renderer. The jrElementRegistryInterface
-      // provides component lookup for the recursive tree build.
-      return renderSpecTree(Html, spec, ctx.element, jrElementRegistryInterface);
+      // Delegate to the core renderer. The shared registryInterface
+      // provides component lookup — includes both built-in and
+      // custom-registered types from registerComponent().
+      return renderSpecTree(Html, spec, ctx.element, registryInterface);
     } catch (e) {
       // Parse or render failure — show diagnostic instead of crashing.
       // During streaming, partial JSON is expected and will trigger this
