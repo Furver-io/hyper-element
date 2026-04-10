@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fragments Coverage Edges - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Fragments Coverage Edges</h1>
+    <p>Edge cases for async fragment array/string/plain-string, once cache, fragment replace/remove, raw multi-node operations, persistent fragment rerender, fragment-to-html, and persistent-fragment-valueof-else.</p>
+
+    <section data-test="async-fragment-array" data-test-result="pending">
+      <h2>Async Fragment with Array Values</h2>
+      <p>Tests async fragment template that returns an array of values.</p>
+      <pre><code>customElements.define(
+  'async-array-elem',
+  class extends hyperElement {
+    Items() {
+      return {
+        placeholder: 'Loading items...',
+        template: Promise.resolve({
+          template: '&lt;li&gt;{name}&lt;/li&gt;',
+          values: [
+            { name: 'Item A' },
+            { name: 'Item B' },
+            { name: 'Item C' },
+          ],
+        }),
+      };
+    }
+    render(Html) {
+      Html`&lt;ul&gt;${{ Items: {} }}&lt;/ul&gt;`;
+    }
+  }
+);
+
+const elem8 = document.createElement('async-array-elem');
+document.getElementById('async-array-output').appendChild(elem8);
+
+setTimeout(() =&gt; {
+  const section = document.querySelector(
+    '[data-test="async-fragment-array"]'
+  );
+  const content = elem8.textContent;
+  console.log('async-fragment-array innerHTML:', elem8.innerHTML);
+  console.log('async-fragment-array textContent:', content);
+  if (
+    content.includes('Item A') &amp;&amp;
+    content.includes('Item B') &amp;&amp;
+    content.includes('Item C')
+  ) {
+    section.dataset.testResult = 'pass';
+  } else {
+    section.dataset.testResult = 'fail';
+  }
+}, 300);</code></pre>
+      <div id="async-array-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="async-fragment-array"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="async-array-output"><async-array-elem><ul><!--<>--><li>Item A</li><li>Item B</li><li>Item C</li><!--</>--></ul></async-array-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="async-fragment-array"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('async-fragment-array', document.getElementById('async-array-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="async-fragment-string" data-test-result="pending">
+      <h2>Async Fragment with String Return</h2>
+      <p>
+        Tests async fragment that returns just a string template (uses data
+        param for values).
+      </p>
+      <pre><code>customElements.define(
+  'async-string-elem',
+  class extends hyperElement {
+    Message(data) {
+      // When promise resolves to just a string, the 'data' passed to fragment is used for values
+      return {
+        placeholder: 'Loading...',
+        template: Promise.resolve({
+          template: '&lt;p&gt;Hello {name}!&lt;/p&gt;',
+          values: data, // Use the data passed from render
+        }),
+      };
+    }
+    render(Html) {
+      Html`${{ Message: { name: 'World' } }}`;
+    }
+  }
+);
+
+const elem9 = document.createElement('async-string-elem');
+document.getElementById('async-string-output').appendChild(elem9);
+
+setTimeout(() =&gt; {
+  const section = document.querySelector(
+    '[data-test="async-fragment-string"]'
+  );
+  if (elem9.textContent.includes('Hello World!')) {
+    section.dataset.testResult = 'pass';
+  } else {
+    section.dataset.testResult = 'fail';
+  }
+}, 300);</code></pre>
+      <div id="async-string-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="async-fragment-string"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="async-string-output"><async-string-elem><!--<>--><p>Hello World!</p><!--</>--></async-string-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="async-fragment-string"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('async-fragment-string', document.getElementById('async-string-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="async-plain-string" data-test-result="pending">
+      <h2>Async Fragment - Promise Resolves to Plain String</h2>
+      <p>
+        Tests async fragment where promise resolves directly to a template
+        string (no variables).
+      </p>
+      <pre><code>customElements.define(
+  'async-plain-elem',
+  class extends hyperElement {
+    PlainMsg(data) {
+      // Promise resolves to just a string - tests line 272-274
+      // When returning just a string, values defaults to {} so no substitution happens
+      return {
+        placeholder: 'Loading...',
+        template: Promise.resolve('&lt;p&gt;Static message loaded&lt;/p&gt;'),
+      };
+    }
+    render(Html) {
+      Html`${{ PlainMsg: {} }}`;
+    }
+  }
+);
+
+const elemPlain = document.createElement('async-plain-elem');
+document.getElementById('async-plain-output').appendChild(elemPlain);
+
+setTimeout(() =&gt; {
+  const section = document.querySelector(
+    '[data-test="async-plain-string"]'
+  );
+  // When promise returns just string, no variable substitution (values = {})
+  if (elemPlain.textContent.includes('Static message loaded')) {
+    section.dataset.testResult = 'pass';
+  } else {
+    section.dataset.testResult = 'fail';
+  }
+}, 300);</code></pre>
+      <div id="async-plain-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="async-plain-string"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="async-plain-output"><async-plain-elem><!--<>--><p>Static message loaded</p><!--</>--></async-plain-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="async-plain-string"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('async-plain-string', document.getElementById('async-plain-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="fragment-once" data-test-result="pending">
+      <h2>Fragment with once:true Caching</h2>
+      <p>Tests that fragments with once:true only execute once.</p>
+      <pre><code>let fragmentCallCount = 0;
+
+customElements.define(
+  'once-frag-elem',
+  class extends hyperElement {
+    Cached(data) {
+      fragmentCallCount++;
+      return {
+        once: true,
+        any: 'Cached content (calls: ' + fragmentCallCount + ')',
+      };
+    }
+    setup(attachStore) {
+      const trigger = attachStore();
+      // Trigger multiple re-renders
+      setTimeout(() =&gt; trigger(), 20);
+      setTimeout(() =&gt; trigger(), 40);
+    }
+    render(Html) {
+      Html`&lt;span&gt;${{ Cached: {} }}&lt;/span&gt;`;
+    }
+  }
+);
+
+const elem10 = document.createElement('once-frag-elem');
+document.getElementById('fragment-once-output').appendChild(elem10);
+
+setTimeout(() =&gt; {
+  const section = document.querySelector('[data-test="fragment-once"]');
+  // Fragment should only have been called once despite multiple renders
+  if (
+    fragmentCallCount === 1 &amp;&amp;
+    elem10.textContent.includes('calls: 1')
+  ) {
+    section.dataset.testResult = 'pass';
+  } else {
+    section.dataset.testResult = 'fail';
+  }
+}, 150);</code></pre>
+      <div id="fragment-once-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="fragment-once"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="fragment-once-output"><once-frag-elem><span>Cached content (calls: 1)</span></once-frag-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="fragment-once"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('fragment-once', document.getElementById('fragment-once-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="fragment-replace" data-test-result="pending">
+      <h2>Persistent Fragment Replace (Drop)</h2>
+      <p>Tests toggling multi-node fragments to trigger drop() function.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="fragment-replace"]');
+
+  customElements.define(
+    'fragment-replace-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._showFragment = true;
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        const showFrag = this.element._showFragment;
+        if (showFrag) {
+          Html`&lt;div id="fragment-replace-result"&gt;&lt;span class="frag-a"&gt;A&lt;/span&gt;&lt;span class="frag-b"&gt;B&lt;/span&gt;&lt;/div&gt;`;
+        } else {
+          Html`&lt;div id="fragment-replace-result"&gt;&lt;span class="frag-single"&gt;Single&lt;/span&gt;&lt;/div&gt;`;
+        }
+      }
+    }
+  );
+
+  const elem = document.createElement('fragment-replace-elem');
+  document.getElementById('fragment-replace-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const result = document.getElementById('fragment-replace-result');
+    const initialA = result?.querySelector('.frag-a');
+    const initialB = result?.querySelector('.frag-b');
+
+    // Toggle to single element (triggers drop to replace fragment)
+    elem._showFragment = false;
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const newResult = document.getElementById('fragment-replace-result');
+      const single = newResult?.querySelector('.frag-single');
+      const noA = !newResult?.querySelector('.frag-a');
+      const noB = !newResult?.querySelector('.frag-b');
+
+      const pass = initialA &amp;&amp; initialB &amp;&amp; single &amp;&amp; noA &amp;&amp; noB;
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 50);
+  }, 100);
+})();</code></pre>
+      <div id="fragment-replace-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="fragment-replace"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="fragment-replace-output"><fragment-replace-elem><div id="fragment-replace-result"><span class="frag-single">Single</span></div></fragment-replace-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="fragment-replace"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('fragment-replace', document.getElementById('fragment-replace-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="fragment-remove" data-test-result="pending">
+      <h2>Persistent Fragment Remove</h2>
+      <p>Tests removing a multi-node fragment to trigger remove() function.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="fragment-remove"]');
+
+  customElements.define(
+    'fragment-remove-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._showFragment = true;
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        const showFrag = this.element._showFragment;
+        if (showFrag) {
+          Html`&lt;div id="fragment-remove-result"&gt;&lt;span class="rem-a"&gt;A&lt;/span&gt;&lt;span class="rem-b"&gt;B&lt;/span&gt;&lt;/div&gt;`;
+        } else {
+          Html`&lt;div id="fragment-remove-result"&gt;&lt;/div&gt;`;
+        }
+      }
+    }
+  );
+
+  const elem = document.createElement('fragment-remove-elem');
+  document.getElementById('fragment-remove-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const result = document.getElementById('fragment-remove-result');
+    const initialA = result?.querySelector('.rem-a');
+    const initialB = result?.querySelector('.rem-b');
+
+    // Remove fragment entirely
+    elem._showFragment = false;
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const newResult = document.getElementById('fragment-remove-result');
+      const noA = !newResult?.querySelector('.rem-a');
+      const noB = !newResult?.querySelector('.rem-b');
+
+      const pass = initialA &amp;&amp; initialB &amp;&amp; noA &amp;&amp; noB;
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 50);
+  }, 100);
+})();</code></pre>
+      <div id="fragment-remove-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="fragment-remove"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="fragment-remove-output"><fragment-remove-elem><div id="fragment-remove-result"></div></fragment-remove-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="fragment-remove"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('fragment-remove', document.getElementById('fragment-remove-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="raw-multi-node-replace" data-test-result="pending">
+      <h2>Raw HTML Multi-Node Replacement</h2>
+      <p>Tests replacing multi-node raw HTML to trigger PersistentFragment drop().</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="raw-multi-node-replace"]');
+
+  customElements.define(
+    'raw-multi-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._multiHtml = '&lt;span class="multi-a"&gt;A&lt;/span&gt;&lt;span class="multi-b"&gt;B&lt;/span&gt;';
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        // Render raw HTML with multiple siblings using Html.raw()
+        Html`&lt;div id="raw-multi-result"&gt;${Html.raw(this.element._multiHtml)}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('raw-multi-elem');
+  document.getElementById('raw-multi-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const result = document.getElementById('raw-multi-result');
+    const initialA = result?.querySelector('.multi-a');
+    const initialB = result?.querySelector('.multi-b');
+    const hadBoth = initialA &amp;&amp; initialB;
+
+    // Replace with single node - should trigger PersistentFragment.replaceWith -&gt; drop()
+    elem._multiHtml = '&lt;span class="single-node"&gt;Single&lt;/span&gt;';
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const singleNode = result?.querySelector('.single-node');
+      const noA = !result?.querySelector('.multi-a');
+      const noB = !result?.querySelector('.multi-b');
+
+      const pass = hadBoth &amp;&amp; singleNode &amp;&amp; noA &amp;&amp; noB;
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+})();</code></pre>
+      <div id="raw-multi-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="raw-multi-node-replace"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="raw-multi-output"><raw-multi-elem><div id="raw-multi-result"><!--<>--><span class="single-node">Single</span><!--</>--></div></raw-multi-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="raw-multi-node-replace"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('raw-multi-node-replace', document.getElementById('raw-multi-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="raw-multi-node-remove" data-test-result="pending">
+      <h2>Raw HTML Multi-Node Removal</h2>
+      <p>Tests removing multi-node raw HTML to trigger PersistentFragment remove().</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="raw-multi-node-remove"]');
+
+  customElements.define(
+    'raw-remove-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._showHtml = true;
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        // Conditionally render multi-node raw HTML
+        const multiHtml = '&lt;span class="rem-a"&gt;A&lt;/span&gt;&lt;span class="rem-b"&gt;B&lt;/span&gt;';
+        Html`&lt;div id="raw-remove-result"&gt;${
+          this.element._showHtml ? Html.raw(multiHtml) : ''
+        }&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('raw-remove-elem');
+  document.getElementById('raw-remove-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const result = document.getElementById('raw-remove-result');
+    const initialA = result?.querySelector('.rem-a');
+    const initialB = result?.querySelector('.rem-b');
+    const hadBoth = initialA &amp;&amp; initialB;
+
+    // Remove entirely - should trigger PersistentFragment.remove -&gt; drop()
+    elem._showHtml = false;
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const noA = !result?.querySelector('.rem-a');
+      const noB = !result?.querySelector('.rem-b');
+      // Result should be empty
+      const isEmpty = result?.children.length === 0;
+
+      const pass = hadBoth &amp;&amp; noA &amp;&amp; noB &amp;&amp; isEmpty;
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+})();</code></pre>
+      <div id="raw-remove-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="raw-multi-node-remove"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="raw-remove-output"><raw-remove-elem><div id="raw-remove-result"><!--<>--><!--</>--></div></raw-remove-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="raw-multi-node-remove"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('raw-multi-node-remove', document.getElementById('raw-remove-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="fragment-remove-cleanup" data-test-result="pending">
+      <h2>Fragment Removal</h2>
+      <p>Tests that removing an element with a fragment triggers fragment cleanup.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="fragment-remove-cleanup"]');
+
+  customElements.define(
+    'fragment-remove-cleanup-elem',
+    class extends hyperElement {
+      render(Html) {
+        // Create a template with interpolated content
+        const items = [{ id: 1 }, { id: 2 }, { id: 3 }];
+        Html`&lt;div&gt;${items.map((item) =&gt; Html.wire(item)`&lt;span&gt;item${item.id}&lt;/span&gt;`)}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const container = document.getElementById('fragment-remove-cleanup-output');
+  container.innerHTML = '&lt;fragment-remove-cleanup-elem&gt;&lt;/fragment-remove-cleanup-elem&gt;';
+  const elem = container.querySelector('fragment-remove-cleanup-elem');
+
+  setTimeout(() =&gt; {
+    // Verify element rendered
+    const content = elem.shadowRoot || elem;
+    const spans = content.querySelectorAll('span');
+    const rendered = spans.length === 3;
+
+    // Remove the element (triggers disconnectedCallback and fragment cleanup)
+    elem.remove();
+
+    // Verify element was removed
+    const removed = !document.contains(elem);
+    section.dataset.testResult = rendered &amp;&amp; removed ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="fragment-remove-cleanup-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="fragment-remove-cleanup"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="fragment-remove-cleanup-output"></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="fragment-remove-cleanup"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('fragment-remove-cleanup', document.getElementById('fragment-remove-cleanup-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="fragment-to-html" data-test-result="pending">
+      <h2>Fragment to Wire HTML</h2>
+      <p>Tests DocumentFragment nodeType 11 to innerHTML conversion</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="fragment-to-html"]');
+
+  // Create a fragment-returning function
+  const templates = {
+    list: (values) =&gt; {
+      const frag = document.createDocumentFragment();
+      values.forEach(v =&gt; {
+        const li = document.createElement('li');
+        li.textContent = v;
+        frag.appendChild(li);
+      });
+      return frag;
+    }
+  };
+
+  customElements.define(
+    'fragment-html-elem',
+    class extends hyperElement {
+      setup() {
+        this.items = ['One', 'Two', 'Three'];
+      }
+      render(Html) {
+        const frag = templates.list(this.items);
+        Html`&lt;ul&gt;${frag}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const container = document.getElementById('fragment-html-output');
+  container.innerHTML = '&lt;fragment-html-elem&gt;&lt;/fragment-html-elem&gt;';
+  const elem = container.querySelector('fragment-html-elem');
+
+  setTimeout(() =&gt; {
+    const shadow = elem.shadowRoot || elem;
+    const lis = shadow.querySelectorAll('li');
+    const pass = lis.length === 3;
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="fragment-html-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="fragment-to-html"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="fragment-html-output"><fragment-html-elem><ul><li>One</li><li>Two</li><li>Three</li></ul></fragment-html-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="fragment-to-html"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('fragment-to-html', document.getElementById('fragment-html-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="persistent-fragment-rerender" data-test-result="pending">
+      <h2>PersistentFragment Re-render</h2>
+      <p>Tests PersistentFragment valueOf path when re-rendering</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="persistent-fragment-rerender"]');
+
+  customElements.define(
+    'persistent-frag-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._count = 1;
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        // Template with multiple root nodes triggers PersistentFragment
+        Html`&lt;span&gt;A${this.element._count}&lt;/span&gt;&lt;span&gt;B${this.element._count}&lt;/span&gt;&lt;span&gt;C${this.element._count}&lt;/span&gt;`;
+      }
+    }
+  );
+
+  const container = document.getElementById('persistent-fragment-output');
+  container.innerHTML = '&lt;persistent-frag-elem&gt;&lt;/persistent-frag-elem&gt;';
+  const elem = container.querySelector('persistent-frag-elem');
+
+  setTimeout(() =&gt; {
+    const shadow = elem.shadowRoot || elem;
+    let spans = shadow.querySelectorAll('span');
+    const initial = spans.length === 3;
+
+    // Trigger re-render which exercises valueOf path
+    elem._count = 2;
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      spans = shadow.querySelectorAll('span');
+      const afterRerender = spans.length === 3;
+      const content = Array.from(spans).map(s =&gt; s.textContent).join(',');
+      const pass = initial &amp;&amp; afterRerender &amp;&amp; content === 'A2,B2,C2';
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+})();</code></pre>
+      <div id="persistent-fragment-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="persistent-fragment-rerender"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="persistent-fragment-output"><persistent-frag-elem><!--<>--><span>A2</span><span>B2</span><span>C2</span><!--</>--></persistent-frag-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="persistent-fragment-rerender"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('persistent-fragment-rerender', document.getElementById('persistent-fragment-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="persistent-fragment-valueof-else" data-test-result="pending">
+      <h2>PersistentFragment: valueOf() Else Branch</h2>
+      <p>
+        Tests that valueOf() correctly collects nodes from DOM when parentNode !== this.
+        Direct test: create PersistentFragment, append to DOM (children move out),
+        then call valueOf() which must collect children back.
+      </p>
+      <pre><code>const { PersistentFragment, nodes } = await import('../../src/render/persistent-fragment.js');
+
+const section = document.querySelector('[data-test="persistent-fragment-valueof-else"]');
+const container = document.getElementById('pf-valueof-else-output');
+
+try {
+  // Create a DocumentFragment with multiple children
+  const docFrag = document.createDocumentFragment();
+  const span1 = document.createElement('span');
+  span1.textContent = 'A';
+  span1.className = 'pf-a';
+  const span2 = document.createElement('span');
+  span2.textContent = 'B';
+  span2.className = 'pf-b';
+  const span3 = document.createElement('span');
+  span3.textContent = 'C';
+  span3.className = 'pf-c';
+  docFrag.appendChild(span1);
+  docFrag.appendChild(span2);
+  docFrag.appendChild(span3);
+
+  // Wrap in PersistentFragment (adds comment markers)
+  const pf = PersistentFragment(docFrag);
+
+  // Verify initial state: children are in the fragment
+  // parentNode getter returns this.firstChild.parentNode
+  // At this point, firstChild (the start comment) is in the fragment
+  const initialParent = pf.parentNode;
+  const initialInFragment = initialParent === pf;
+  console.log('pf-valueof-else: initial parentNode === pf:', initialInFragment);
+
+  // Create a wrapper div to append the fragment to
+  const wrapper = document.createElement('div');
+  wrapper.className = 'pf-wrapper';
+  container.appendChild(wrapper);
+
+  // Append the PersistentFragment to DOM
+  // This moves all children (comment markers + spans) into the wrapper
+  wrapper.appendChild(pf);
+
+  // After appending, the fragment is empty but its firstChild/lastChild
+  // properties still reference the comment markers (now in DOM)
+  const afterAppendParent = pf.parentNode;
+  const afterAppendInDOM = afterAppendParent === wrapper;
+  console.log('pf-valueof-else: after append parentNode === wrapper:', afterAppendInDOM);
+
+  // Verify children are visible in DOM
+  const visibleBefore = wrapper.querySelectorAll('span').length;
+  console.log('pf-valueof-else: spans in DOM:', visibleBefore);
+
+  // NOW: Call valueOf() - this should hit the ELSE branch!
+  // parentNode !== this (it's the wrapper), so valueOf() must:
+  // 1. Collect all nodes from firstChild to lastChild via nextSibling
+  // 2. Call replaceChildren() to move them back into the fragment
+  const result = pf.valueOf();
+
+  // After valueOf(), the children should be back in the fragment
+  const afterValueOfParent = pf.parentNode;
+  const afterValueOfInFragment = afterValueOfParent === pf;
+  console.log('pf-valueof-else: after valueOf parentNode === pf:', afterValueOfInFragment);
+
+  // Verify the fragment contains the children
+  const fragChildren = pf.childNodes.length;
+  console.log('pf-valueof-else: fragment childNodes:', fragChildren);
+
+  // Verify the nodes array was populated
+  const nodesArray = pf[nodes];
+  const nodesLength = nodesArray ? nodesArray.length : 0;
+  console.log('pf-valueof-else: nodes array length:', nodesLength);
+
+  // The wrapper should now be empty (children moved back to fragment)
+  const visibleAfter = wrapper.querySelectorAll('span').length;
+  console.log('pf-valueof-else: spans still in wrapper:', visibleAfter);
+
+  // Verify result is the fragment itself
+  const resultIsFragment = result === pf;
+
+  // Success criteria:
+  // 1. Initially children were in fragment (parentNode === pf)
+  // 2. After append, children were in DOM (parentNode === wrapper)
+  // 3. After valueOf(), children are back in fragment
+  // 4. The nodes array was populated (5 nodes: comment, span, span, span, comment)
+  const pass =
+    initialInFragment &amp;&amp;
+    afterAppendInDOM &amp;&amp;
+    afterValueOfInFragment &amp;&amp;
+    nodesLength === 5 &amp;&amp; // 2 comments + 3 spans
+    fragChildren === 5 &amp;&amp;
+    visibleAfter === 0 &amp;&amp; // children moved out of wrapper
+    resultIsFragment;
+
+  section.dataset.testResult = pass ? 'pass' : 'fail';
+  console.log('pf-valueof-else result:', pass ? 'PASS' : 'FAIL');
+
+  // Clean up by re-appending fragment to show content
+  wrapper.appendChild(pf);
+
+} catch (err) {
+  console.error('pf-valueof-else error:', err);
+  section.dataset.testResult = 'fail';
+}</code></pre>
+      <div id="pf-valueof-else-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="persistent-fragment-valueof-else"] pre code').textContent;
+        const fn = new Function('return (async () => { ' + code + ' })();');
+        await fn();
+        const expected = '<div id="pf-valueof-else-output"><div class="pf-wrapper"><!--<>--><span class="pf-a">A</span><span class="pf-b">B</span><span class="pf-c">C</span><!--</>--></div></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="persistent-fragment-valueof-else"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('persistent-fragment-valueof-else', document.getElementById('pf-valueof-else-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

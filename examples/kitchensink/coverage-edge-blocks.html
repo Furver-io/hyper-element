@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blocks Coverage Edges - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Blocks Coverage Edges</h1>
+    <p>Edge cases for {+if}, {+each}, {+unless} block syntax: empty arrays, undefined arrays, with-index, else branches, truthy/falsy, template-form blocks, and multiroot template arrays.</p>
+
+    <section data-test="each-non-array" data-test-result="pending">
+      <h2>Each with Non-Array Value</h2>
+      <p>Tests that {#each} with non-array returns empty string.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="each-non-array"]'
+  );
+
+  customElements.define(
+    'each-non-array-elem',
+    class extends hyperElement {
+      List(data) {
+        return {
+          template: '{+each items}&lt;li&gt;{...}&lt;/li&gt;{-each}',
+          values: data,
+        };
+      }
+      render(Html) {
+        // Pass non-array for items
+        Html`&lt;ul&gt;${{ List: { items: 'not-an-array' } }}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('each-non-array-elem');
+  document.getElementById('each-non-array-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    // Should render empty list (no li elements)
+    const liCount = elem.querySelectorAll('li').length;
+    section.dataset.testResult = liCount === 0 ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="each-non-array-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="each-non-array"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="each-non-array-output"><each-non-array-elem><ul><!--<>--><!--</>--></ul></each-non-array-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="each-non-array"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('each-non-array', document.getElementById('each-non-array-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="if-else-branch" data-test-result="pending">
+      <h2>If/Else Template - Else Branch</h2>
+      <p>Tests that {#if}...{else}...{-if} uses else branch when false.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="if-else-branch"]'
+  );
+
+  customElements.define(
+    'if-else-elem',
+    class extends hyperElement {
+      Content(data) {
+        return {
+          template: '{+if showMain}Main{else}Fallback{-if}',
+          values: data,
+        };
+      }
+      render(Html) {
+        Html`${{ Content: { showMain: false } }}`;
+      }
+    }
+  );
+
+  const elem = document.createElement('if-else-elem');
+  document.getElementById('if-else-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const hasElse =
+      elem.textContent.includes('Fallback') &amp;&amp;
+      !elem.textContent.includes('Main');
+    section.dataset.testResult = hasElse ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="if-else-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="if-else-branch"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="if-else-output"><if-else-elem><!--<>--><!--<>-->Fallback<!--</>--><!--</>--></if-else-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="if-else-branch"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('if-else-branch', document.getElementById('if-else-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="unless-truthy" data-test-result="pending">
+      <h2>Unless Template - Truthy Value</h2>
+      <p>Tests that {#unless} hides content when condition is true.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="unless-truthy"]');
+
+  customElements.define(
+    'unless-truthy-elem',
+    class extends hyperElement {
+      Content(data) {
+        return {
+          template: 'Before{+unless hidden}SHOWN{-unless}After',
+          values: data,
+        };
+      }
+      render(Html) {
+        // hidden is truthy, so content should NOT show
+        Html`${{ Content: { hidden: true } }}`;
+      }
+    }
+  );
+
+  const elem = document.createElement('unless-truthy-elem');
+  document.getElementById('unless-truthy-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const noShown = !elem.textContent.includes('SHOWN');
+    const hasBefore = elem.textContent.includes('Before');
+    const hasAfter = elem.textContent.includes('After');
+    section.dataset.testResult =
+      noShown &amp;&amp; hasBefore &amp;&amp; hasAfter ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="unless-truthy-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="unless-truthy"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="unless-truthy-output"><unless-truthy-elem><!--<>--><!--<>-->BeforeAfter<!--</>--><!--</>--></unless-truthy-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="unless-truthy"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('unless-truthy', document.getElementById('unless-truthy-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="var-null" data-test-result="pending">
+      <h2>Variable Substitution with Null/Undefined</h2>
+      <p>
+        Tests that null/undefined values in templates render as empty string.
+      </p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="var-null"]');
+
+  customElements.define(
+    'var-null-elem',
+    class extends hyperElement {
+      Content(data) {
+        return {
+          template: '{+if show}Value: {value}{-if}',
+          values: data,
+        };
+      }
+      render(Html) {
+        // value is undefined, should render as empty
+        Html`${{ Content: { show: true, value: null } }}`;
+      }
+    }
+  );
+
+  const elem = document.createElement('var-null-elem');
+  document.getElementById('var-null-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    // Should show "Value: " with nothing after
+    const hasValue = elem.textContent.includes('Value:');
+    section.dataset.testResult = hasValue ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="var-null-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="var-null"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="var-null-output"><var-null-elem><!--<>--><!--<>-->Value: <!--</>--><!--</>--></var-null-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="var-null"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('var-null', document.getElementById('var-null-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="each-with-index" data-test-result="pending">
+      <h2>Each with @index</h2>
+      <p>Tests {@} access in each loops to get the current iteration index.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="each-with-index"]'
+  );
+
+  customElements.define(
+    'each-index-elem',
+    class extends hyperElement {
+      List(data) {
+        return {
+          template: '{+each items}{@}:{...},{-each}',
+          values: data,
+        };
+      }
+      render(Html) {
+        Html`${{ List: { items: ['a', 'b', 'c'] } }}`;
+      }
+    }
+  );
+
+  const elem = document.createElement('each-index-elem');
+  document.getElementById('each-index-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const expected = '0:a,1:b,2:c,';
+    const actual = elem.textContent.trim();
+    section.dataset.testResult = actual === expected ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="each-index-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="each-with-index"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="each-index-output"><each-index-elem><!--<>--><!--<>-->0:a,1:b,2:c,<!--</>--><!--</>--></each-index-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="each-with-index"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('each-with-index', document.getElementById('each-index-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="if-else-truthy" data-test-result="pending">
+      <h2>If/Else Truthy Branch</h2>
+      <p>
+        Tests that {+if condition}...{else}...{-if} returns the if-branch when
+        condition is truthy.
+      </p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="if-else-truthy"]'
+  );
+
+  customElements.define(
+    'if-else-truthy-elem',
+    class extends hyperElement {
+      Content(data) {
+        return {
+          template: '{+if show}YES{else}NO{-if}',
+          values: data,
+        };
+      }
+      render(Html) {
+        Html`${{ Content: { show: true } }}`;
+      }
+    }
+  );
+
+  const elem = document.createElement('if-else-truthy-elem');
+  document.getElementById('if-else-truthy-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const hasYes =
+      elem.textContent.includes('YES') &amp;&amp;
+      !elem.textContent.includes('NO');
+    section.dataset.testResult = hasYes ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="if-else-truthy-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="if-else-truthy"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="if-else-truthy-output"><if-else-truthy-elem><!--<>--><!--<>-->YES<!--</>--><!--</>--></if-else-truthy-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="if-else-truthy"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('if-else-truthy', document.getElementById('if-else-truthy-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="unless-truthy-hide" data-test-result="pending">
+      <h2>Unless Truthy Hides Content</h2>
+      <p>
+        Tests that {+unless condition} hides content when condition is truthy.
+      </p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="unless-truthy-hide"]'
+  );
+
+  customElements.define(
+    'unless-truthy-hide-elem',
+    class extends hyperElement {
+      Content(data) {
+        return {
+          template: 'Before{+unless visible}HIDDEN{-unless}After',
+          values: data,
+        };
+      }
+      render(Html) {
+        Html`${{ Content: { visible: true } }}`;
+      }
+    }
+  );
+
+  const elem = document.createElement('unless-truthy-hide-elem');
+  document
+    .getElementById('unless-truthy-hide-output')
+    .appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const text = elem.textContent;
+    const hidden = !text.includes('HIDDEN');
+    const hasBefore = text.includes('Before');
+    const hasAfter = text.includes('After');
+    section.dataset.testResult =
+      hidden &amp;&amp; hasBefore &amp;&amp; hasAfter ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="unless-truthy-hide-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="unless-truthy-hide"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="unless-truthy-hide-output"><unless-truthy-hide-elem><!--<>--><!--<>-->BeforeAfter<!--</>--><!--</>--></unless-truthy-hide-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="unless-truthy-hide"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('unless-truthy-hide', document.getElementById('unless-truthy-hide-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="each-empty-array" data-test-result="pending">
+      <h2>Each with Empty Array</h2>
+      <p>Tests that {#each} with an empty array renders nothing.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="each-empty-array"]'
+  );
+
+  customElements.define(
+    'each-empty-elem',
+    class extends hyperElement {
+      List(data) {
+        return {
+          template: 'Start{+each items}[{...}]{-each}End',
+          values: data,
+        };
+      }
+      render(Html) {
+        Html`${{ List: { items: [] } }}`; // Empty array
+      }
+    }
+  );
+
+  const elem = document.createElement('each-empty-elem');
+  document.getElementById('each-empty-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    // Should render "StartEnd" with no items in between
+    const expected = 'StartEnd';
+    const actual = elem.textContent.trim();
+    section.dataset.testResult = actual === expected ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="each-empty-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="each-empty-array"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="each-empty-output"><each-empty-elem><!--<>--><!--<>-->StartEnd<!--</>--><!--</>--></each-empty-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="each-empty-array"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('each-empty-array', document.getElementById('each-empty-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="unless-returns-empty" data-test-result="pending">
+      <h2>Unless Both Branches (template attribute)</h2>
+      <p>
+        Tests {#unless} with both truthy (returns '') and falsy (returns
+        content) conditions.
+      </p>
+      <!-- Truthy test: shouldHide=true means content is hidden -->
+      <unless-truthy-attr-elem template
+        >START{+unless shouldHide}VISIBLE{-unless}END</unless-truthy-attr-elem
+      >
+      <!-- Falsy test: shouldShow=false means content is shown -->
+      <unless-falsy-attr-elem template
+        >BEGIN{+unless shouldShow}CONTENT{-unless}FINISH</unless-falsy-attr-elem
+      >
+      <pre><code>customElements.define(
+  'unless-truthy-attr-elem',
+  class extends hyperElement {
+    render(Html) {
+      // shouldHide=true, so #unless should return '' (hide content)
+      Html`${Html.template({ shouldHide: true })}`;
+    }
+  }
+);
+
+customElements.define(
+  'unless-falsy-attr-elem',
+  class extends hyperElement {
+    render(Html) {
+      // shouldShow=false, so #unless should return content (show it)
+      Html`${Html.template({ shouldShow: false })}`;
+    }
+  }
+);</code></pre>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="unless-returns-empty"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<unless-truthy-attr-elem template=""><!--<>--><!--<>-->STARTEND<!--</>--><!--</>--></unless-truthy-attr-elem>';
+
+        requestAnimationFrame(() => {
+
+          window.assertSnapshot('unless-returns-empty', document.querySelector('unless-truthy-attr-elem'), expected);
+
+        });
+       </script>
+    </section>
+
+    <section data-test="unless-fragment-truthy" data-test-result="pending">
+      <h2>Unless via Fragment - Truthy Condition</h2>
+      <p>Tests {#unless} through Fragment pattern with truthy condition.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="unless-fragment-truthy"]'
+  );
+
+  customElements.define(
+    'unless-frag-truthy',
+    class extends hyperElement {
+      Hidden(data) {
+        return {
+          template: 'X{+unless showIt}HIDDEN{-unless}Y',
+          values: data,
+        };
+      }
+      render(Html) {
+        // showIt is truthy, so HIDDEN should NOT appear
+        Html`${{ Hidden: { showIt: 'yes' } }}`;
+      }
+    }
+  );
+
+  const elem = document.createElement('unless-frag-truthy');
+  document.getElementById('unless-fragment-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const text = elem.textContent.trim();
+    // Should be "XY" not "XHIDDENY"
+    section.dataset.testResult = text === 'XY' ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="unless-fragment-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="unless-fragment-truthy"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="unless-fragment-output"><unless-frag-truthy><!--<>--><!--<>-->XY<!--</>--><!--</>--></unless-frag-truthy></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="unless-fragment-truthy"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('unless-fragment-truthy', document.getElementById('unless-fragment-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="each-undefined" data-test-result="pending">
+      <h2>Each with Undefined Array</h2>
+      <p>Tests {+each} block with undefined value (should render empty).</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="each-undefined"]'
+  );
+
+  customElements.define(
+    'each-undefined-elem',
+    class extends hyperElement {
+      render(Html) {
+        const undefinedArray = undefined;
+        Html`&lt;div id="each-undefined-result"&gt;before{+each ${undefinedArray}}&lt;span&gt;item&lt;/span&gt;{-each}after&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('each-undefined-elem');
+  document.getElementById('each-undefined-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const result = document.getElementById('each-undefined-result');
+    // Should render 'beforeafter' with no items
+    const pass = result &amp;&amp; result.textContent === 'beforeafter';
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+    if (!pass)
+      console.log('each-undefined actual:', result?.textContent);
+  }, 100);
+})();</code></pre>
+      <div id="each-undefined-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="each-undefined"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="each-undefined-output"><each-undefined-elem><div id="each-undefined-result">before<!--◦-->after</div></each-undefined-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="each-undefined"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('each-undefined', document.getElementById('each-undefined-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="tpl-if-block" data-test-result="pending">
+      <h2>Template Literal {+if} Block</h2>
+      <p>Tests {+if} block using template literal syntax (transformEachBlocks path).</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="tpl-if-block"]');
+
+  customElements.define(
+    'tpl-if-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.showA = true;
+        this.showB = false;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="tpl-if-result"&gt;[{+if ${this.showA}}TRUTHY{-if}][{+if ${this.showB}}HIDDEN{-if}]&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('tpl-if-elem');
+  document.getElementById('tpl-if-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('tpl-if-result');
+    const pass = result?.textContent === '[TRUTHY][]';
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  });
+})();</code></pre>
+      <div id="tpl-if-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="tpl-if-block"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="tpl-if-output"><tpl-if-elem><div id="tpl-if-result">[<!--<>-->TRUTHY<!--</>-->][<!--<>--><!--</>-->]</div></tpl-if-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="tpl-if-block"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('tpl-if-block', document.getElementById('tpl-if-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="tpl-unless-block" data-test-result="pending">
+      <h2>Template Literal {+unless} Block</h2>
+      <p>Tests {+unless} block using template literal syntax (transformEachBlocks path).</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="tpl-unless-block"]');
+
+  customElements.define(
+    'tpl-unless-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.isHidden = true;
+        this.isShown = false;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="tpl-unless-result"&gt;[{+unless ${this.isHidden}}HIDDEN{-unless}][{+unless ${this.isShown}}SHOWN{-unless}]&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('tpl-unless-elem');
+  document.getElementById('tpl-unless-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('tpl-unless-result');
+    const pass = result?.textContent === '[][SHOWN]';
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  });
+})();</code></pre>
+      <div id="tpl-unless-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="tpl-unless-block"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="tpl-unless-output"><tpl-unless-elem><div id="tpl-unless-result">[<!--<>--><!--</>-->][<!--<>-->SHOWN<!--</>-->]</div></tpl-unless-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="tpl-unless-block"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('tpl-unless-block', document.getElementById('tpl-unless-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="tpl-each-block" data-test-result="pending">
+      <h2>Template Literal {+each} Block</h2>
+      <p>Tests {+each} block using template literal syntax (transformEachBlocks path).</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="tpl-each-block"]');
+
+  customElements.define(
+    'tpl-each-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.items = ['Alpha', 'Beta', 'Gamma'];
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;ul id="tpl-each-result"&gt;{+each ${this.items}}&lt;li&gt;{...}&lt;/li&gt;{-each}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('tpl-each-elem');
+  document.getElementById('tpl-each-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const result = document.getElementById('tpl-each-result');
+    const lis = result?.querySelectorAll('li') || [];
+    const pass = lis.length === 3 &amp;&amp;
+                 lis[0].textContent === 'Alpha' &amp;&amp;
+                 lis[1].textContent === 'Beta' &amp;&amp;
+                 lis[2].textContent === 'Gamma';
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="tpl-each-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="tpl-each-block"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="tpl-each-output"><tpl-each-elem><ul id="tpl-each-result"><li>Alpha</li><li>Beta</li><li>Gamma</li><!--◦--></ul></tpl-each-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="tpl-each-block"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('tpl-each-block', document.getElementById('tpl-each-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="advanced-template-array" data-test-result="pending">
+      <h2>Advanced Template with Array Values</h2>
+      <p>Tests fragment returning advanced template ({+if} syntax) with array values - hits item.html branch in combined mapping.</p>
+      <pre><code>customElements.define(
+  'advanced-array-elem',
+  class extends hyperElement {
+    Items() {
+      return {
+        template: '&lt;li&gt;{+if active}&lt;b&gt;{name}&lt;/b&gt;{else}{name}{-if}&lt;/li&gt;',
+        values: [
+          { name: 'Bold Item', active: true },
+          { name: 'Normal Item', active: false },
+          { name: 'Also Bold', active: true },
+        ],
+      };
+    }
+    render(Html) {
+      Html`&lt;ul&gt;${{ Items: {} }}&lt;/ul&gt;`;
+    }
+  }
+);
+
+const elemAdvArr = document.createElement('advanced-array-elem');
+document.getElementById('advanced-array-output').appendChild(elemAdvArr);</code></pre>
+      <div id="advanced-array-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="advanced-template-array"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="advanced-array-output"><advanced-array-elem><ul><!--<>--><li><b>Bold Item</b></li><li>Normal Item</li><li><b>Also Bold</b></li><!--</>--></ul></advanced-array-elem></div>';
+
+        requestAnimationFrame(() => {
+
+          window.assertSnapshot('advanced-template-array', document.getElementById('advanced-array-output'), expected);
+
+        });
+       </script>
+    </section>
+
+    <section data-test="multiroot-template-array" data-test-result="pending">
+      <h2>Multi-Root Template with Array Values</h2>
+      <p>Tests fragment returning template with multiple root elements (produces DocumentFragment) - hits nodeType === 11 branch.</p>
+      <pre><code>customElements.define(
+  'multiroot-array-elem',
+  class extends hyperElement {
+    Pairs() {
+      return {
+        // Multiple root elements → DocumentFragment when rendered
+        template: '&lt;span class="left"&gt;{left}&lt;/span&gt;&lt;span class="right"&gt;{right}&lt;/span&gt;',
+        values: [
+          { left: 'A', right: '1' },
+          { left: 'B', right: '2' },
+        ],
+      };
+    }
+    render(Html) {
+      Html`&lt;div&gt;${{ Pairs: {} }}&lt;/div&gt;`;
+    }
+  }
+);
+
+const elemMulti = document.createElement('multiroot-array-elem');
+document.getElementById('multiroot-array-output').appendChild(elemMulti);</code></pre>
+      <div id="multiroot-array-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="multiroot-template-array"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="multiroot-array-output"><multiroot-array-elem><div><!--<>--><!--<>--><span class="left">A</span><span class="right">1</span><!--</>--><!--<>--><span class="left">B</span><span class="right">2</span><!--</>--><!--</>--></div></multiroot-array-elem></div>';
+
+        requestAnimationFrame(() => {
+
+          window.assertSnapshot('multiroot-template-array', document.getElementById('multiroot-array-output'), expected);
+
+        });
+       </script>
+    </section>
+
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

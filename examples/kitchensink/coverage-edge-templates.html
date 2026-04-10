@@ -1,0 +1,1120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Templates Coverage Edges - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Templates Coverage Edges</h1>
+    <p>Edge cases for template attr handling, template errors, undefined/null var paths, format-value branches, async templates, html-wire/lite/raw, to-string, spread-operator, and element-identifier.</p>
+
+    <section data-test="unknown-template-error" data-test-result="pending">
+      <h2>Unknown Template Type Error</h2>
+      <p>Tests that invalid template type throws an error.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="unknown-template-error"]'
+  );
+  let errorThrown = false;
+
+  customElements.define(
+    'bad-template-elem',
+    class extends hyperElement {
+      BadFragment(data) {
+        return {
+          // Invalid template type (number instead of string or promise)
+          template: 12345,
+        };
+      }
+      render(Html) {
+        try {
+          Html`${{ BadFragment: {} }}`;
+        } catch (e) {
+          if (e.message.includes('unknow template type')) {
+            errorThrown = true;
+          }
+        }
+      }
+    }
+  );
+
+  const elem = document.createElement('bad-template-elem');
+  document.getElementById('unknown-template-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    if (errorThrown) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 100);
+})();</code></pre>
+      <div id="unknown-template-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="unknown-template-error"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="unknown-template-output"><bad-template-elem></bad-template-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="unknown-template-error"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('unknown-template-error', document.getElementById('unknown-template-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="template-attr-empty" data-test-result="pending">
+      <h2>Template Attribute with Empty Value</h2>
+      <p>
+        Tests element with template attribute but no value uses innerHTML as
+        template.
+      </p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="template-attr-empty"]'
+  );
+
+  customElements.define(
+    'template-empty-elem',
+    class extends hyperElement {
+      render(Html) {
+        // When template attr is empty, Html.template should be defined
+        if (Html.template) {
+          const result = Html.template({
+            greeting: 'Hello',
+            name: 'World',
+          });
+          Html`${result}`;
+        } else {
+          Html`&lt;span&gt;No template&lt;/span&gt;`;
+        }
+      }
+    }
+  );
+
+  const container = document.getElementById('template-empty-output');
+  // Create element with template attribute (no value) and template content
+  container.innerHTML =
+    '&lt;template-empty-elem template&gt;{greeting}{name}!&lt;/template-empty-elem&gt;';
+
+  setTimeout(() =&gt; {
+    const elem = container.querySelector('template-empty-elem');
+    const hasContent = elem &amp;&amp; elem.textContent.includes('HelloWorld!');
+    section.dataset.testResult = hasContent ? 'pass' : 'fail';
+  }, 200);
+})();</code></pre>
+      <div id="template-empty-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="template-attr-empty"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="template-empty-output"><template-empty-elem template=""><!--<>--><!--<>-->HelloWorld!<!--</>--><!--</>--></template-empty-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="template-attr-empty"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('template-attr-empty', document.getElementById('template-empty-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="simple-template-error" data-test-result="pending">
+      <h2>Simple Template Non-Object Error</h2>
+      <p>Tests that passing non-object to simple template throws error.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="simple-template-error"]'
+  );
+  let errorThrown = false;
+
+  customElements.define(
+    'simple-tmpl-err-elem',
+    class extends hyperElement {
+      Item(data) {
+        return {
+          template: '&lt;span&gt;{name}&lt;/span&gt;',
+          values: 'not-an-object', // This should cause error
+        };
+      }
+      render(Html) {
+        try {
+          Html`${{ Item: {} }}`;
+        } catch (e) {
+          if (
+            e.message.includes('Templates must be passed an object')
+          ) {
+            errorThrown = true;
+          }
+        }
+      }
+    }
+  );
+
+  const elem = document.createElement('simple-tmpl-err-elem');
+  document
+    .getElementById('simple-template-error-output')
+    .appendChild(elem);
+
+  setTimeout(() =&gt; {
+    section.dataset.testResult = errorThrown ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="simple-template-error-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="simple-template-error"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="simple-template-error-output"><simple-tmpl-err-elem></simple-tmpl-err-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="simple-template-error"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('simple-template-error', document.getElementById('simple-template-error-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="advanced-template-error" data-test-result="pending">
+      <h2>Advanced Template Non-Object Error</h2>
+      <p>
+        Tests that passing non-object to advanced template (with #if) throws
+        error.
+      </p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="advanced-template-error"]'
+  );
+  let errorThrown = false;
+
+  customElements.define(
+    'adv-tmpl-err-elem',
+    class extends hyperElement {
+      Item(data) {
+        return {
+          template: '{+if show}&lt;span&gt;shown&lt;/span&gt;{-if}',
+          values: 'not-an-object', // This should cause error
+        };
+      }
+      render(Html) {
+        try {
+          Html`${{ Item: {} }}`;
+        } catch (e) {
+          if (
+            e.message.includes('Templates must be passed an object')
+          ) {
+            errorThrown = true;
+          }
+        }
+      }
+    }
+  );
+
+  const elem = document.createElement('adv-tmpl-err-elem');
+  document
+    .getElementById('advanced-template-error-output')
+    .appendChild(elem);
+
+  setTimeout(() =&gt; {
+    section.dataset.testResult = errorThrown ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="advanced-template-error-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="advanced-template-error"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="advanced-template-error-output"><adv-tmpl-err-elem></adv-tmpl-err-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="advanced-template-error"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('advanced-template-error', document.getElementById('advanced-template-error-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="to-string" data-test-result="pending">
+      <h2>toString Override</h2>
+      <p>Tests the custom toString method returns element name.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="to-string"]');
+  let toStringResult = null;
+
+  customElements.define(
+    'to-string-elem',
+    class extends hyperElement {
+      render(Html) {
+        // Call toString on `this` context (which is `that` internally)
+        toStringResult = this.toString();
+        Html`&lt;span&gt;${toStringResult}&lt;/span&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('to-string-elem');
+  document.getElementById('to-string-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const hasName =
+      toStringResult &amp;&amp; toStringResult.includes('to-string-elem');
+    section.dataset.testResult = hasName ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="to-string-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="to-string"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="to-string-output"><to-string-elem><span>hyper-element: to-string-elem</span></to-string-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="to-string"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('to-string', document.getElementById('to-string-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="html-wire" data-test-result="pending">
+      <h2>Html.wire Helper</h2>
+      <p>Tests the Html.wire helper function.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="html-wire"]');
+  let wireWorked = false;
+
+  customElements.define(
+    'html-wire-elem',
+    class extends hyperElement {
+      render(Html) {
+        // Use Html.wire to create a wired element
+        const items = [
+          { id: 1, name: 'a' },
+          { id: 2, name: 'b' },
+        ];
+        const list = items.map(
+          (item) =&gt; Html.wire(item)`&lt;li&gt;${item.name}&lt;/li&gt;`
+        );
+        wireWorked = list.length === 2;
+        Html`&lt;ul&gt;${list}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('html-wire-elem');
+  document.getElementById('html-wire-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const hasItems =
+      elem.textContent.includes('a') &amp;&amp; elem.textContent.includes('b');
+    section.dataset.testResult =
+      wireWorked &amp;&amp; hasItems ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="html-wire-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="html-wire"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="html-wire-output"><html-wire-elem><ul><li>a</li><li>b</li><!--◦--></ul></html-wire-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="html-wire"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('html-wire', document.getElementById('html-wire-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="html-lite" data-test-result="pending">
+      <h2>Html.lite Helper</h2>
+      <p>Tests the Html.lite helper function.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="html-lite"]');
+  let liteWorked = false;
+  let liteDiv = null;
+
+  customElements.define(
+    'html-lite-elem',
+    class extends hyperElement {
+      render(Html) {
+        // Use Html.lite to render to a temporary element
+        liteDiv = document.createElement('div');
+        Html.lite(liteDiv)`&lt;span&gt;lite content&lt;/span&gt;`;
+        liteWorked = liteDiv.textContent.includes('lite content');
+        Html`&lt;div&gt;Main: ${liteWorked ? 'yes' : 'no'}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('html-lite-elem');
+  document.getElementById('html-lite-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    section.dataset.testResult = liteWorked ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="html-lite-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="html-lite"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="html-lite-output"><html-lite-elem><div>Main: yes</div></html-lite-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="html-lite"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('html-lite', document.getElementById('html-lite-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="template-undefined-var" data-test-result="pending">
+      <h2>Template Variable with Undefined Key</h2>
+      <p>Tests that undefined variables in templates render as empty string.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="template-undefined-var"]'
+  );
+
+  customElements.define(
+    'template-undefined-elem',
+    class extends hyperElement {
+      Greeting(data) {
+        return {
+          template: 'Hello {name}!',
+          values: data, // name is not provided
+        };
+      }
+      render(Html) {
+        Html`${{ Greeting: {} }}`; // Empty object, no name property
+      }
+    }
+  );
+
+  const elem = document.createElement('template-undefined-elem');
+  document
+    .getElementById('template-undefined-output')
+    .appendChild(elem);
+
+  setTimeout(() =&gt; {
+    // Should render "Hello !" with empty string for undefined name
+    const expected = 'Hello !';
+    const actual = elem.textContent.trim();
+    section.dataset.testResult = actual === expected ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="template-undefined-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="template-undefined-var"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="template-undefined-output"><template-undefined-elem><!--<>--><!--<>--><!--<>-->Hello !<!--</>--><!--</>--><!--</>--></template-undefined-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="template-undefined-var"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('template-undefined-var', document.getElementById('template-undefined-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="advanced-undefined-var" data-test-result="pending">
+      <h2>Advanced Template Variable Branches</h2>
+      <p>
+        Tests variable substitution with both defined and undefined variables.
+      </p>
+      <!-- Undefined variable test -->
+      <adv-undef-attr-elem template
+        >{+if show}[{notProvided}]{-if}</adv-undef-attr-elem
+      >
+      <!-- Defined variable test -->
+      <adv-defined-attr-elem template
+        >{+if show}[{provided}]{-if}</adv-defined-attr-elem
+      >
+      <pre><code>customElements.define(
+  'adv-undef-attr-elem',
+  class extends hyperElement {
+    render(Html) {
+      // 'notProvided' is NOT in the data - should return ''
+      Html`${Html.template({ show: true })}`;
+    }
+  }
+);
+
+customElements.define(
+  'adv-defined-attr-elem',
+  class extends hyperElement {
+    render(Html) {
+      // 'provided' IS in the data - should return its value
+      Html`${Html.template({ show: true, provided: 'VALUE' })}`;
+    }
+  }
+);</code></pre>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="advanced-undefined-var"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<adv-undef-attr-elem template=""><!--<>--><!--<>-->[]<!--</>--><!--</>--></adv-undef-attr-elem>';
+
+        requestAnimationFrame(() => {
+
+          window.assertSnapshot('advanced-undefined-var', document.querySelector('adv-undef-attr-elem'), expected);
+
+        });
+       </script>
+    </section>
+
+    <section data-test="advanced-null-var" data-test-result="pending">
+      <h2>Advanced Template Null Variable</h2>
+      <p>
+        Tests that null variables in advanced templates render as empty string.
+      </p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="advanced-null-var"]'
+  );
+
+  customElements.define(
+    'adv-null-var-elem',
+    class extends hyperElement {
+      NullVal(data) {
+        return {
+          // Template with #if (makes it "advanced") and a null variable
+          template: '{+if active}Value=[{val}]{-if}',
+          values: data,
+        };
+      }
+      render(Html) {
+        // 'active' is true, 'val' is explicitly null
+        Html`${{ NullVal: { active: true, val: null } }}`;
+      }
+    }
+  );
+
+  const elem = document.createElement('adv-null-var-elem');
+  document.getElementById('advanced-null-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    // Should render "Value=[]" - empty string for null variable
+    const text = elem.textContent.trim();
+    section.dataset.testResult = text === 'Value=[]' ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="advanced-null-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="advanced-null-var"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="advanced-null-output"><adv-null-var-elem><!--<>--><!--<>-->Value=[]<!--</>--><!--</>--></adv-null-var-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="advanced-null-var"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('advanced-null-var', document.getElementById('advanced-null-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="async-template-no-values" data-test-result="pending">
+      <h2>Async Template Without Values</h2>
+      <p>
+        Tests async template that resolves without values object (uses data
+        parameter as fallback).
+      </p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="async-template-no-values"]'
+  );
+
+  customElements.define(
+    'async-no-values-elem',
+    class extends hyperElement {
+      AsyncContent(data) {
+        return {
+          // Async template without values - should fall back to using data
+          template: Promise.resolve({
+            template: 'Name: {name}',
+            // values is NOT provided - should use data parameter as fallback
+          }),
+        };
+      }
+      render(Html) {
+        Html`${{ AsyncContent: { name: 'PASSED' } }}`;
+      }
+    }
+  );
+
+  const elem = document.createElement('async-no-values-elem');
+  document.getElementById('async-no-values-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const text = elem.textContent.trim();
+    section.dataset.testResult = text.includes('PASSED')
+      ? 'pass'
+      : 'fail';
+  }, 200);
+})();</code></pre>
+      <div id="async-no-values-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="async-template-no-values"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="async-no-values-output"><async-no-values-elem><!--<>--><!--<>-->Name: PASSED<!--</>--><!--</>--></async-no-values-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="async-template-no-values"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('async-template-no-values', document.getElementById('async-no-values-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="format-value-types" data-test-result="pending">
+      <h2>Format Value Types in Each</h2>
+      <p>
+        Tests {...} with different value types: string, number, boolean, array,
+        object, function, null.
+      </p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="format-value-types"]'
+  );
+
+  customElements.define(
+    'format-value-elem',
+    class extends hyperElement {
+      List(data) {
+        return {
+          template: '{+each items}[{...}]{-each}',
+          values: data,
+        };
+      }
+      render(Html) {
+        // Test various types
+        const items = [
+          'hello', // string
+          42, // number
+          true, // boolean
+          ['a', 'b'], // array -&gt; "a, b"
+          { x: 1 }, // object -&gt; JSON
+          () =&gt; 'fn-result', // function -&gt; call it
+          null, // null -&gt; empty
+        ];
+        Html`&lt;div id="format-value-result"&gt;${{ List: { items } }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('format-value-elem');
+  document.getElementById('format-value-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const result = document.getElementById('format-value-result');
+    const text = result?.textContent || '';
+    // Expected: [hello][42][true][a, b][{"x":1}][fn-result][]
+    const hasString = text.includes('[hello]');
+    const hasNumber = text.includes('[42]');
+    const hasBoolean = text.includes('[true]');
+    const hasArray = text.includes('[a, b]');
+    const hasObject = text.includes('[{"x":1}]');
+    const hasFunction = text.includes('[fn-result]');
+    const hasNull = text.includes('[]');
+
+    const pass =
+      hasString &amp;&amp;
+      hasNumber &amp;&amp;
+      hasBoolean &amp;&amp;
+      hasArray &amp;&amp;
+      hasObject &amp;&amp;
+      hasFunction &amp;&amp;
+      hasNull;
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+    if (!pass) {
+      console.log('format-value-types actual:', text);
+    }
+  }, 200);
+})();</code></pre>
+      <div id="format-value-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="format-value-types"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="format-value-output"><format-value-elem><div id="format-value-result"><!--<>-->[hello][42][true][a, b][{"x":1}][fn-result][]<!--</>--></div></format-value-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="format-value-types"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('format-value-types', document.getElementById('format-value-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="html-wire-direct" data-test-result="pending">
+      <h2>Html.wire() Direct Usage</h2>
+      <p>Tests that Html.wire() can be used directly for wired templates.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="html-wire-direct"]'
+  );
+
+  customElements.define(
+    'html-wire-direct-elem',
+    class extends hyperElement {
+      render(Html) {
+        const items = [
+          { id: 1, name: 'A' },
+          { id: 2, name: 'B' },
+        ];
+        const wired = items.map(
+          (item) =&gt; Html.wire(item)`&lt;li&gt;${item.name}&lt;/li&gt;`
+        );
+        Html`&lt;ul id="html-wire-direct-result"&gt;${wired}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('html-wire-direct-elem');
+  document.getElementById('html-wire-direct-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const result = document.getElementById('html-wire-direct-result');
+    const lis = result?.querySelectorAll('li') || [];
+    const pass =
+      lis.length === 2 &amp;&amp;
+      lis[0].textContent === 'A' &amp;&amp;
+      lis[1].textContent === 'B';
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="html-wire-direct-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="html-wire-direct"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="html-wire-direct-output"><html-wire-direct-elem><ul id="html-wire-direct-result"><li>A</li><li>B</li><!--◦--></ul></html-wire-direct-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="html-wire-direct"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('html-wire-direct', document.getElementById('html-wire-direct-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="html-lite-direct" data-test-result="pending">
+      <h2>Html.lite() Direct Usage</h2>
+      <p>Tests that Html.lite() works for lightweight templates.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="html-lite-direct"]'
+  );
+
+  customElements.define(
+    'html-lite-direct-elem',
+    class extends hyperElement {
+      render(Html) {
+        // Use lite for a simple one-off render
+        const lite = Html.lite`&lt;span&gt;lite-direct-content&lt;/span&gt;`;
+        Html`&lt;div id="html-lite-direct-result"&gt;${lite}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('html-lite-direct-elem');
+  document.getElementById('html-lite-direct-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const result = document.getElementById('html-lite-direct-result');
+    const pass = result?.textContent?.includes('lite-direct-content');
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="html-lite-direct-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="html-lite-direct"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="html-lite-direct-output"><html-lite-direct-elem><div id="html-lite-direct-result"><span>lite-direct-content</span></div></html-lite-direct-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="html-lite-direct"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('html-lite-direct', document.getElementById('html-lite-direct-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="html-raw" data-test-result="pending">
+      <h2>Html.raw() for Safe HTML</h2>
+      <p>Tests that Html.raw() renders HTML without escaping.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="html-raw"]');
+
+  customElements.define(
+    'html-raw-elem',
+    class extends hyperElement {
+      render(Html) {
+        const rawHtml = Html.raw('&lt;strong&gt;bold&lt;/strong&gt;');
+        Html`&lt;div id="html-raw-result"&gt;${rawHtml}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('html-raw-elem');
+  document.getElementById('html-raw-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const result = document.getElementById('html-raw-result');
+    const strong = result?.querySelector('strong');
+    const pass = strong &amp;&amp; strong.textContent === 'bold';
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="html-raw-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="html-raw"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="html-raw-output"><html-raw-elem><div id="html-raw-result"><!--<>--><strong>bold</strong><!--</>--></div></html-raw-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="html-raw"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('html-raw', document.getElementById('html-raw-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="obj-to-regular-elem" data-test-result="pending">
+      <h2>Object to Regular Element</h2>
+      <p>
+        Tests passing an object to a regular HTML element (not a custom
+        element).
+      </p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="obj-to-regular-elem"]'
+  );
+
+  customElements.define(
+    'obj-to-regular-elem',
+    class extends hyperElement {
+      render(Html) {
+        // Pass an object to a regular div's style attribute
+        // This should NOT trigger custom element interception
+        const styleObj = { color: 'blue', fontWeight: 'bold' };
+        Html`&lt;div id="obj-to-regular-result" style=${styleObj}&gt;styled&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('obj-to-regular-elem');
+  document.getElementById('obj-to-regular-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const result = document.getElementById('obj-to-regular-result');
+    // hyperHTML should apply the style object to the div
+    const pass = result &amp;&amp; result.style.color === 'blue';
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="obj-to-regular-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="obj-to-regular-elem"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="obj-to-regular-output"><obj-to-regular-elem><div id="obj-to-regular-result" style="color: blue; font-weight: bold;">styled</div></obj-to-regular-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="obj-to-regular-elem"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('obj-to-regular-elem', document.getElementById('obj-to-regular-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="template-path-resolution" data-test-result="pending">
+      <h2>Template Element Path Resolution</h2>
+      <p>Tests the resolve function with template elements (i &lt; 0 path for node.content).</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="template-path-resolution"]');
+
+  customElements.define(
+    'template-path-elem',
+    class extends hyperElement {
+      render(Html) {
+        // Using &lt;template&gt; element with dynamic content forces the resolve
+        // function to handle negative indices (i &lt; 0) for template.content access
+        Html`&lt;div&gt;
+          &lt;template id="inner-tpl"&gt;
+            &lt;div class="template-content"&gt;${'Template Inner'}&lt;/div&gt;
+          &lt;/template&gt;
+          &lt;span&gt;Outside template&lt;/span&gt;
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('template-path-elem');
+  document.getElementById('template-path-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const tpl = elem.shadowRoot?.querySelector('#inner-tpl') || elem.querySelector('#inner-tpl');
+    const span = elem.shadowRoot?.querySelector('span') || elem.querySelector('span');
+    // Template should exist and span should have content
+    const pass = tpl !== null &amp;&amp; span?.textContent?.includes('Outside');
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="template-path-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="template-path-resolution"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="template-path-output"><template-path-elem><div>\n          <template id="inner-tpl">\n            <div class="template-content">Template Inner</div>\n          </template>\n          <span>Outside template</span>\n        </div></template-path-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="template-path-resolution"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('template-path-resolution', document.getElementById('template-path-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="spread-operator" data-test-result="pending">
+      <h2>Spread Operator Attribute Syntax</h2>
+      <p>Tests the ...=${obj} spread syntax to apply multiple attributes.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="spread-operator"]');
+
+  customElements.define(
+    'spread-operator-elem',
+    class extends hyperElement {
+      render(Html) {
+        const props = { class: 'spread-class', 'data-id': 'spread-123', title: 'Spread Title' };
+        Html`&lt;div id="spread-operator-result" ...=${props}&gt;Spread Content&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('spread-operator-elem');
+  document.getElementById('spread-operator-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('spread-operator-result');
+    const hasClass = result?.classList.contains('spread-class');
+    const hasDataId = result?.dataset.id === 'spread-123';
+    const hasTitle = result?.title === 'Spread Title';
+    const pass = hasClass &amp;&amp; hasDataId &amp;&amp; hasTitle;
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  });
+})();</code></pre>
+      <div id="spread-operator-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="spread-operator"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="spread-operator-output"><spread-operator-elem><div id="spread-operator-result" class="spread-class" data-id="spread-123" title="Spread Title">Spread Content</div></spread-operator-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="spread-operator"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('spread-operator', document.getElementById('spread-operator-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <section data-test="element-identifier" data-test-result="pending">
+      <h2>Element Identifier Property</h2>
+      <p>Tests that each hyperElement instance has a unique identifier.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="element-identifier"]'
+  );
+
+  customElements.define(
+    'identifier-elem',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;span&gt;Has identifier&lt;/span&gt;`;
+      }
+    }
+  );
+
+  const elem1 = document.createElement('identifier-elem');
+  const elem2 = document.createElement('identifier-elem');
+  document.getElementById('element-identifier-output').appendChild(elem1);
+  document.getElementById('element-identifier-output').appendChild(elem2);
+
+  setTimeout(() =&gt; {
+    // Each element should have a unique identifier
+    const pass =
+      elem1.identifier !== undefined &amp;&amp;
+      elem2.identifier !== undefined &amp;&amp;
+      elem1.identifier !== elem2.identifier;
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="element-identifier-output"></div>
+      <script type="module">
+
+        const code = document.querySelector('[data-test="element-identifier"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="element-identifier-output"><identifier-elem><span>Has identifier</span></identifier-elem><identifier-elem><span>Has identifier</span></identifier-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="element-identifier"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('element-identifier', document.getElementById('element-identifier-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

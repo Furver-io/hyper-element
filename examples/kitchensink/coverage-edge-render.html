@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Render Lifecycle Coverage Edges - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Render Lifecycle Coverage Edges</h1>
+    <p>Edge cases for base render, setup, attachStore, innerShadow, teardown, and prototype methods.</p>
+
+    <section data-test="base-render" data-test-result="pending">
+      <h2>Base render() Method (No Override)</h2>
+      <p>
+        Tests that a hyperElement without an overridden render() still works.
+      </p>
+      <pre><code>customElements.define(
+  'base-render-elem',
+  class extends hyperElement {
+    // Intentionally no render() method - uses base class empty stub
+  }
+);
+
+const baseRenderElem = document.createElement('base-render-elem');
+document
+  .getElementById('base-render-output')
+  .appendChild(baseRenderElem);
+
+requestAnimationFrame(() =&gt; {
+  const section = document.querySelector('[data-test="base-render"]');
+  // Element should exist and be connected, even with empty render
+  if (baseRenderElem &amp;&amp; baseRenderElem.isConnected) {
+    section.dataset.testResult = 'pass';
+  } else {
+    section.dataset.testResult = 'fail';
+  }
+});</code></pre>
+      <div id="base-render-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="base-render"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="base-render-output"><base-render-elem></base-render-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="base-render"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('base-render', document.getElementById('base-render-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="setup-no-store" data-test-result="pending">
+      <h2>Setup with No Store (undefined)</h2>
+      <p>Tests the onNext function when called without a store argument.</p>
+      <pre><code>customElements.define(
+  'no-store-elem',
+  class extends hyperElement {
+    setup(attachStore) {
+      // Call attachStore with no arguments - triggers undefined store path
+      const trigger = attachStore();
+      setTimeout(() =&gt; trigger(), 10);
+    }
+    render(Html) {
+      Html`&lt;span&gt;No store render&lt;/span&gt;`;
+    }
+  }
+);
+
+const elem = document.createElement('no-store-elem');
+document.getElementById('no-store-output').appendChild(elem);
+
+setTimeout(() =&gt; {
+  const section = document.querySelector(
+    '[data-test="setup-no-store"]'
+  );
+  if (elem &amp;&amp; elem.textContent.includes('No store render')) {
+    section.dataset.testResult = 'pass';
+  } else {
+    section.dataset.testResult = 'fail';
+  }
+}, 100);</code></pre>
+      <div id="no-store-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="setup-no-store"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="no-store-output"><no-store-elem><span>No store render</span></no-store-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="setup-no-store"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('setup-no-store', document.getElementById('no-store-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="inner-shadow" data-test-result="pending">
+      <h2>innerShadow Getter</h2>
+      <p>Tests accessing the innerShadow property.</p>
+      <pre><code>customElements.define(
+  'inner-shadow-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;span class="inner-content"&gt;Shadow content here&lt;/span&gt;`;
+    }
+  }
+);
+
+const elem2 = document.createElement('inner-shadow-elem');
+document.getElementById('inner-shadow-output').appendChild(elem2);
+
+requestAnimationFrame(() =&gt; {
+  const section = document.querySelector('[data-test="inner-shadow"]');
+  // Access innerShadow getter
+  const shadow = elem2.innerShadow;
+  if (shadow &amp;&amp; shadow.includes('Shadow content here')) {
+    section.dataset.testResult = 'pass';
+  } else {
+    section.dataset.testResult = 'fail';
+  }
+});</code></pre>
+      <div id="inner-shadow-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="inner-shadow"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="inner-shadow-output"><inner-shadow-elem><span class="inner-content">Shadow content here</span></inner-shadow-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="inner-shadow"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('inner-shadow', document.getElementById('inner-shadow-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="disconnected" data-test-result="pending">
+      <h2>Disconnected Callback (Teardown)</h2>
+      <p>Tests that teardown function is called when element is removed.</p>
+      <pre><code>let teardownCalled = false;
+
+customElements.define(
+  'teardown-elem',
+  class extends hyperElement {
+    setup(attachStore) {
+      attachStore({ count: 0 });
+      // Return teardown function
+      return () =&gt; {
+        teardownCalled = true;
+      };
+    }
+    render(Html, store) {
+      Html`&lt;span&gt;Count: ${store ? store.count : 0}&lt;/span&gt;`;
+    }
+  }
+);
+
+const container = document.getElementById('disconnected-output');
+const elem6 = document.createElement('teardown-elem');
+container.appendChild(elem6);
+
+setTimeout(() =&gt; {
+  // Remove element to trigger disconnectedCallback
+  container.removeChild(elem6);
+
+  setTimeout(() =&gt; {
+    const section = document.querySelector(
+      '[data-test="disconnected"]'
+    );
+    if (teardownCalled) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 50);
+}, 50);</code></pre>
+      <div id="disconnected-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="disconnected"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="disconnected-output"></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="disconnected"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('disconnected', document.getElementById('disconnected-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="inner-shadow-getter" data-test-result="pending">
+      <h2>innerShadow Getter</h2>
+      <p>Tests the hyperElement innerShadow getter returns rendered HTML.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="inner-shadow-getter"]');
+
+  customElements.define(
+    'inner-shadow-getter-elem',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;div class="inner-content"&gt;Inner Shadow Content&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('inner-shadow-getter-elem');
+  document.getElementById('inner-shadow-getter-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    // Access the innerShadow getter
+    const innerHtml = elem.innerShadow;
+    const hasContent = innerHtml &amp;&amp; innerHtml.includes('Inner Shadow Content');
+    section.dataset.testResult = hasContent ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="inner-shadow-getter-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="inner-shadow-getter"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="inner-shadow-getter-output"><inner-shadow-getter-elem><div class="inner-content">Inner Shadow Content</div></inner-shadow-getter-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="inner-shadow-getter"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('inner-shadow-getter', document.getElementById('inner-shadow-getter-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="disconnected-teardown" data-test-result="pending">
+      <h2>disconnectedCallback with Teardown</h2>
+      <p>Tests that disconnectedCallback calls teardown function from setup.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="disconnected-teardown"]');
+  let teardownCalled = false;
+
+  customElements.define(
+    'teardown-callback-elem',
+    class extends hyperElement {
+      setup() {
+        // Return a teardown function
+        return () =&gt; {
+          teardownCalled = true;
+        };
+      }
+      render(Html) {
+        Html`&lt;div&gt;Teardown Test Element&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('teardown-callback-elem');
+  document.getElementById('disconnected-teardown-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    // Remove the element to trigger disconnectedCallback
+    elem.remove();
+
+    setTimeout(() =&gt; {
+      section.dataset.testResult = teardownCalled ? 'pass' : 'fail';
+    }, 50);
+  }, 100);
+})();</code></pre>
+      <div id="disconnected-teardown-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="disconnected-teardown"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="disconnected-teardown-output"></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="disconnected-teardown"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('disconnected-teardown', document.getElementById('disconnected-teardown-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="base-before-hydrate" data-test-result="pending">
+      <h2>Base onBeforeHydrate (No Override)</h2>
+      <p>Tests that base onBeforeHydrate returns events unchanged when not overridden.</p>
+      <ssr-base-hooks>
+        <button id="base-hooks-btn">Click</button>
+      </ssr-base-hooks>
+      <pre><code>(function () {
+  // Click before component defined
+  document.getElementById('base-hooks-btn').click();
+
+  setTimeout(() =&gt; {
+    let clickCount = 0;
+
+    customElements.define(
+      'ssr-base-hooks',
+      class extends hyperElement {
+        // No onBeforeHydrate override - uses base class that returns events
+
+        handleClick() {
+          clickCount++;
+        }
+
+        render(Html) {
+          Html`&lt;button onclick=${() =&gt; this.handleClick()}&gt;Click&lt;/button&gt;`;
+        }
+      }
+    );
+
+    setTimeout(() =&gt; {
+      const section = document.querySelector('[data-test="base-before-hydrate"]');
+      // Click should be replayed since base onBeforeHydrate returns events unchanged
+      section.dataset.testResult = clickCount &gt;= 1 ? 'pass' : 'fail';
+    }, 100);
+  }, 800);
+})();</code></pre>
+      <script type="module">
+        const code = document.querySelector('[data-test="base-before-hydrate"] pre code').textContent;
+        eval(code);
+        const expected = '<ssr-base-hooks><button>Click</button></ssr-base-hooks>';
+        const poll = setInterval(() => {
+          const sec = document.querySelector('[data-test="base-before-hydrate"]');
+          if (sec.dataset.testResult === 'pending') return;
+          clearInterval(poll);
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('base-before-hydrate', document.querySelector('ssr-base-hooks'), expected);
+        }, 50);
+      </script>
+    </section>
+
+    <section data-test="prototype-methods" data-test-result="pending">
+      <h2>hyperElement Prototype Methods</h2>
+      <p>Explicitly accesses hyperElement prototype methods for V8 coverage tracking.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="prototype-methods"]');
+
+  // Access class constructor and prototype to help V8 coverage
+  const HE = hyperElement;
+  const proto = HE.prototype;
+
+  // Check that all expected methods exist on prototype
+  const hasConnected = typeof proto.connectedCallback === 'function';
+  const hasDisconnected = typeof proto.disconnectedCallback === 'function';
+  const hasAttrChanged = typeof proto.attributeChangedCallback === 'function';
+  const hasSetup = typeof proto.setup === 'function';
+  const hasRender = typeof proto.render === 'function';
+  const hasBeforeHydrate = typeof proto.onBeforeHydrate === 'function';
+  const hasAfterHydrate = typeof proto.onAfterHydrate === 'function';
+  const hasAddDataset = typeof proto.addDataset === 'function';
+  const hasGetDataset = typeof proto.getDataset === 'function';
+  const hasAttachAttrs = typeof proto.attachAttrs === 'function';
+  const hasInnerShadow = Object.getOwnPropertyDescriptor(proto, 'innerShadow')?.get !== undefined;
+
+  // Call base class methods that are safe to call directly
+  const testEvents = [{ type: 'test' }];
+  const resultEvents = proto.onBeforeHydrate.call({}, testEvents);
+  const beforeHydrateWorks = resultEvents === testEvents;
+
+  // onAfterHydrate is a no-op
+  proto.onAfterHydrate.call({});
+
+  // setup is a no-op
+  proto.setup.call({}, () =&gt; {});
+
+  // render is a no-op
+  proto.render.call({}, () =&gt; {});
+
+  // attributeChangedCallback is a no-op
+  proto.attributeChangedCallback.call({}, 'name', 'old', 'new');
+
+  const pass = hasConnected &amp;&amp; hasDisconnected &amp;&amp; hasAttrChanged &amp;&amp;
+               hasSetup &amp;&amp; hasRender &amp;&amp; hasBeforeHydrate &amp;&amp; hasAfterHydrate &amp;&amp;
+               hasAddDataset &amp;&amp; hasGetDataset &amp;&amp; hasAttachAttrs &amp;&amp; hasInnerShadow &amp;&amp;
+               beforeHydrateWorks;
+
+  section.dataset.testResult = pass ? 'pass' : 'fail';
+})();</code></pre>
+      <script type="module">
+        const code = document.querySelector('[data-test="prototype-methods"] pre code').textContent;
+        eval(code);
+      </script>
+    </section>
+
+    <section data-test="disconnected-callback" data-test-result="pending">
+      <h2>disconnectedCallback and Teardown</h2>
+      <p>Tests that disconnectedCallback triggers teardown function.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="disconnected-callback"]'
+  );
+  let teardownCalled = false;
+
+  customElements.define(
+    'disconnect-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        // Return teardown function
+        return onNext(() =&gt; {
+          teardownCalled = true;
+        });
+      }
+
+      render(Html) {
+        Html`&lt;div&gt;Connected&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const container = document.getElementById('disconnect-output');
+  container.innerHTML = '&lt;disconnect-elem&gt;&lt;/disconnect-elem&gt;';
+  const elem = container.querySelector('disconnect-elem');
+
+  setTimeout(() =&gt; {
+    // Remove element to trigger disconnectedCallback
+    elem.remove();
+
+    // Check if teardown was called
+    setTimeout(() =&gt; {
+      section.dataset.testResult = teardownCalled ? 'pass' : 'fail';
+    }, 50);
+  }, 100);
+})();</code></pre>
+      <div id="disconnect-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="disconnected-callback"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="disconnect-output"></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="disconnected-callback"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('disconnected-callback', document.getElementById('disconnect-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+    <section data-test="inner-shadow-explicit" data-test-result="pending">
+      <h2>innerShadow Getter (Explicit)</h2>
+      <p>Tests the innerShadow property returns shadow DOM content.</p>
+      <pre><code>(function () {
+  const section = document.querySelector(
+    '[data-test="inner-shadow-explicit"]'
+  );
+
+  customElements.define(
+    'inner-shadow-explicit-elem',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;div class="shadow-content"&gt;Shadow Content Here&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const container = document.getElementById('inner-shadow-explicit-output');
+  container.innerHTML = '&lt;inner-shadow-explicit-elem&gt;&lt;/inner-shadow-explicit-elem&gt;';
+  const elem = container.querySelector('inner-shadow-explicit-elem');
+
+  setTimeout(() =&gt; {
+    // Access innerShadow getter
+    const shadowHtml = elem.innerShadow;
+    const hasContent =
+      shadowHtml &amp;&amp; shadowHtml.includes('Shadow Content Here');
+    section.dataset.testResult = hasContent ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
+      <div id="inner-shadow-explicit-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="inner-shadow-explicit"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="inner-shadow-explicit-output"><inner-shadow-explicit-elem><div class="shadow-content">Shadow Content Here</div></inner-shadow-explicit-elem></div>';
+        setTimeout(() => {
+          const sec = document.querySelector('[data-test="inner-shadow-explicit"]');
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('inner-shadow-explicit', document.getElementById('inner-shadow-explicit-output'), expected);
+        }, 500);
+      </script>
+    </section>
+
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>
