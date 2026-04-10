@@ -30,7 +30,7 @@ const browserFiles = [
   'ssr/capture.js', 'ssr/replay.js', 'ssr/index.js',
   'lifecycle/onNext.js', 'lifecycle/observer.js', 'lifecycle/processFragmentResult.js', 'lifecycle/connectedCallback.js',
   'hyperElement.js', 'functional.js', 'withOptions.js',
-  'json-render/validator.js', 'json-render/catalog.js', 'json-render/components.js', 'json-render/renderer.js', 'json-render/index.js', 'json-render/element.js',
+  'json-render/validator.js', 'json-render/catalog-metadata.js', 'json-render/components.js', 'json-render/registry.js', 'json-render/catalog.js', 'json-render/renderer.js', 'json-render/index.js', 'json-render/element.js',
 ];
 
 const ssrServerFiles = [
@@ -109,6 +109,7 @@ function createBundle() {
       root.validateSpec = exports.validateSpec;
       root.listComponentTypes = exports.listComponentTypes;
       root.BUILT_IN_COMPONENTS = exports.BUILT_IN_COMPONENTS;
+      root.getCatalog = exports.getCatalog;
     }
   }
 })(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this, function (isBrowser) {
@@ -144,8 +145,9 @@ function createBundle() {
   var captureScrollState, captureCheckedState, handleCapturedEvent, restoreElementState;
   var startCapture, replayEvents, initSSR, ssrState, markTagRegistered, createSyntheticEvent;
   var onNext, observer, createdCallback;
-  var renderSpec, registerComponent, validateSpec, listComponentTypes, BUILT_IN_COMPONENTS, renderNode, renderSpecTree, registry, registryInterface;
-  var KNOWN_TYPES, getKnownTypes;
+  var renderSpec, registerComponent, validateSpec, listComponentTypes, BUILT_IN_COMPONENTS, renderNode, renderSpecTree, registry, registryInterface, getCatalog;
+  var CatalogSnapshot, EM_DASH, OUTPUT_FORMAT_BLOCK, deepFreeze, cloneCatalog, formatProp, formatActionParams, formatAction, formatComponent, buildPrompt, buildToolDefinition;
+  var getKnownTypes;
   var CATALOG, entry;
   var dispatchAction, renderCard, renderRow, renderColumn, renderButton, renderText, renderAlert, renderProgress, renderDivider, renderCodeBlock, renderImage, renderChecklist, renderTextField;
 `);
@@ -177,6 +179,7 @@ function createBundle() {
       signal: signal, computed: computed, effect: effect, batch: batch, untracked: untracked, withOptions: withOptions,
       renderSpec: renderSpec, registerComponent: registerComponent, validateSpec: validateSpec,
       listComponentTypes: listComponentTypes, BUILT_IN_COMPONENTS: BUILT_IN_COMPONENTS,
+      getCatalog: getCatalog,
       html: html, dom: dom };
   } else {
     return { renderElement: renderElement, renderElements: renderElements, createRenderer: createRenderer,

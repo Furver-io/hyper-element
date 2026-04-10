@@ -22,35 +22,7 @@
 
 import { BUILT_IN_COMPONENTS } from './components.js';
 import { renderSpecTree } from './renderer.js';
-
-/**
- * Component registry — maps type names to component entries.
- *
- * Each entry is either:
- *   - { render: Function, catalog: Object } — built-in or catalog-registered
- *   - Function — legacy registerComponent(type, fn) for backward compat
- *
- * Initialized with all built-in types (Card, Button, Text, etc.).
- * Custom types can be added via registerComponent() and will be
- * available to all specs rendered after registration.
- *
- * @type {Map<string, { render: Function, catalog?: Object } | Function>}
- */
-const registry = new Map(BUILT_IN_COMPONENTS);
-
-/**
- * Registry interface exposed to the renderer and element.js.
- *
- * The .get() method returns the raw registry entry (either a
- * { render, catalog } object or a legacy function). The renderer
- * resolves the render function from either shape.
- */
-const registryInterface = {
-  /** Look up a registry entry by component type name */
-  get: (type) => registry.get(type),
-  /** List all registered type names */
-  all: () => [...registry.keys()],
-};
+import { registry, registryInterface } from './registry.js';
 
 /**
  * Register a custom component type for json-render specs.
@@ -112,7 +84,15 @@ export function registerComponent(type, renderFnOrEntry) {
         `This replaces the default implementation for all future renders.`
     );
   }
-  registry.set(type, renderFnOrEntry);
+  // Normalize legacy function-only registrations to the standard
+  // { render, catalog } shape. This ensures all registry entries have
+  // a consistent structure, simplifying downstream consumers (renderer,
+  // catalog API). Legacy registrations get catalog: null — they render
+  // correctly but are invisible to getCatalog() / LLM schema generation.
+  const entry = isFunction
+    ? { render: renderFnOrEntry, catalog: null }
+    : renderFnOrEntry;
+  registry.set(type, entry);
 }
 
 /**
@@ -169,6 +149,7 @@ export { registryInterface };
 export { renderNode } from './renderer.js';
 export { validateSpec } from './validator.js';
 export { BUILT_IN_COMPONENTS } from './components.js';
+export { getCatalog } from './catalog.js';
 
 // Auto-register the <jr-ui> custom element as a side effect.
 // This import triggers the element definition so consumers

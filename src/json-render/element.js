@@ -25,11 +25,10 @@
 import { createFunctionalElement } from '../functional.js';
 import { renderSpecTree } from './renderer.js';
 
-// Import the shared registry from index.js so <jr-ui> sees custom-registered
-// components — not just built-ins. This is safe despite the circular import
-// (index.js imports this file) because registryInterface is a module-scope
-// const that's initialized before this file's render() is ever called.
-import { registryInterface } from './index.js';
+// Import the shared registry so <jr-ui> sees custom-registered
+// components — not just built-ins. The registry lives in its own
+// module (registry.js) to avoid a circular import with index.js.
+import { registryInterface } from './registry.js';
 
 /**
  * The <jr-ui> custom element class.

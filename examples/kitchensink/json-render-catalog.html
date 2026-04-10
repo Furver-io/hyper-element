@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JSON Render Catalog API - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <link rel="stylesheet" href="../../src/json-render/json-render.css" />
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+        max-width: 70rem;
+        margin: 0 auto;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 0.5rem;
+        overflow-x: auto;
+        font-size: 0.85em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JSON Render Catalog API</h1>
+    <p>
+      Verifies <code>getCatalog()</code> — the public catalog API that walks
+      the json-render registry and produces LLM-consumable output. Each
+      section maps to one acceptance criterion from TASK-03.
+    </p>
+
+    <!--
+      All sections are driven by a single orchestrator script at the bottom
+      of the page. This guarantees deterministic execution order:
+        1. AC #1 must read .types.size === 12 BEFORE any custom registration
+        2. AC #2 registers a legacy fn — must run after #1
+        3. AC #7 registers a cataloged custom — must run after #1 and after
+           #6 captures the built-in-only enum baseline.
+      Per-section <script> blocks would interleave module loading and break
+      this contract. The orchestrator awaits window.getCatalog availability
+      then walks the sections in order.
+    -->
+
+    <section data-test="catalog-types-lists-builtins" data-test-result="pending">
+      <h2>AC #1 — getCatalog().types lists all 12 built-ins</h2>
+      <p>
+        After <code>getCatalog()</code>, <code>.types</code> must be a Map of
+        size 12 containing every built-in: Card, Row, Column, Button, Text,
+        Alert, Progress, Divider, CodeBlock, Image, Checklist, TextField.
+      </p>
+    </section>
+
+    <section data-test="catalog-types-excludes-legacy" data-test-result="pending">
+      <h2>AC #2 — Legacy function-only registrations are excluded</h2>
+      <p>
+        After <code>registerComponent('LegacyFn', () =&gt; null)</code>, the
+        type must NOT appear in <code>getCatalog().types</code> because it
+        has no catalog metadata.
+      </p>
+    </section>
+
+    <section data-test="catalog-prompt-full-metadata" data-test-result="pending">
+      <h2>AC #3 — prompt() contains every component's full metadata</h2>
+      <p>
+        Verifies the natural-language prompt contains: each built-in's name,
+        the formatted prop strings (with required/enum/nullable flags), the
+        Children: yes/no line, and the full Actions: line for Button.
+      </p>
+    </section>
+
+    <section data-test="catalog-prompt-output-format-block" data-test-result="pending">
+      <h2>AC #4 — prompt() includes the output-format spec block</h2>
+      <p>
+        The prompt must include the literal <code>{ root, elements }</code>
+        format block describing the spec the LLM should emit.
+      </p>
+    </section>
+
+    <section data-test="catalog-prompt-custom-rules" data-test-result="pending">
+      <h2>AC #5 — prompt({ customRules }) appends rules at the end</h2>
+      <p>
+        Custom rules must appear under a <code>Rules:</code> heading at the
+        bottom of the prompt, after the output-format block.
+      </p>
+    </section>
+
+    <section data-test="catalog-tool-definition" data-test-result="pending">
+      <h2>AC #6 — toolDefinition() returns valid JSON Schema</h2>
+      <p>
+        <code>toolDefinition({ name: 'render_ui' })</code> must return a
+        Claude/OpenAI-compatible tool definition with the correct structure
+        and a <code>type.enum</code> listing every cataloged component.
+      </p>
+    </section>
+
+    <section data-test="catalog-custom-component-appears" data-test-result="pending">
+      <h2>AC #7 — Custom catalog-tagged components appear everywhere</h2>
+      <p>
+        After <code>registerComponent('CatalogThing', { render, catalog })</code>,
+        the new type must appear in <code>.types</code>, in the
+        <code>.prompt()</code> output, and in the
+        <code>.toolDefinition()</code> enum.
+      </p>
+    </section>
+
+    <section data-test="catalog-snapshot-immutable" data-test-result="pending">
+      <h2>AC #8 — Returned snapshot is immutable</h2>
+      <p>
+        The snapshot instance is frozen, each entry is recursively frozen
+        (mutations throw TypeError in strict mode), and a subsequent
+        <code>getCatalog()</code> call returns the unmutated registry view.
+      </p>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+
+    <script type="module">
+      // ─────────────────────────────────────────────────────────────────
+      // Catalog API test orchestrator.
+      //
+      // Drives all 8 acceptance-criterion sections in strict order. Order
+      // matters: AC #1 must observe a clean 12-builtin registry BEFORE
+      // ACs #2 and #7 add custom registrations. Running each section as
+      // its own <script type="module"> would interleave module loading and
+      // break that contract — so a single orchestrator awaits the loader's
+      // ready signal then walks sections sequentially.
+      //
+      // Each section's pass/fail is recorded directly on its
+      // [data-test=<name>] element via dataset.testResult, matching the
+      // kitchensink.spec.js polling protocol.
+      // ─────────────────────────────────────────────────────────────────
+
+      // Wait for the test loader to expose window.getCatalog. Source mode
+      // injects the import via document.write so globals appear after a
+      // microtask; bundle mode loads the UMD synchronously. Polling
+      // covers both with a small deadline.
+      function waitForReady(timeoutMs) {
+        return new Promise((resolve, reject) => {
+          const deadline = Date.now() + timeoutMs;
+          (function poll() {
+            if (typeof window.getCatalog === 'function' &&
+                typeof window.registerComponent === 'function') {
+              resolve();
+              return;
+            }
+            if (Date.now() > deadline) {
+              reject(new Error('getCatalog/registerComponent never became available'));
+              return;
+            }
+            setTimeout(poll, 25);
+          })();
+        });
+      }
+
+      // Helper: mark a section as pass or fail by data-test name.
+      function setResult(name, result, reason) {
+        const section = document.querySelector('[data-test="' + name + '"]');
+        if (!section) return;
+        section.dataset.testResult = result;
+        if (result === 'fail' && reason) {
+          console.error('[' + name + '] ' + reason);
+        }
+      }
+
+      // Helper: run one assertion section in a try/catch so a single
+      // failure cannot stall the entire suite (each section reports its
+      // own pass/fail independently).
+      function runSection(name, fn) {
+        try {
+          fn();
+          // If fn() didn't already mark fail, mark pass.
+          const section = document.querySelector('[data-test="' + name + '"]');
+          if (section && section.dataset.testResult === 'pending') {
+            section.dataset.testResult = 'pass';
+          }
+        } catch (err) {
+          setResult(name, 'fail', (err && err.stack) || String(err));
+        }
+      }
+
+      // ── Test sections ────────────────────────────────────────────────
+
+      // The complete list of built-in component names that must appear in
+      // an unaltered catalog snapshot. Used by ACs #1, #3, and #6.
+      const BUILTIN_NAMES = [
+        'Card', 'Row', 'Column', 'Button', 'Text', 'Alert',
+        'Progress', 'Divider', 'CodeBlock', 'Image', 'Checklist', 'TextField',
+      ];
+
+      function ac1_typesListsBuiltins() {
+        const catalog = window.getCatalog();
+        if (!(catalog.types instanceof Map)) {
+          throw new Error('catalog.types is not a Map');
+        }
+        if (catalog.types.size !== 12) {
+          throw new Error('expected types.size === 12, got ' + catalog.types.size);
+        }
+        for (const name of BUILTIN_NAMES) {
+          if (!catalog.types.has(name)) {
+            throw new Error('missing built-in type: ' + name);
+          }
+        }
+      }
+
+      function ac2_excludesLegacy() {
+        // Register a legacy function-only component. The catalog filter
+        // must skip it because it has no catalog metadata. Use a unique
+        // name so re-runs (via Playwright reuse) don't collide with
+        // earlier passes — we don't actually re-register on each call,
+        // we check for prior registration first.
+        if (typeof window.__legacyFnRegistered === 'undefined') {
+          window.registerComponent('LegacyFn', () => null);
+          window.__legacyFnRegistered = true;
+        }
+        const catalog = window.getCatalog();
+        if (catalog.types.has('LegacyFn')) {
+          throw new Error('LegacyFn (legacy fn-only) leaked into catalog.types');
+        }
+        // Listing should still include it (legacy renders correctly),
+        // confirming the filter is catalog-specific not registry-wide.
+        if (typeof window.listComponentTypes === 'function') {
+          if (!window.listComponentTypes().includes('LegacyFn')) {
+            throw new Error('LegacyFn missing from listComponentTypes() — registration failed');
+          }
+        }
+      }
+
+      function ac3_promptFullMetadata() {
+        const prompt = window.getCatalog().prompt();
+        if (typeof prompt !== 'string' || prompt.length === 0) {
+          throw new Error('prompt() returned empty/non-string');
+        }
+        // Header line.
+        if (prompt.indexOf('You can render interactive UI using the render_ui tool.') === -1) {
+          throw new Error('prompt missing header line');
+        }
+        if (prompt.indexOf('Available components:') === -1) {
+          throw new Error('prompt missing "Available components:" header');
+        }
+        // Every built-in name must appear at least once.
+        for (const name of BUILTIN_NAMES) {
+          if (prompt.indexOf(name) === -1) {
+            throw new Error('prompt missing built-in name: ' + name);
+          }
+        }
+        // Button-specific assertions — covers required, enum, no-default,
+        // Children: no, and the full Actions line with params.
+        const buttonChecks = [
+          'label (string, required)',
+          'variant (enum: primary|destructive|success)',
+          'disabled (boolean)',
+          'loading (boolean)',
+          '  Children: no',
+          'Actions: press \u2014 Fired when button is clicked. Params: action (string)',
+        ];
+        for (const check of buttonChecks) {
+          if (prompt.indexOf(check) === -1) {
+            throw new Error('prompt missing Button substring: ' + JSON.stringify(check));
+          }
+        }
+        // Card has a default slot — must show "yes (default slot)".
+        if (prompt.indexOf('  Children: yes (default slot)') === -1) {
+          throw new Error('prompt missing "Children: yes (default slot)" line for default-slot components');
+        }
+        // Card.description is nullable — must show ", nullable".
+        if (prompt.indexOf('description (string, nullable)') === -1) {
+          throw new Error('prompt missing nullable formatter output');
+        }
+      }
+
+      function ac4_promptOutputFormatBlock() {
+        const prompt = window.getCatalog().prompt();
+        const required = [
+          'Output format:',
+          '"root": "<key of root element>"',
+          '"type": "<ComponentName>"',
+          '"elements":',
+        ];
+        for (const r of required) {
+          if (prompt.indexOf(r) === -1) {
+            throw new Error('output-format block missing: ' + JSON.stringify(r));
+          }
+        }
+      }
+
+      function ac5_promptCustomRules() {
+        const rules = ['Only use Card as root', 'Max 3 levels deep'];
+        const prompt = window.getCatalog().prompt({ customRules: rules });
+        if (prompt.indexOf('Rules:') === -1) {
+          throw new Error('prompt({customRules}) missing "Rules:" heading');
+        }
+        for (const rule of rules) {
+          if (prompt.indexOf('- ' + rule) === -1) {
+            throw new Error('prompt({customRules}) missing rule: ' + rule);
+          }
+        }
+        // Rules block must be at the END (after the output-format block).
+        const rulesIdx = prompt.indexOf('Rules:');
+        const formatIdx = prompt.indexOf('Output format:');
+        if (rulesIdx <= formatIdx) {
+          throw new Error('Rules: block must come after Output format: block');
+        }
+        // No-customRules path must NOT include a Rules: heading.
+        const promptNoRules = window.getCatalog().prompt();
+        if (promptNoRules.indexOf('Rules:') !== -1) {
+          throw new Error('prompt() without customRules unexpectedly includes Rules: heading');
+        }
+        // Empty array path is treated like absent.
+        const promptEmptyRules = window.getCatalog().prompt({ customRules: [] });
+        if (promptEmptyRules.indexOf('Rules:') !== -1) {
+          throw new Error('prompt({customRules: []}) unexpectedly includes Rules: heading');
+        }
+      }
+
+      function ac6_toolDefinition() {
+        const tool = window.getCatalog().toolDefinition({ name: 'render_ui' });
+        if (tool.name !== 'render_ui') {
+          throw new Error('toolDefinition.name !== "render_ui": ' + tool.name);
+        }
+        if (typeof tool.description !== 'string' || tool.description.length === 0) {
+          throw new Error('toolDefinition.description missing/empty');
+        }
+        if (!tool.input_schema || tool.input_schema.type !== 'object') {
+          throw new Error('input_schema missing or wrong type');
+        }
+        const required = tool.input_schema.required;
+        if (!Array.isArray(required) || required.length !== 2 ||
+            required[0] !== 'root' || required[1] !== 'elements') {
+          throw new Error('input_schema.required is not [root, elements]: ' + JSON.stringify(required));
+        }
+        const props = tool.input_schema.properties;
+        if (!props || !props.root || props.root.type !== 'string') {
+          throw new Error('input_schema.properties.root missing or wrong type');
+        }
+        if (!props.elements || props.elements.type !== 'object') {
+          throw new Error('input_schema.properties.elements missing or wrong type');
+        }
+        const ap = props.elements.additionalProperties;
+        if (!ap || ap.type !== 'object') {
+          throw new Error('elements.additionalProperties missing or wrong type');
+        }
+        if (!ap.required || ap.required[0] !== 'type') {
+          throw new Error('elements.additionalProperties.required must include "type"');
+        }
+        const typeProp = ap.properties && ap.properties.type;
+        if (!typeProp || typeProp.type !== 'string' || !Array.isArray(typeProp.enum)) {
+          throw new Error('per-element type.enum missing or wrong shape');
+        }
+        // Every built-in must appear in the enum (excluding LegacyFn from AC #2).
+        for (const name of BUILTIN_NAMES) {
+          if (typeProp.enum.indexOf(name) === -1) {
+            throw new Error('toolDefinition enum missing built-in: ' + name);
+          }
+        }
+        if (typeProp.enum.indexOf('LegacyFn') !== -1) {
+          throw new Error('toolDefinition enum unexpectedly includes legacy fn-only registration');
+        }
+        // Default name path: omitting options.name uses 'render_ui'.
+        const defaultTool = window.getCatalog().toolDefinition({});
+        if (defaultTool.name !== 'render_ui') {
+          throw new Error('default toolDefinition name !== "render_ui"');
+        }
+        // Custom description override.
+        const customTool = window.getCatalog().toolDefinition({
+          name: 'my_ui',
+          description: 'Custom description here',
+        });
+        if (customTool.name !== 'my_ui' || customTool.description !== 'Custom description here') {
+          throw new Error('toolDefinition options not honored');
+        }
+      }
+
+      function ac7_customComponentAppears() {
+        // Register once and only once across re-runs to keep AC #1 unaffected.
+        if (typeof window.__catalogThingRegistered === 'undefined') {
+          window.registerComponent('CatalogThing', {
+            render: (Html, def, key) =>
+              Html.wire(def, ':' + key)`<div class="catalog-thing">${def.props?.label || ''}</div>`,
+            catalog: {
+              description: 'A custom catalog-tagged component for testing.',
+              props: {
+                label: { type: 'string', required: true, description: 'Display label' },
+                count: { type: 'number', description: 'Optional numeric count' },
+              },
+              slots: ['default'],
+              actions: {
+                tap: {
+                  description: 'Fired when the thing is tapped',
+                  params: { id: { type: 'string' } },
+                },
+                hover: {
+                  description: 'Fired when the thing is hovered',
+                  params: { x: { type: 'number' }, y: { type: 'number' } },
+                },
+              },
+            },
+          });
+          window.__catalogThingRegistered = true;
+        }
+        const catalog = window.getCatalog();
+        if (!catalog.types.has('CatalogThing')) {
+          throw new Error('CatalogThing not in .types after registration');
+        }
+        const entry = catalog.types.get('CatalogThing');
+        if (!entry || !entry.props || !entry.props.label || !entry.props.label.required) {
+          throw new Error('CatalogThing entry missing expected metadata shape');
+        }
+        const prompt = catalog.prompt();
+        if (prompt.indexOf('CatalogThing') === -1) {
+          throw new Error('CatalogThing missing from prompt() output');
+        }
+        if (prompt.indexOf('label (string, required)') === -1) {
+          throw new Error('CatalogThing prop formatting missing from prompt()');
+        }
+        if (prompt.indexOf('tap \u2014 Fired when the thing is tapped. Params: id (string)') === -1) {
+          throw new Error('CatalogThing first action formatting missing from prompt()');
+        }
+        // Second action exercises the multi-action indented continuation
+        // branch in formatComponent — verify it appears with the 11-space
+        // indent that aligns under the first action.
+        if (prompt.indexOf('           hover \u2014 Fired when the thing is hovered. Params: x (number), y (number)') === -1) {
+          throw new Error('CatalogThing second action (multi-action branch) missing from prompt()');
+        }
+        const tool = catalog.toolDefinition({ name: 'render_ui' });
+        const enumList = tool.input_schema.properties.elements.additionalProperties.properties.type.enum;
+        if (enumList.indexOf('CatalogThing') === -1) {
+          throw new Error('CatalogThing missing from toolDefinition() enum');
+        }
+      }
+
+      function ac8_snapshotImmutable() {
+        const catalog = window.getCatalog();
+        if (!Object.isFrozen(catalog)) {
+          throw new Error('CatalogSnapshot instance is not frozen');
+        }
+        // Each catalog entry must be deep-frozen. Strict mode (modules)
+        // throws TypeError on mutation attempts.
+        const buttonEntry = catalog.types.get('Button');
+        if (!Object.isFrozen(buttonEntry)) {
+          throw new Error('catalog entry for Button is not frozen');
+        }
+        if (!Object.isFrozen(buttonEntry.props)) {
+          throw new Error('catalog entry props is not frozen');
+        }
+        if (!Object.isFrozen(buttonEntry.props.label)) {
+          throw new Error('catalog entry props.label is not frozen');
+        }
+        let mutationThrew = false;
+        try {
+          buttonEntry.props.label.required = false;
+        } catch (e) {
+          if (e instanceof TypeError) mutationThrew = true;
+        }
+        if (!mutationThrew) {
+          throw new Error('mutation of frozen catalog entry did not throw TypeError');
+        }
+        // After mutation attempt, a fresh catalog must still show the
+        // original (registry untouched).
+        const fresh = window.getCatalog();
+        const freshButton = fresh.types.get('Button');
+        if (freshButton.props.label.required !== true) {
+          throw new Error('registry was contaminated by snapshot mutation attempt');
+        }
+        // Mutating the snapshot's types Map (.set) must not affect the
+        // live registry — verified by getting another snapshot.
+        try {
+          catalog.types.set('GhostType', { description: 'should not persist' });
+        } catch (e) { /* may throw if Map proxy is added later */ }
+        const fresh2 = window.getCatalog();
+        if (fresh2.types.has('GhostType')) {
+          throw new Error('snapshot Map mutation leaked into the registry');
+        }
+      }
+
+      // ── Orchestrator entry point ─────────────────────────────────────
+
+      waitForReady(5000).then(() => {
+        // Order is critical — see comment block at the top of the body.
+        runSection('catalog-types-lists-builtins', ac1_typesListsBuiltins);
+        runSection('catalog-types-excludes-legacy', ac2_excludesLegacy);
+        runSection('catalog-prompt-full-metadata', ac3_promptFullMetadata);
+        runSection('catalog-prompt-output-format-block', ac4_promptOutputFormatBlock);
+        runSection('catalog-prompt-custom-rules', ac5_promptCustomRules);
+        runSection('catalog-tool-definition', ac6_toolDefinition);
+        runSection('catalog-custom-component-appears', ac7_customComponentAppears);
+        runSection('catalog-snapshot-immutable', ac8_snapshotImmutable);
+      }).catch((err) => {
+        console.error('catalog test orchestrator failed to start:', err);
+        // Fail all sections so the test reports the underlying issue.
+        for (const name of [
+          'catalog-types-lists-builtins',
+          'catalog-types-excludes-legacy',
+          'catalog-prompt-full-metadata',
+          'catalog-prompt-output-format-block',
+          'catalog-prompt-custom-rules',
+          'catalog-tool-definition',
+          'catalog-custom-component-appears',
+          'catalog-snapshot-immutable',
+        ]) {
+          setResult(name, 'fail', 'orchestrator never started: ' + err.message);
+        }
+      });
+    </script>
+  </body>
+</html>

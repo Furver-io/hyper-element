@@ -15,6 +15,7 @@ import {
   registerComponent,
   validateSpec,
   listComponentTypes,
+  getCatalog,
 } from './json-render/index.js';
 
 /**
@@ -85,5 +86,6 @@ export {
   registerComponent,
   validateSpec,
   listComponentTypes,
+  getCatalog,
 };
 export default hyperElement;

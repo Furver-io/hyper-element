@@ -290,7 +290,7 @@ function renderTextField(Html, def, key, kids, hostEl) {
  *
  * @type {Map<string, { render: Function, catalog: Object }>}
  */
-import { CATALOG } from './catalog.js';
+import { CATALOG } from './catalog-metadata.js';
 
 /**
  * Pair a render function with its catalog entry from the CATALOG map.

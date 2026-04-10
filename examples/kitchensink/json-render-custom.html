@@ -88,6 +88,68 @@ document.getElementById('custom-output').innerHTML = '&lt;json-custom-wrapper&gt
       </script>
     </section>
 
+    <section data-test="json-render-custom-jr-ui" data-test-result="pending">
+      <h2>Custom Component via &lt;jr-ui&gt;</h2>
+      <p>
+        Registers a custom component with <code>registerComponent()</code> and
+        renders it through the <code>&lt;jr-ui&gt;</code> custom element (not the
+        programmatic <code>renderSpec</code> API). This verifies that custom-registered
+        types are visible to the declarative element path.
+      </p>
+      <pre><code>registerComponent('CustomBanner', (Html, def, key) => {
+  const msg = def.props?.message ?? 'default';
+  return Html.wire(def, ':' + key)`&lt;div class="custom-banner"&gt;${msg}&lt;/div&gt;`;
+});
+
+const elem = document.createElement('jr-ui');
+elem.dataset.spec = JSON.stringify({
+  root: 'b0',
+  elements: { 'b0': { type: 'CustomBanner', props: { message: 'Hello from jr-ui!' } } }
+});
+document.getElementById('jr-ui-custom-output').appendChild(elem);</code></pre>
+      <div id="jr-ui-custom-output"></div>
+      <script type="module">
+        // Single source of truth: the displayed snippet IS the program.
+        // It registers a custom component and mounts it via <jr-ui>.
+        const code = document.querySelector('[data-test="json-render-custom-jr-ui"] pre code').textContent;
+        let checkCount = 0;
+        function awaitReady() {
+          if (typeof window.registerComponent !== 'function') {
+            if (checkCount++ < 40) { setTimeout(awaitReady, 50); return; }
+            document.querySelector('[data-test="json-render-custom-jr-ui"]').dataset.testResult = 'fail';
+            return;
+          }
+          eval(code);
+          const elem = document.getElementById('jr-ui-custom-output').firstChild;
+
+          // Poll until the <jr-ui> element renders the custom component.
+          // The expected snapshot pins the resolved DOM: <jr-ui> wraps the
+          // custom component output inside a jr-ui-root container div.
+          const expected = '<div class="jr-ui-root"><div class="custom-banner">Hello from jr-ui!</div></div>';
+          const deadline = Date.now() + 1500;
+          (function awaitRender() {
+            if (elem.innerHTML === expected) {
+              window.assertSnapshot('json-render-custom-jr-ui', function() { return elem.outerHTML; }, elem.outerHTML);
+              return;
+            }
+            if (Date.now() > deadline) {
+              // Deadline reached — assert anyway to surface the mismatch
+              const section = document.querySelector('[data-test="json-render-custom-jr-ui"]');
+              if (elem.innerHTML === expected) {
+                section.dataset.testResult = 'pass';
+              } else {
+                console.error('json-render-custom-jr-ui mismatch\nExpected innerHTML: ' + expected + '\nActual innerHTML:   ' + elem.innerHTML);
+                section.dataset.testResult = 'fail';
+              }
+              return;
+            }
+            setTimeout(awaitRender, 25);
+          })();
+        }
+        awaitReady();
+      </script>
+    </section>
+
     <a href="index.html">&larr; Back to Kitchen Sink</a>
   </body>
 </html>

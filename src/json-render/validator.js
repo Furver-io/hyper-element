@@ -19,26 +19,27 @@
  */
 
 /**
- * Set of known built-in component types.
+ * Build the set of known component types from the shared registry.
  *
- * Built lazily on first validation call from the canonical
- * BUILT_IN_COMPONENTS registry, so the validator stays in sync
- * automatically when built-ins are added or renamed — no separate
- * maintenance of a duplicate type list.
+ * Reads from the live registry (built-ins + custom-registered types)
+ * so the validator automatically recognizes types added via
+ * registerComponent() without requiring callers to pass customTypes.
  *
- * Lazy initialization is required because in the bundled build,
- * variable declarations execute in concatenation order and
- * BUILT_IN_COMPONENTS may not be initialized yet at module scope.
+ * Returns a fresh Set on every call — no caching — because the
+ * registry is mutable (registerComponent can be called at any time).
+ * The cost is trivial for the typical 12-20 registered types.
+ *
+ * Called lazily inside validateSpec(), never at module scope, so the
+ * registry is guaranteed to be initialized regardless of bundled
+ * file concatenation order.
  */
-import { BUILT_IN_COMPONENTS } from './components.js';
-let KNOWN_TYPES;
+import { registry } from './registry.js';
 /**
- * Lazily build the set of known built-in types from the canonical registry.
- * @returns {Set<string>} Set of built-in component type names
+ * Build a fresh set of known types from the shared registry.
+ * @returns {Set<string>} Set of all registered component type names
  */
 function getKnownTypes() {
-  if (!KNOWN_TYPES) KNOWN_TYPES = new Set(BUILT_IN_COMPONENTS.keys());
-  return KNOWN_TYPES;
+  return new Set(registry.keys());
 }
 
 /**

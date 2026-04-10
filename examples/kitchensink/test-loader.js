@@ -39,7 +39,7 @@
     // This ensures hyperElement is available before inline scripts run
     document.write(
       '<script type="module">' +
-        'import { hyperElement, withOptions, signal, computed, effect, batch, untracked, configureSSR, renderSpec, registerComponent, validateSpec, listComponentTypes } from "hyper-element";' +
+        'import { hyperElement, withOptions, signal, computed, effect, batch, untracked, configureSSR, renderSpec, registerComponent, validateSpec, listComponentTypes, getCatalog } from "hyper-element";' +
         'import { html, dom } from "hyper-element/render/index.js";' +
         'import { BUILT_IN_COMPONENTS } from "hyper-element/json-render/index.js";' +
         // Add configureSSR as static method to match bundle behavior
@@ -56,6 +56,7 @@
         'window.registerComponent = registerComponent;' +
         'window.validateSpec = validateSpec;' +
         'window.listComponentTypes = listComponentTypes;' +
+        'window.getCatalog = getCatalog;' +
         'window.html = html;' +
         'window.dom = dom;' +
         'window.BUILT_IN_COMPONENTS = BUILT_IN_COMPONENTS;' +

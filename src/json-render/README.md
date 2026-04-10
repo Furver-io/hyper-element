@@ -81,6 +81,44 @@ const { valid, errors } = validateSpec(spec);
 }
 ```
 
+## LLM Integration
+
+`getCatalog()` returns a snapshot of every catalog-tagged component, ready
+to be fed to an LLM as a system prompt or tool definition. The snapshot is
+generated from live registry state, so any new `registerComponent()` call
+with `{ render, catalog }` automatically appears in the next snapshot — no
+manual sync between render code and the LLM's UI vocabulary.
+
+```js
+import { getCatalog } from 'hyper-element/json-render';
+
+const catalog = getCatalog();
+
+// Natural-language system prompt for the LLM. Lists every cataloged
+// component with its props (types/required/enum/nullable), children
+// capability, and actions, then the { root, elements } output format.
+const prompt = catalog.prompt({
+  customRules: ['Use Card as the root element for any layout'],
+});
+
+// JSON Schema tool definition for Claude/OpenAI function calling. The
+// `type.enum` lists every cataloged component name.
+const tool = catalog.toolDefinition({
+  name: 'render_ui',
+  description: 'Render interactive UI components',
+});
+```
+
+Only components registered with a `catalog` metadata object appear in the
+output. Legacy function-only `registerComponent(type, fn)` registrations
+render correctly via `<jr-ui>` and `renderSpec()` but are intentionally
+invisible to the LLM — surfacing them would give the LLM types whose props
+have no schema.
+
+The returned snapshot is immutable: each catalog entry is deep-cloned and
+recursively frozen, and the snapshot instance itself is `Object.freeze`d.
+Mutations cannot reach the live registry.
+
 ## Events
 
 Interactive components dispatch `jr-action` CustomEvents that bubble
