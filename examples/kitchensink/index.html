@@ -165,6 +165,18 @@
           >All fragment result types: text, html, any, template</span
         >
       </li>
+      <li>
+        <a href="keyed-templates.html">Keyed Templates</a>
+        <span class="description"
+          >Template directives with keys</span
+        >
+      </li>
+      <li>
+        <a href="partial-interpolation.html">Partial Interpolation</a>
+        <span class="description"
+          >Partial attribute interpolation class="prefix-${v}"</span
+        >
+      </li>
     </ul>
 
     <h2>Rendering</h2>
@@ -179,6 +191,12 @@
         <a href="xss-prevention.html">XSS Prevention</a>
         <span class="description"
           >HTML escaping and Html.raw() for safe rendering</span
+        >
+      </li>
+      <li>
+        <a href="nodes-tostring.html">Nodes toString</a>
+        <span class="description"
+          >Element.toString() and Fragment.toString() coverage</span
         >
       </li>
     </ul>
@@ -215,6 +233,18 @@
           >Passing objects and functions to child elements</span
         >
       </li>
+      <li>
+        <a href="nested-each-deep.html">Nested Each Deep</a>
+        <span class="description"
+          >Deeply nested {+each} with property references</span
+        >
+      </li>
+      <li>
+        <a href="same-type-nesting.html">Same-Type Nesting</a>
+        <span class="description"
+          >Same custom element nested in itself</span
+        >
+      </li>
     </ul>
 
     <h2>Events</h2>
@@ -227,6 +257,54 @@
       </li>
     </ul>
 
+    <h2>Signals &amp; Reactivity</h2>
+    <ul>
+      <li>
+        <a href="signals.html">Signals</a>
+        <span class="description"
+          >signal(), computed(), effect(), batch(), untracked()</span
+        >
+      </li>
+    </ul>
+
+    <h2>Functional API</h2>
+    <ul>
+      <li>
+        <a href="functional-api.html">Functional API</a>
+        <span class="description"
+          >Functional component definition API</span
+        >
+      </li>
+      <li>
+        <a href="functional-validation.html">Functional Validation</a>
+        <span class="description"
+          >Validation for functional API inputs</span
+        >
+      </li>
+    </ul>
+
+    <h2>SSR (Server-Side Rendering)</h2>
+    <ul>
+      <li>
+        <a href="ssr-dev-indicator-head.html">SSR Dev Indicator</a>
+        <span class="description"
+          >SSR dev-mode indicator visibility</span
+        >
+      </li>
+      <li>
+        <a href="ssr-e2e.html">SSR E2E</a>
+        <span class="description"
+          >Full SSR hydration flow (6 phases)</span
+        >
+      </li>
+      <li>
+        <a href="ssr-hydration.html">SSR Hydration</a>
+        <span class="description"
+          >SSR hydration edge cases</span
+        >
+      </li>
+    </ul>
+
     <h2>Edge Cases</h2>
     <ul>
       <li>
@@ -234,8 +312,32 @@
         <span class="description">Edge cases and unusual scenarios</span>
       </li>
       <li>
-        <a href="coverage-edge-cases.html">Coverage Edge Cases</a>
-        <span class="description">Additional edge cases for code coverage</span>
+        <a href="coverage-edge-render.html">Coverage: Render Lifecycle</a>
+        <span class="description">Edge cases for base render, setup, attachStore, teardown</span>
+      </li>
+      <li>
+        <a href="coverage-edge-attrs.html">Coverage: Attributes</a>
+        <span class="description">observedAttributes, dataset, type coercion edges</span>
+      </li>
+      <li>
+        <a href="coverage-edge-templates.html">Coverage: Templates</a>
+        <span class="description">Template errors, format-value, wire/lite/raw edges</span>
+      </li>
+      <li>
+        <a href="coverage-edge-fragments.html">Coverage: Fragments</a>
+        <span class="description">Async fragments, once cache, replace/remove paths</span>
+      </li>
+      <li>
+        <a href="coverage-edge-blocks.html">Coverage: Blocks</a>
+        <span class="description">{+if}/{+each}/{+unless} edge branches</span>
+      </li>
+      <li>
+        <a href="coverage-edge-keyed.html">Coverage: Keyed &amp; Diff</a>
+        <span class="description">Keyed lists and diff algorithm branches</span>
+      </li>
+      <li>
+        <a href="coverage-edge-misc.html">Coverage: DOM Content &amp; Misc</a>
+        <span class="description">textarea/style/svg content, ref, direct props</span>
       </li>
     </ul>
 
@@ -251,6 +353,12 @@
         <a href="json-render-custom.html">JSON Render Custom</a>
         <span class="description"
           >Programmatic spec rendering using renderSpec with a registered custom component</span
+        >
+      </li>
+      <li>
+        <a href="json-render-coverage.html">JSON Render Coverage</a>
+        <span class="description"
+          >JSON render coverage edges</span
         >
       </li>
     </ul>

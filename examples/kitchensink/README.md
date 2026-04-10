@@ -15,40 +15,94 @@ This directory serves two purposes:
 
 - [basic-rendering.html](basic-rendering.html) - Static content rendering with the `Html` template literal
 - [setup-async.html](setup-async.html) - Async initialization using `setup()` with `onNext` trigger
+- [lifecycle-sequence.html](lifecycle-sequence.html) - Order of `setup()`, `render()`, `teardown()` calls
 
 ### Attributes & Data
 
 - [attributes.html](attributes.html) - Accessing element attributes via `this.attrs`
+- [observed-attributes.html](observed-attributes.html) - Automatic attribute reactivity via MutationObserver
 - [dataset.html](dataset.html) - Using `data-*` attributes with automatic JSON parsing
 - [dataset-mutations.html](dataset-mutations.html) - Re-rendering when dataset values change
+- [type-coercion.html](type-coercion.html) - Automatic numeric/boolean/JSON parsing of attributes
 
 ### Content Handling
 
 - [content-handling.html](content-handling.html) - Accessing content between tags via `this.wrappedContent`
 - [content-mutations.html](content-mutations.html) - Re-rendering when wrapped content changes
 
-### Templates & Fragments
+### Templates & Blocks
 
 - [templates.html](templates.html) - `Html.template()` with `{variable}` substitution
+- [advanced-templates.html](advanced-templates.html) - `{+if}`, `{+each}`, `{+unless}` block syntax
+- [block-syntax-advanced.html](block-syntax-advanced.html) - Nested blocks, edge cases, null/undefined handling
+- [auto-wire-each.html](auto-wire-each.html) - `{+each ${array}}...{-each}` template iteration
+- [keyed-templates.html](keyed-templates.html) - Template directives with keys
+- [partial-interpolation.html](partial-interpolation.html) - Partial attribute interpolation `class="prefix-${v}"`
+
+### Fragments
+
 - [fragments-async.html](fragments-async.html) - Fragments with promises and placeholders
 - [fragments-templates.html](fragments-templates.html) - Fragments using template strings
+- [fragment-combinations.html](fragment-combinations.html) - All fragment return types: text/html/any/template
 
-### Advanced Templates
+### Rendering
 
-- [advanced-templates.html](advanced-templates.html) - Conditionals (`{#if}`, `{#unless}`), iteration (`{#each}`), and branching
+- [keyed-rendering.html](keyed-rendering.html) - `Html.wire()` for efficient keyed list updates
+- [xss-prevention.html](xss-prevention.html) - HTML escaping and `Html.raw()` for safe rendering
+- [nodes-tostring.html](nodes-tostring.html) - Coverage for `Element.toString()` and `Fragment.toString()`
+
+### Styling
+
+- [styled.html](styled.html) - `+styled` system: base styles, prop flags, logic functions
 
 ### Composition
 
 - [nested-elements.html](nested-elements.html) - Parent-child custom element composition
+- [nested-each-deep.html](nested-each-deep.html) - Deeply nested `{+each}` with property references
+- [same-type-nesting.html](same-type-nesting.html) - Same custom element nested in itself
+- [child-redraw.html](child-redraw.html) - Parent-child attribute passing and re-renders
+- [child-styles.html](child-styles.html) - Passing style objects to children
+- [complex-type-attrs.html](complex-type-attrs.html) - Passing objects/functions to child elements
 
-### Event Handling
+### Signals & Reactivity
+
+- [signals.html](signals.html) - `signal()`, `computed()`, `effect()`, `batch()`, `untracked()`
+
+### Events
 
 - [event-callbacks.html](event-callbacks.html) - External event callbacks using `attachStore()`
 
+### Functional API
+
+- [functional-api.html](functional-api.html) - Functional component definition API
+- [functional-validation.html](functional-validation.html) - Validation for functional API inputs
+
+### SSR (Server-Side Rendering)
+
+- [ssr-dev-indicator-head.html](ssr-dev-indicator-head.html) - SSR dev-mode indicator visibility
+- [ssr-e2e.html](ssr-e2e.html) - Full SSR hydration flow (6 phases)
+- [ssr-hydration.html](ssr-hydration.html) - SSR hydration edge cases
+
+### JSON Render
+
+- [json-render-basic.html](json-render-basic.html) - Declarative `<jr-ui>` rendering from JSON spec
+- [json-render-custom.html](json-render-custom.html) - Programmatic `renderSpec` + `registerComponent`
+- [json-render-coverage.html](json-render-coverage.html) - JSON render coverage edges
+
 ### Edge Cases
 
-- [corner-cases.html](corner-cases.html) - Unusual scenarios and edge cases
-- [coverage-edge-cases.html](coverage-edge-cases.html) - Coverage testing for uncovered branches
+- [corner-cases.html](corner-cases.html) - Edge cases including `document.body` mocking
+- [coverage-edge-render.html](coverage-edge-render.html) - Render lifecycle coverage edges
+- [coverage-edge-attrs.html](coverage-edge-attrs.html) - Attribute reflection coverage edges
+- [coverage-edge-templates.html](coverage-edge-templates.html) - Template/wire/raw coverage edges
+- [coverage-edge-fragments.html](coverage-edge-fragments.html) - Fragment branch coverage edges
+- [coverage-edge-blocks.html](coverage-edge-blocks.html) - Block syntax parser coverage edges
+- [coverage-edge-keyed.html](coverage-edge-keyed.html) - Keyed lists and diff algorithm branches
+- [coverage-edge-misc.html](coverage-edge-misc.html) - DOM content and misc coverage edges
+
+### Performance
+
+- [stress-test.html](stress-test.html) - Large lists, rapid updates, deep nesting
 
 ## Running Demos
 
@@ -129,6 +183,10 @@ After running tests, coverage reports are generated in:
 
 ## Writing New Tests
 
+Each test follows the **single source of truth** convention: the displayed
+`<pre><code>` snippet IS the entire executable program. The surrounding
+script only reads the snippet, evals it, and asserts.
+
 1. Create a new HTML file in `examples/kitchensink/`:
 
 ```html
@@ -138,25 +196,90 @@ After running tests, coverage reports are generated in:
     <script src="test-loader.js"></script>
   </head>
   <body>
-    <my-test-elem></my-test-elem>
-
-    <script>
-      customElements.define(
-        'my-test-elem',
-        class extends hyperElement {
-          render(Html) {
-            Html`<div data-test-result="pass">Test passed!</div>`;
-          }
-        }
-      );
-    </script>
+    <section data-test="my-test" data-test-result="pending">
+      <h2>My Test</h2>
+      <p>What this demonstrates.</p>
+      <pre><code>customElements.define(
+  'my-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;div&gt;Hello!&lt;/div&gt;`;
+    }
+  }
+);
+document.getElementById('my-test-output').innerHTML = '&lt;my-elem&gt;&lt;/my-elem&gt;';</code></pre>
+      <div id="my-test-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="my-test"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="my-test-output"><my-elem><div>Hello!</div></my-elem></div>';
+        requestAnimationFrame(() => {
+          window.assertSnapshot('my-test', document.getElementById('my-test-output'), expected);
+        });
+      </script>
+    </section>
   </body>
 </html>
 ```
 
-2. The test runner automatically picks up new HTML files
-3. Use `data-test-result="pass"` to indicate successful assertions
-4. Use `data-test-result="fail"` to indicate failures
+2. The test runner automatically picks up new HTML files.
+3. The snippet's `textContent` is the entire program — `customElements.define`,
+   element creation, mounting, and any test driver. The script only reads,
+   executes, and asserts.
+4. Use `window.assertSnapshot(name, target, expected[, normalize])` for HTML
+   snapshot assertions. The helper auto-canonicalizes random `fn-RND`/`ob-RND`
+   placeholders so snapshots stay deterministic.
+
+## Canonical Patterns
+
+Four patterns cover every test case. Choose the simplest one that fits.
+
+### Pattern A — synchronous DOM render
+
+Use when the demo renders once and the assertion is `outerHTML === expected`.
+The script waits one `requestAnimationFrame` and calls `assertSnapshot`.
+See `templates.html`, `dataset.html`, `nodes-tostring.html` for reference.
+
+### Pattern B — sentinel-driven snippet
+
+Use when the assertion is on internal state (e.g. signal values, counter
+increments) rather than DOM HTML. The snippet sets `section.dataset.testResult`
+directly. The script just `eval`s the snippet. See `signals.html`.
+
+### Pattern C — multi-phase driver inside snippet
+
+Use when the demo needs clicks, observers, intervals, or multi-tick verification.
+The driver code (clicks, setTimeouts, observers) goes INSIDE the snippet. The
+snippet sets the section result when verification completes. See
+`event-callbacks.html`, `child-redraw.html`.
+
+### Pattern D — async snippet with `await import()`
+
+Use when the snippet needs ES module imports (e.g. SSR component definitions
+from a separate `.mjs` file). The script wraps with
+`new Function('return (async () => { ' + code + ' })();')` so top-level `await`
+works inside the snippet. The snippet itself uses dynamic `await import('./...')`.
+In bundle mode where imports may fail, the snippet falls back to a `'skip'`
+sentinel. See `nodes-tostring.html` (`direct-tostring` section), `ssr-e2e.html`.
+
+## The `assertSnapshot` API
+
+```javascript
+window.assertSnapshot(sectionName, target, expected[, normalize])
+```
+
+- `sectionName` — the section's `data-test` attribute. Sets `data-test-result`.
+- `target` — DOM element OR a function returning an HTML string.
+- `expected` — the static expected snapshot string (already canonicalized for
+  random IDs).
+- `normalize` — optional extra normalizer applied to `actual` before compare.
+
+Internally calls `canonicalizeRender(actual)` which collapses random IDs of the
+form `fn-<random>` and `ob-<random>` to constant tokens `fn-RND`/`ob-RND` so
+snapshots stay deterministic across runs.
+
+On mismatch, logs `Expected: ... Actual: ...` to console and sets
+`data-test-result="fail"`.
 
 ## Test Configuration
 
