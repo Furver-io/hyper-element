@@ -40,43 +40,32 @@
     <section data-test="dev-indicator-basic" data-test-result="pending">
       <h2>Basic Dev Indicator Show/Hide</h2>
       <p>Tests that configureSSR with devMode shows and hides the indicator.</p>
-      <script type="module">
-        setTimeout(() => {
-          const section = document.querySelector(
-            '[data-test="dev-indicator-basic"]'
-          );
-
-          if (
-            typeof hyperElement !== 'undefined' &&
-            hyperElement.configureSSR
-          ) {
-            // Show indicator
-            hyperElement.configureSSR({ devMode: true });
-
-            setTimeout(() => {
-              const indicator = document.getElementById(
-                'hyper-element-ssr-indicator'
-              );
-              const shown =
-                indicator !== null &&
-                (indicator.textContent.includes('SSR') ||
-                  indicator.innerHTML.includes('SSR'));
-
-              // Hide indicator
-              hyperElement.configureSSR({ devMode: false });
-
-              setTimeout(() => {
-                const indicatorHidden =
-                  document.getElementById('hyper-element-ssr-indicator') ===
-                  null;
-                section.dataset.testResult =
-                  shown && indicatorHidden ? 'pass' : 'fail';
-              }, 50);
-            }, 50);
-          } else {
-            section.dataset.testResult = 'fail';
-          }
+      <pre><code>(function () {
+  var section = document.querySelector('[data-test="dev-indicator-basic"]');
+  try {
+    if (typeof hyperElement !== 'undefined' &amp;&amp; hyperElement.configureSSR) {
+      hyperElement.configureSSR({ devMode: true });
+      setTimeout(function () {
+        var indicator = document.getElementById('hyper-element-ssr-indicator');
+        var shown = indicator !== null &amp;&amp;
+          (indicator.textContent.includes('SSR') || indicator.innerHTML.includes('SSR'));
+        hyperElement.configureSSR({ devMode: false });
+        setTimeout(function () {
+          var indicatorHidden = document.getElementById('hyper-element-ssr-indicator') === null;
+          section.dataset.testResult = (shown &amp;&amp; indicatorHidden) ? 'pass' : 'fail';
         }, 50);
+      }, 50);
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  } catch (e) {
+    section.dataset.testResult = 'fail';
+    console.error('dev-indicator-basic:', e.message);
+  }
+})();</code></pre>
+      <script type="module">
+        const code = document.querySelector('[data-test="dev-indicator-basic"] pre code').textContent;
+        eval(code);
       </script>
     </section>
 
@@ -88,79 +77,57 @@
         simulates the scenario when configureSSR is called in &lt;head&gt;
         before body exists.
       </p>
-      <script type="module">
-        setTimeout(() => {
-          const section = document.querySelector(
-            '[data-test="dev-indicator-dcl-fallback"]'
-          );
-
-          if (
-            typeof hyperElement !== 'undefined' &&
-            hyperElement.configureSSR
-          ) {
-            // First, ensure any existing indicator is removed
-            hyperElement.configureSSR({ devMode: false });
-
-            // Mock document.body being null temporarily
-            const originalBody = document.body;
-            const listeners = [];
-            const originalAddEventListener = document.addEventListener;
-
-            // Override addEventListener to capture DOMContentLoaded callbacks
-            document.addEventListener = function (type, callback, options) {
-              if (type === 'DOMContentLoaded') {
-                listeners.push(callback);
-              }
-              return originalAddEventListener.call(
-                this,
-                type,
-                callback,
-                options
-              );
-            };
-
-            // Temporarily hide body to trigger fallback
-            Object.defineProperty(document, 'body', {
-              get: function () {
-                return null;
-              },
-              configurable: true,
-            });
-
-            try {
-              // This should add a DOMContentLoaded listener since body is "null"
-              hyperElement.configureSSR({ devMode: true });
-            } finally {
-              // Restore body
-              Object.defineProperty(document, 'body', {
-                get: function () {
-                  return originalBody;
-                },
-                configurable: true,
-              });
-              document.addEventListener = originalAddEventListener;
-            }
-
-            // Manually trigger the captured callback to simulate DOMContentLoaded
-            setTimeout(() => {
-              listeners.forEach((cb) => cb());
-
-              setTimeout(() => {
-                const indicator = document.getElementById(
-                  'hyper-element-ssr-indicator'
-                );
-                const indicatorShown = indicator !== null;
-
-                // Clean up
-                hyperElement.configureSSR({ devMode: false });
-
-                section.dataset.testResult = indicatorShown ? 'pass' : 'fail';
-              }, 50);
-            }, 50);
-          } else {
-            section.dataset.testResult = 'fail';
+      <pre><code>(function () {
+  var section = document.querySelector('[data-test="dev-indicator-dcl-fallback"]');
+  // Delay to let section 1 finish its timer chain (100ms) before
+  // this section touches the shared devIndicator module state.
+  setTimeout(function () {
+    try {
+      if (typeof hyperElement !== 'undefined' &amp;&amp; hyperElement.configureSSR) {
+        hyperElement.configureSSR({ devMode: false });
+        var originalBody = document.body;
+        var listeners = [];
+        var originalAddEventListener = document.addEventListener;
+        document.addEventListener = function (type, callback, options) {
+          if (type === 'DOMContentLoaded') {
+            listeners.push(callback);
           }
-        }, 150);
+          return originalAddEventListener.call(this, type, callback, options);
+        };
+        Object.defineProperty(document, 'body', {
+          get: function () { return null; },
+          configurable: true,
+        });
+        try {
+          hyperElement.configureSSR({ devMode: true });
+        } finally {
+          Object.defineProperty(document, 'body', {
+            get: function () { return originalBody; },
+            configurable: true,
+          });
+          document.addEventListener = originalAddEventListener;
+        }
+        setTimeout(function () {
+          listeners.forEach(function (cb) { cb(); });
+          setTimeout(function () {
+            var indicator = document.getElementById('hyper-element-ssr-indicator');
+            var indicatorShown = indicator !== null;
+            hyperElement.configureSSR({ devMode: false });
+            section.dataset.testResult = indicatorShown ? 'pass' : 'fail';
+          }, 50);
+        }, 50);
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    } catch (e) {
+      section.dataset.testResult = 'fail';
+      console.error('dev-indicator-dcl-fallback:', e.message);
+    }
+  }, 150);
+})();</code></pre>
+      <script type="module">
+        const code = document.querySelector('[data-test="dev-indicator-dcl-fallback"] pre code').textContent;
+        eval(code);
       </script>
     </section>
 

@@ -48,7 +48,7 @@
       <p>
         Fragment methods return objects with promises that resolve to content.
       </p>
-      <pre><code id="example1">class extends hyperElement {
+      <pre><code>customElements.define('fragments-element', class extends hyperElement {
   AsyncData() {
     return {
       once: true,
@@ -59,35 +59,43 @@
   render(Html) {
     Html`Data: ${{ AsyncData: true }}`
   }
-}</code></pre>
+});
+
+const elem = document.querySelector('fragments-element');
+const initialSnapshot = '&lt;!--&lt;&gt;--&gt;Data: Loading...&lt;!--&lt;/&gt;--&gt;';
+const finalSnapshot = '&lt;!--&lt;&gt;--&gt;Data: Loaded!&lt;!--&lt;/&gt;--&gt;';
+let passed = true;
+if (elem.innerHTML !== initialSnapshot) {
+  console.error('Phase 1 failed. Expected:', initialSnapshot, 'Got:', elem.innerHTML);
+  passed = false;
+}
+setTimeout(() => {
+  if (elem.innerHTML !== finalSnapshot) {
+    console.error('Phase 2 failed. Expected:', finalSnapshot, 'Got:', elem.innerHTML);
+    passed = false;
+  }
+  const section = document.querySelector('[data-test="fragment-async"]');
+  section.dataset.testResult = passed ? 'pass' : 'fail';
+}, 100);</code></pre>
       <fragments-element></fragments-element>
       <script type="module">
-        const code = document.getElementById('example1').textContent;
-        const ExampleElement = eval(`(${code})`);
-        customElements.define('fragments-element', ExampleElement);
 
-        const section = document.querySelector('[data-test="fragment-async"]');
-        const elem = document.querySelector('fragments-element');
+        const code = document.querySelector('[data-test="fragment-async"] pre code').textContent;
 
-        const initialSnapshot = `<!--<>-->Data: Loading...<!--</>-->`;
-        const finalSnapshot = `<!--<>-->Data: Loaded!<!--</>-->`;
+        eval(code);
 
-        let passed = true;
-
-        if (elem.innerHTML !== initialSnapshot) {
-          console.error('Phase 1 failed. Expected:', initialSnapshot, 'Got:', elem.innerHTML);
-          passed = false;
-        }
+        const expected = '<fragments-element><!--<>-->Data: Loaded!<!--</>--></fragments-element>';
 
         setTimeout(() => {
-          if (elem.innerHTML !== finalSnapshot) {
-            console.error('Phase 2 failed. Expected:', finalSnapshot, 'Got:', elem.innerHTML);
-            passed = false;
-          }
 
-          section.dataset.testResult = passed ? 'pass' : 'fail';
-        }, 100);
-      </script>
+          const sec = document.querySelector('[data-test="fragment-async"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('fragment-async', document.querySelector('fragments-element'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

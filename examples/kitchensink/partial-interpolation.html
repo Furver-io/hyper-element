@@ -144,28 +144,39 @@ customElements.define(
 
 document.getElementById('mixed-attrs-output').appendChild(
   document.createElement('mixed-attrs')
-);</code></pre>
+);
+
+requestAnimationFrame(() => {
+  const expectedMounted = '&lt;div id="mixed-attrs-output"&gt;&lt;mixed-attrs&gt;&lt;div id="mixed-attrs-target" title="My Title" class="prefix-suffix"&gt;Content Here&lt;/div&gt;&lt;/mixed-attrs&gt;&lt;/div&gt;';
+  const container = document.getElementById('mixed-attrs-output');
+  const mountedOk = container.outerHTML === expectedMounted;
+  if (!mountedOk) {
+    console.error('Phase Mounted mismatch (mixed-attrs)\nExpected: ' + expectedMounted + '\nActual:   ' + container.outerHTML);
+  }
+  document.getElementById('mixed-attrs-target').click();
+  const clickOk = window.__mixedClicked === true;
+  const section = document.querySelector('[data-test="mixed-attrs"]');
+  section.dataset.testResult = (mountedOk && clickOk) ? 'pass' : 'fail';
+});</code></pre>
       <div id="mixed-attrs-output"></div>
       <script type="module">
+
         const code = document.querySelector('[data-test="mixed-attrs"] pre code').textContent;
+
         eval(code);
 
-        // Multi-phase example.
-        //   Phase Mounted — initial render with all interpolations resolved.
-        //   Phase Clicked — synthetic click flips window.__mixedClicked.
-        const expectedMounted = '<div id="mixed-attrs-output"><mixed-attrs><div id="mixed-attrs-target" title="My Title" class="prefix-suffix">Content Here</div></mixed-attrs></div>';
-        requestAnimationFrame(() => {
-          const container = document.getElementById('mixed-attrs-output');
-          const mountedOk = container.outerHTML === expectedMounted;
-          if (!mountedOk) {
-            console.error('Phase Mounted mismatch (mixed-attrs)\nExpected: ' + expectedMounted + '\nActual:   ' + container.outerHTML);
-          }
-          document.getElementById('mixed-attrs-target').click();
-          const clickOk = window.__mixedClicked === true;
-          const section = document.querySelector('[data-test="mixed-attrs"]');
-          section.dataset.testResult = (mountedOk && clickOk) ? 'pass' : 'fail';
-        });
-      </script>
+        const expected = '<div id="mixed-attrs-output"><mixed-attrs><div id="mixed-attrs-target" title="My Title" class="prefix-suffix">Content Here</div></mixed-attrs></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="mixed-attrs"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('mixed-attrs', document.getElementById('mixed-attrs-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <section data-test="cascade-test" data-test-result="pending">
@@ -188,28 +199,39 @@ customElements.define(
 
 document.getElementById('cascade-test-output').appendChild(
   document.createElement('cascade-test')
-);</code></pre>
+);
+
+requestAnimationFrame(() => {
+  const expectedMounted = '&lt;div id="cascade-test-output"&gt;&lt;cascade-test&gt;&lt;button id="cascade-test-target" title="skill-1" class="skill-node locked"&gt;RPC&lt;/button&gt;&lt;/cascade-test&gt;&lt;/div&gt;';
+  const container = document.getElementById('cascade-test-output');
+  const mountedOk = container.outerHTML === expectedMounted;
+  if (!mountedOk) {
+    console.error('Phase Mounted mismatch (cascade-test)\nExpected: ' + expectedMounted + '\nActual:   ' + container.outerHTML);
+  }
+  document.getElementById('cascade-test-target').click();
+  const clickOk = window.__cascadeClicked === true;
+  const section = document.querySelector('[data-test="cascade-test"]');
+  section.dataset.testResult = (mountedOk && clickOk) ? 'pass' : 'fail';
+});</code></pre>
       <div id="cascade-test-output"></div>
       <script type="module">
+
         const code = document.querySelector('[data-test="cascade-test"] pre code').textContent;
+
         eval(code);
 
-        // Multi-phase example.
-        //   Phase Mounted — partial interpolation produces locked class etc.
-        //   Phase Clicked — synthetic click flips window.__cascadeClicked.
-        const expectedMounted = '<div id="cascade-test-output"><cascade-test><button id="cascade-test-target" title="skill-1" class="skill-node locked">RPC</button></cascade-test></div>';
-        requestAnimationFrame(() => {
-          const container = document.getElementById('cascade-test-output');
-          const mountedOk = container.outerHTML === expectedMounted;
-          if (!mountedOk) {
-            console.error('Phase Mounted mismatch (cascade-test)\nExpected: ' + expectedMounted + '\nActual:   ' + container.outerHTML);
-          }
-          document.getElementById('cascade-test-target').click();
-          const clickOk = window.__cascadeClicked === true;
-          const section = document.querySelector('[data-test="cascade-test"]');
-          section.dataset.testResult = (mountedOk && clickOk) ? 'pass' : 'fail';
-        });
-      </script>
+        const expected = '<div id="cascade-test-output"><cascade-test><button id="cascade-test-target" title="skill-1" class="skill-node locked">RPC</button></cascade-test></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="cascade-test"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('cascade-test', document.getElementById('cascade-test-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <section data-test="update-partial" data-test-result="pending">
@@ -231,36 +253,47 @@ customElements.define(
 
 const updElem = document.createElement('update-partial');
 document.getElementById('update-partial-output').appendChild(updElem);
-window.__updatePartialElem = updElem;</code></pre>
+window.__updatePartialElem = updElem;
+
+const expectedInitial = '&lt;div id="update-partial-output"&gt;&lt;update-partial&gt;&lt;div id="update-partial-target" class="counter-0"&gt;0&lt;/div&gt;&lt;/update-partial&gt;&lt;/div&gt;';
+const expectedUpdated = '&lt;div id="update-partial-output"&gt;&lt;update-partial&gt;&lt;div id="update-partial-target" class="counter-5"&gt;5&lt;/div&gt;&lt;/update-partial&gt;&lt;/div&gt;';
+
+requestAnimationFrame(() => {
+  const container = document.getElementById('update-partial-output');
+  const initialOk = container.outerHTML === expectedInitial;
+  if (!initialOk) {
+    console.error('Phase Initial mismatch (update-partial)\nExpected: ' + expectedInitial + '\nActual:   ' + container.outerHTML);
+  }
+  window.__updatePartialState.count = 5;
+  window.__updatePartialElem.render();
+  requestAnimationFrame(() => {
+    const updatedOk = container.outerHTML === expectedUpdated;
+    if (!updatedOk) {
+      console.error('Phase Updated mismatch (update-partial)\nExpected: ' + expectedUpdated + '\nActual:   ' + container.outerHTML);
+    }
+    const section = document.querySelector('[data-test="update-partial"]');
+    section.dataset.testResult = (initialOk && updatedOk) ? 'pass' : 'fail';
+  });
+});</code></pre>
       <div id="update-partial-output"></div>
       <script type="module">
+
         const code = document.querySelector('[data-test="update-partial"] pre code').textContent;
+
         eval(code);
 
-        // Multi-phase example.
-        //   Phase Initial — counter-0
-        //   Phase Updated — after mutating state and re-rendering, counter-5
-        const expectedInitial = '<div id="update-partial-output"><update-partial><div id="update-partial-target" class="counter-0">0</div></update-partial></div>';
-        const expectedUpdated = '<div id="update-partial-output"><update-partial><div id="update-partial-target" class="counter-5">5</div></update-partial></div>';
+        const expected = '<div id="update-partial-output"><update-partial><div id="update-partial-target" class="counter-5">5</div></update-partial></div>';
 
-        requestAnimationFrame(() => {
-          const container = document.getElementById('update-partial-output');
-          const initialOk = container.outerHTML === expectedInitial;
-          if (!initialOk) {
-            console.error('Phase Initial mismatch (update-partial)\nExpected: ' + expectedInitial + '\nActual:   ' + container.outerHTML);
-          }
-          window.__updatePartialState.count = 5;
-          window.__updatePartialElem.render();
-          requestAnimationFrame(() => {
-            const updatedOk = container.outerHTML === expectedUpdated;
-            if (!updatedOk) {
-              console.error('Phase Updated mismatch (update-partial)\nExpected: ' + expectedUpdated + '\nActual:   ' + container.outerHTML);
-            }
-            const section = document.querySelector('[data-test="update-partial"]');
-            section.dataset.testResult = (initialOk && updatedOk) ? 'pass' : 'fail';
-          });
-        });
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="update-partial"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('update-partial', document.getElementById('update-partial-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <section data-test="empty-result" data-test-result="pending">

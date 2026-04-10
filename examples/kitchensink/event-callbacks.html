@@ -50,7 +50,7 @@
         Calling attachStore() without arguments returns a trigger function for
         re-rendering.
       </p>
-      <pre><code id="code-no-store">const eventCallbacks = [];
+      <pre><code>const eventCallbacks = [];
 function onExternalEvent(cb) {
   eventCallbacks.push(cb);
 }
@@ -67,7 +67,6 @@ customElements.define(
     }
 
     setup(attachStore) {
-      // Use attachStore without arguments - should return a trigger function
       const triggerRender = attachStore();
 
       onExternalEvent((data) => {
@@ -80,44 +79,45 @@ customElements.define(
       Html`&lt;div id="event-result"&gt;Count: ${this.count}&lt;/div&gt;`;
     }
   }
-);</code></pre>
+);
+
+setTimeout(() => {
+  emitExternalEvent(5);
+  setTimeout(() => {
+    emitExternalEvent(10);
+    setTimeout(() => {
+      const section = document.querySelector('[data-test="event-callback-no-store"]');
+      const result = document.querySelector('#event-result');
+      section.dataset.testResult =
+        (result && result.textContent.includes('Count: 10')) ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+}, 100);</code></pre>
       <event-elem></event-elem>
       <script type="module">
-        {
-          const code = document.querySelector('#code-no-store').textContent;
-          const script = document.createElement('script');
-          script.type = 'module';
-          script.textContent = code + `
-          {
-            // Test: emit events and verify re-render
-            setTimeout(() => {
-              emitExternalEvent(5);
-              setTimeout(() => {
-                emitExternalEvent(10);
-                setTimeout(() => {
-                  const section = document.querySelector(
-                    '[data-test="event-callback-no-store"]'
-                  );
-                  const result = document.querySelector('#event-result');
-                  if (result && result.textContent.includes('Count: 10')) {
-                    section.dataset.testResult = 'pass';
-                  } else {
-                    section.dataset.testResult = 'fail';
-                  }
-                }, 100);
-              }, 100);
-            }, 100);
-          }
-          `;
-          document.body.appendChild(script);
-        }
-      </script>
+
+        const code = document.querySelector('[data-test="event-callback-no-store"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<event-elem><div id="event-result">Count: 10</div></event-elem>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="event-callback-no-store"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('event-callback-no-store', document.querySelector('event-elem'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <section data-test="event-callback-with-data" data-test-result="pending">
       <h2>External Event with Data Passed to Render</h2>
       <p>The trigger function can also pass data directly to render().</p>
-      <pre><code id="code-with-data">const dataEventCallbacks = [];
+      <pre><code>const dataEventCallbacks = [];
 function onDataEvent(cb) {
   dataEventCallbacks.push(cb);
 }
@@ -132,7 +132,7 @@ customElements.define(
       const triggerRender = attachStore();
 
       onDataEvent((data) => {
-        triggerRender(data); // Pass data directly to render
+        triggerRender(data);
       });
     }
 
@@ -140,34 +140,36 @@ customElements.define(
       Html`&lt;div id="event-data-result"&gt;Data: ${data || 'none'}&lt;/div&gt;`;
     }
   }
-);</code></pre>
+);
+
+setTimeout(() => {
+  emitDataEvent('PASS');
+  setTimeout(() => {
+    const section = document.querySelector('[data-test="event-callback-with-data"]');
+    const result = document.querySelector('#event-data-result');
+    section.dataset.testResult =
+      (result && result.textContent.includes('Data: PASS')) ? 'pass' : 'fail';
+  }, 100);
+}, 200);</code></pre>
       <event-data-elem></event-data-elem>
       <script type="module">
-        {
-          const code = document.querySelector('#code-with-data').textContent;
-          const script = document.createElement('script');
-          script.type = 'module';
-          script.textContent = code + `
-          {
-            setTimeout(() => {
-              emitDataEvent('PASS');
-              setTimeout(() => {
-                const section = document.querySelector(
-                  '[data-test="event-callback-with-data"]'
-                );
-                const result = document.querySelector('#event-data-result');
-                if (result && result.textContent.includes('Data: PASS')) {
-                  section.dataset.testResult = 'pass';
-                } else {
-                  section.dataset.testResult = 'fail';
-                }
-              }, 100);
-            }, 200);
-          }
-          `;
-          document.body.appendChild(script);
-        }
-      </script>
+
+        const code = document.querySelector('[data-test="event-callback-with-data"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<event-data-elem><div id="event-data-result">Data: PASS</div></event-data-elem>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="event-callback-with-data"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('event-callback-with-data', document.querySelector('event-data-elem'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Event handler with options array -->
@@ -176,7 +178,7 @@ customElements.define(
       <p>
         Tests event handlers passed as arrays with options: @click=${[handler, { capture: true }]}
       </p>
-      <pre><code id="code-handler-array">let capturePhaseClicked = false;
+      <pre><code>let capturePhaseClicked = false;
 let onceClicked = 0;
 
 customElements.define(
@@ -201,42 +203,46 @@ customElements.define(
       &lt;/div&gt;`;
     }
   }
-);</code></pre>
+);
+
+const arraySection = document.querySelector('[data-test="event-handler-array"]');
+const arrayElem = document.createElement('event-array-elem');
+document.getElementById('event-handler-array-output').appendChild(arrayElem);
+
+setTimeout(() => {
+  const captureBtn = document.getElementById('capture-btn');
+  const onceBtn = document.getElementById('once-btn');
+
+  captureBtn?.click();
+
+  onceBtn?.click();
+  onceBtn?.click();
+  onceBtn?.click();
+
+  setTimeout(() => {
+    const pass = capturePhaseClicked && onceClicked === 1;
+    arraySection.dataset.testResult = pass ? 'pass' : 'fail';
+  }, 50);
+}, 100);</code></pre>
       <div id="event-handler-array-output"></div>
       <script type="module">
-        {
-          const code = document.querySelector('#code-handler-array').textContent;
-          const script = document.createElement('script');
-          script.type = 'module';
-          script.textContent = code + `
-          {
-            const section = document.querySelector('[data-test="event-handler-array"]');
-            const elem = document.createElement('event-array-elem');
-            document.getElementById('event-handler-array-output').appendChild(elem);
 
-            setTimeout(() => {
-              const captureBtn = document.getElementById('capture-btn');
-              const onceBtn = document.getElementById('once-btn');
+        const code = document.querySelector('[data-test="event-handler-array"] pre code').textContent;
 
-              // Click capture button
-              captureBtn?.click();
+        eval(code);
 
-              // Click once button multiple times
-              onceBtn?.click();
-              onceBtn?.click();
-              onceBtn?.click();
+        const expected = '<div id="event-handler-array-output"><event-array-elem><div>\n        <button id="capture-btn">Capture</button>\n        <button id="once-btn">Once</button>\n      </div></event-array-elem></div>';
 
-              setTimeout(() => {
-                // Capture should have fired, once should only count 1
-                const pass = capturePhaseClicked && onceClicked === 1;
-                section.dataset.testResult = pass ? 'pass' : 'fail';
-              }, 50);
-            }, 100);
-          }
-          `;
-          document.body.appendChild(script);
-        }
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="event-handler-array"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('event-handler-array', document.getElementById('event-handler-array-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Event handler array replacement -->
@@ -245,7 +251,7 @@ customElements.define(
       <p>
         Tests that event handler arrays can be replaced (removes old, adds new).
       </p>
-      <pre><code id="code-handler-replace">let handlerAClicks = 0;
+      <pre><code>let handlerAClicks = 0;
 let handlerBClicks = 0;
 
 customElements.define(
@@ -271,46 +277,49 @@ customElements.define(
       Html`&lt;button id="replace-btn" @click=${handler}&gt;Click&lt;/button&gt;`;
     }
   }
-);</code></pre>
+);
+
+const replaceSection = document.querySelector('[data-test="event-handler-array-replace"]');
+const replaceElem = document.createElement('event-replace-elem');
+document.getElementById('event-handler-array-replace-output').appendChild(replaceElem);
+
+setTimeout(() => {
+  const btn = document.getElementById('replace-btn');
+
+  btn?.click();
+  const afterA = handlerAClicks;
+
+  replaceElem._useHandlerA = false;
+  replaceElem._trigger();
+
+  setTimeout(() => {
+    btn?.click();
+
+    setTimeout(() => {
+      const pass = afterA === 1 && handlerAClicks === 1 && handlerBClicks === 1;
+      replaceSection.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 50);
+  }, 50);
+}, 100);</code></pre>
       <div id="event-handler-array-replace-output"></div>
       <script type="module">
-        {
-          const code = document.querySelector('#code-handler-replace').textContent;
-          const script = document.createElement('script');
-          script.type = 'module';
-          script.textContent = code + `
-          {
-            const section = document.querySelector('[data-test="event-handler-array-replace"]');
-            const elem = document.createElement('event-replace-elem');
-            document.getElementById('event-handler-array-replace-output').appendChild(elem);
 
-            setTimeout(() => {
-              const btn = document.getElementById('replace-btn');
+        const code = document.querySelector('[data-test="event-handler-array-replace"] pre code').textContent;
 
-              // Click with handler A
-              btn?.click();
-              const afterA = handlerAClicks;
+        eval(code);
 
-              // Switch to handler B and re-render
-              elem._useHandlerA = false;
-              elem._trigger();
+        const expected = '<div id="event-handler-array-replace-output"><event-replace-elem><button id="replace-btn">Click</button></event-replace-elem></div>';
 
-              setTimeout(() => {
-                // Click with handler B
-                btn?.click();
+        setTimeout(() => {
 
-                setTimeout(() => {
-                  // Handler A should have 1 click, handler B should have 1 click
-                  const pass = afterA === 1 && handlerAClicks === 1 && handlerBClicks === 1;
-                  section.dataset.testResult = pass ? 'pass' : 'fail';
-                }, 50);
-              }, 50);
-            }, 100);
-          }
-          `;
-          document.body.appendChild(script);
-        }
-      </script>
+          const sec = document.querySelector('[data-test="event-handler-array-replace"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('event-handler-array-replace', document.getElementById('event-handler-array-replace-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

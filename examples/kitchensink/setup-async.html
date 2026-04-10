@@ -66,40 +66,17 @@ const setupElem = document.createElement('setup-element');
 document.getElementById('setup-output').appendChild(setupElem);</code></pre>
       <div id="setup-output"></div>
       <script type="module">
-        // Single source of truth: read the example exactly as displayed
-        // and execute it. There is no second copy of the code anywhere.
         const code = document.querySelector('[data-test="setup-element"] pre code').textContent;
         eval(code);
-
-        // Phase-aware snapshots.
-        //
-        // Note on "phases": although the snippet uses setTimeout to *schedule*
-        // a delayed onNext invocation, the onNext call inside setup() runs
-        // synchronously. onNext synchronously replaces this.render with a
-        // version that injects the store value, so the very first render
-        // already paints with the resolved store ("loaded!"). The default
-        // 'loading...' parameter never appears in the DOM, so this example
-        // has a single stable rendered output.
-        const expectedFinal = '<setup-element><!--<>-->Status: loaded!<!--</>--></setup-element>';
-
-        const elem = document.querySelector('setup-element');
-        const section = document.querySelector('[data-test="setup-element"]');
-
-        // Poll until the final phase string matches, with a generous deadline.
-        // This is timing-stable across runs because the deadline is far longer
-        // than the example's 10ms setTimeout and any rendering microtask churn.
+        const expected = '<div id="setup-output"><setup-element><!--<>-->Status: loaded!<!--</>--></setup-element></div>';
+        const target = document.getElementById('setup-output');
         const deadline = Date.now() + 1500;
-        (function awaitFinal() {
-          if (elem.outerHTML === expectedFinal) {
-            section.dataset.testResult = 'pass';
+        (function awaitRender() {
+          if (target.outerHTML === expected || Date.now() > deadline) {
+            window.assertSnapshot('setup-element', target, expected);
             return;
           }
-          if (Date.now() > deadline) {
-            console.error('Final snapshot mismatch.\nExpected: ' + expectedFinal + '\nActual:   ' + elem.outerHTML);
-            section.dataset.testResult = 'fail';
-            return;
-          }
-          setTimeout(awaitFinal, 25);
+          setTimeout(awaitRender, 25);
         })();
       </script>
     </section>

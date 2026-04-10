@@ -30,6 +30,11 @@
       h2 {
         margin-top: 0;
       }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
     </style>
   </head>
   <body>
@@ -40,513 +45,659 @@
     <section data-test="wire-update-rerender" data-test-result="pending">
       <h2>Wire Keyed List Update and Re-render</h2>
       <p>Tests that updating items and calling render works correctly.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-update-rerender"]');
+
+  customElements.define(
+    'wire-update-rerender-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._items = [
+          { id: 1, name: 'First' },
+          { id: 2, name: 'Second' },
+        ];
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        Html`&lt;ul id="wire-update-rerender-list"&gt;${this.element._items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li data-id=${item.id}&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-update-rerender-elem');
+  document.getElementById('wire-update-rerender-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const list = document.getElementById('wire-update-rerender-list');
+    const initialLis = list?.querySelectorAll('li');
+    const initialCount = initialLis?.length;
+
+    elem._items = [
+      { id: 1, name: 'Updated First' },
+      { id: 2, name: 'Updated Second' },
+      { id: 3, name: 'New Third' },
+    ];
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const newLis = list?.querySelectorAll('li');
+      const pass =
+        initialCount === 2 &&
+        newLis?.length === 3 &&
+        newLis[0].textContent === 'Updated First' &&
+        newLis[1].textContent === 'Updated Second' &&
+        newLis[2].textContent === 'New Third';
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+})();</code></pre>
       <div id="wire-update-rerender-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-update-rerender"]');
 
-          customElements.define(
-            'wire-update-rerender-elem',
-            class extends hyperElement {
-              setup(attachStore) {
-                this.element._items = [
-                  { id: 1, name: 'First' },
-                  { id: 2, name: 'Second' },
-                ];
-                this.element._trigger = attachStore();
-              }
-              render(Html) {
-                Html`<ul id="wire-update-rerender-list">${this.element._items.map(
-                  (item) => Html.wire(item, ':item')`<li data-id=${item.id}>${item.name}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="wire-update-rerender"] pre code').textContent;
 
-          const elem = document.createElement('wire-update-rerender-elem');
-          document.getElementById('wire-update-rerender-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const list = document.getElementById('wire-update-rerender-list');
-            const initialLis = list?.querySelectorAll('li');
-            const initialCount = initialLis?.length;
+        const expected = '<div id="wire-update-rerender-output"><wire-update-rerender-elem><ul id="wire-update-rerender-list"><li data-id="1">Updated First</li><li data-id="2">Updated Second</li><li data-id="3">New Third</li><!--◦--></ul></wire-update-rerender-elem></div>';
 
-            // Update items
-            elem._items = [
-              { id: 1, name: 'Updated First' },
-              { id: 2, name: 'Updated Second' },
-              { id: 3, name: 'New Third' },
-            ];
-            elem._trigger();
+        setTimeout(() => {
 
-            setTimeout(() => {
-              const newLis = list?.querySelectorAll('li');
-              const pass =
-                initialCount === 2 &&
-                newLis?.length === 3 &&
-                newLis[0].textContent === 'Updated First' &&
-                newLis[1].textContent === 'Updated Second' &&
-                newLis[2].textContent === 'New Third';
-              section.dataset.testResult = pass ? 'pass' : 'fail';
-            }, 100);
-          }, 100);
-        })();
-      </script>
+          const sec = document.querySelector('[data-test="wire-update-rerender"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-update-rerender', document.getElementById('wire-update-rerender-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire keyed list reorder -->
     <section data-test="wire-reorder" data-test-result="pending">
       <h2>Wire Keyed List Reorder</h2>
       <p>Tests reordering keyed items via render.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-reorder"]');
+
+  const itemA = { id: 'a', text: 'Alpha' };
+  const itemB = { id: 'b', text: 'Beta' };
+  const itemC = { id: 'c', text: 'Gamma' };
+
+  customElements.define(
+    'wire-reorder-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._items = [itemA, itemB, itemC];
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        Html`&lt;ul id="wire-reorder-list"&gt;${this.element._items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li data-id=${item.id}&gt;${item.text}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-reorder-elem');
+  document.getElementById('wire-reorder-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const list = document.getElementById('wire-reorder-list');
+    const initialOrder = Array.from(list?.querySelectorAll('li') || []).map(li =&gt; li.dataset.id);
+
+    elem._items = [itemC, itemB, itemA];
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const newOrder = Array.from(list?.querySelectorAll('li') || []).map(li =&gt; li.dataset.id);
+      const pass =
+        initialOrder.join(',') === 'a,b,c' &&
+        newOrder.join(',') === 'c,b,a';
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+})();</code></pre>
       <div id="wire-reorder-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-reorder"]');
 
-          // Pre-create items so wire can track them
-          const itemA = { id: 'a', text: 'Alpha' };
-          const itemB = { id: 'b', text: 'Beta' };
-          const itemC = { id: 'c', text: 'Gamma' };
+        const code = document.querySelector('[data-test="wire-reorder"] pre code').textContent;
 
-          customElements.define(
-            'wire-reorder-elem',
-            class extends hyperElement {
-              setup(attachStore) {
-                this.element._items = [itemA, itemB, itemC];
-                this.element._trigger = attachStore();
-              }
-              render(Html) {
-                Html`<ul id="wire-reorder-list">${this.element._items.map(
-                  (item) => Html.wire(item, ':item')`<li data-id=${item.id}>${item.text}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('wire-reorder-elem');
-          document.getElementById('wire-reorder-output').appendChild(elem);
+        const expected = '<div id="wire-reorder-output"><wire-reorder-elem><ul id="wire-reorder-list"><li data-id="c">Gamma</li><li data-id="b">Beta</li><li data-id="a">Alpha</li><!--◦--></ul></wire-reorder-elem></div>';
 
-          setTimeout(() => {
-            const list = document.getElementById('wire-reorder-list');
-            const initialOrder = Array.from(list?.querySelectorAll('li') || []).map(li => li.dataset.id);
+        setTimeout(() => {
 
-            // Reverse order
-            elem._items = [itemC, itemB, itemA];
-            elem._trigger();
+          const sec = document.querySelector('[data-test="wire-reorder"]');
 
-            setTimeout(() => {
-              const newOrder = Array.from(list?.querySelectorAll('li') || []).map(li => li.dataset.id);
-              const pass =
-                initialOrder.join(',') === 'a,b,c' &&
-                newOrder.join(',') === 'c,b,a';
-              section.dataset.testResult = pass ? 'pass' : 'fail';
-            }, 100);
-          }, 100);
-        })();
-      </script>
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-reorder', document.getElementById('wire-reorder-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire with item removal -->
     <section data-test="wire-removal" data-test-result="pending">
       <h2>Wire Item Removal</h2>
       <p>Tests removing items from a wired list.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-removal"]');
+
+  const item1 = { id: 1, name: 'Keep' };
+  const item2 = { id: 2, name: 'Remove' };
+  const item3 = { id: 3, name: 'Also Keep' };
+
+  customElements.define(
+    'wire-removal-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._items = [item1, item2, item3];
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        Html`&lt;ul id="wire-removal-list"&gt;${this.element._items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-removal-elem');
+  document.getElementById('wire-removal-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const list = document.getElementById('wire-removal-list');
+    const initialCount = list?.querySelectorAll('li').length;
+
+    elem._items = [item1, item3];
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const lis = list?.querySelectorAll('li');
+      const pass =
+        initialCount === 3 &&
+        lis?.length === 2 &&
+        lis[0].textContent === 'Keep' &&
+        lis[1].textContent === 'Also Keep';
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+})();</code></pre>
       <div id="wire-removal-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-removal"]');
 
-          const item1 = { id: 1, name: 'Keep' };
-          const item2 = { id: 2, name: 'Remove' };
-          const item3 = { id: 3, name: 'Also Keep' };
+        const code = document.querySelector('[data-test="wire-removal"] pre code').textContent;
 
-          customElements.define(
-            'wire-removal-elem',
-            class extends hyperElement {
-              setup(attachStore) {
-                this.element._items = [item1, item2, item3];
-                this.element._trigger = attachStore();
-              }
-              render(Html) {
-                Html`<ul id="wire-removal-list">${this.element._items.map(
-                  (item) => Html.wire(item, ':item')`<li>${item.name}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('wire-removal-elem');
-          document.getElementById('wire-removal-output').appendChild(elem);
+        const expected = '<div id="wire-removal-output"><wire-removal-elem><ul id="wire-removal-list"><li>Keep</li><li>Also Keep</li><!--◦--></ul></wire-removal-elem></div>';
 
-          setTimeout(() => {
-            const list = document.getElementById('wire-removal-list');
-            const initialCount = list?.querySelectorAll('li').length;
+        setTimeout(() => {
 
-            // Remove middle item
-            elem._items = [item1, item3];
-            elem._trigger();
+          const sec = document.querySelector('[data-test="wire-removal"]');
 
-            setTimeout(() => {
-              const lis = list?.querySelectorAll('li');
-              const pass =
-                initialCount === 3 &&
-                lis?.length === 2 &&
-                lis[0].textContent === 'Keep' &&
-                lis[1].textContent === 'Also Keep';
-              section.dataset.testResult = pass ? 'pass' : 'fail';
-            }, 100);
-          }, 100);
-        })();
-      </script>
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-removal', document.getElementById('wire-removal-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire to empty list -->
     <section data-test="wire-clear" data-test-result="pending">
       <h2>Wire Clear All</h2>
       <p>Tests clearing all items from a wired list.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-clear"]');
+
+  customElements.define(
+    'wire-clear-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._items = [
+          { id: 1, name: 'One' },
+          { id: 2, name: 'Two' },
+        ];
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        Html`&lt;ul id="wire-clear-list"&gt;${this.element._items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-clear-elem');
+  document.getElementById('wire-clear-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const list = document.getElementById('wire-clear-list');
+    const initialCount = list?.querySelectorAll('li').length;
+
+    elem._items = [];
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const lis = list?.querySelectorAll('li');
+      const pass = initialCount === 2 && lis?.length === 0;
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+})();</code></pre>
       <div id="wire-clear-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-clear"]');
 
-          customElements.define(
-            'wire-clear-elem',
-            class extends hyperElement {
-              setup(attachStore) {
-                this.element._items = [
-                  { id: 1, name: 'One' },
-                  { id: 2, name: 'Two' },
-                ];
-                this.element._trigger = attachStore();
-              }
-              render(Html) {
-                Html`<ul id="wire-clear-list">${this.element._items.map(
-                  (item) => Html.wire(item, ':item')`<li>${item.name}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="wire-clear"] pre code').textContent;
 
-          const elem = document.createElement('wire-clear-elem');
-          document.getElementById('wire-clear-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const list = document.getElementById('wire-clear-list');
-            const initialCount = list?.querySelectorAll('li').length;
+        const expected = '<div id="wire-clear-output"><wire-clear-elem><ul id="wire-clear-list"><!--◦--></ul></wire-clear-elem></div>';
 
-            // Clear all
-            elem._items = [];
-            elem._trigger();
+        setTimeout(() => {
 
-            setTimeout(() => {
-              const lis = list?.querySelectorAll('li');
-              const pass = initialCount === 2 && lis?.length === 0;
-              section.dataset.testResult = pass ? 'pass' : 'fail';
-            }, 100);
-          }, 100);
-        })();
-      </script>
+          const sec = document.querySelector('[data-test="wire-clear"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-clear', document.getElementById('wire-clear-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire with different wire IDs -->
     <section data-test="wire-multi-id" data-test-result="pending">
       <h2>Wire Multiple IDs for Same Object</h2>
       <p>Tests using different wire IDs for the same object reference.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-multi-id"]');
+
+  const user = { id: 1, name: 'Alice', role: 'Admin' };
+
+  customElements.define(
+    'wire-multi-id-elem',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;div id="wire-multi-id-content"&gt;
+          ${Html.wire(user, ':name')`&lt;span class="name"&gt;Name: ${user.name}&lt;/span&gt;`}
+          ${Html.wire(user, ':role')`&lt;span class="role"&gt;Role: ${user.role}&lt;/span&gt;`}
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-multi-id-elem');
+  document.getElementById('wire-multi-id-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const content = document.getElementById('wire-multi-id-content');
+    const nameSpan = content?.querySelector('.name');
+    const roleSpan = content?.querySelector('.role');
+    const pass =
+      nameSpan &&
+      roleSpan &&
+      nameSpan.textContent === 'Name: Alice' &&
+      roleSpan.textContent === 'Role: Admin' &&
+      nameSpan !== roleSpan;
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  }, 100);
+})();</code></pre>
       <div id="wire-multi-id-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-multi-id"]');
 
-          const user = { id: 1, name: 'Alice', role: 'Admin' };
+        const code = document.querySelector('[data-test="wire-multi-id"] pre code').textContent;
 
-          customElements.define(
-            'wire-multi-id-elem',
-            class extends hyperElement {
-              render(Html) {
-                // Same object with different wire IDs creates separate DOM nodes
-                Html`<div id="wire-multi-id-content">
-                  ${Html.wire(user, ':name')`<span class="name">Name: ${user.name}</span>`}
-                  ${Html.wire(user, ':role')`<span class="role">Role: ${user.role}</span>`}
-                </div>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('wire-multi-id-elem');
-          document.getElementById('wire-multi-id-output').appendChild(elem);
+        const expected = '<div id="wire-multi-id-output"><wire-multi-id-elem><div id="wire-multi-id-content">\n          <span class="name">Name: Alice</span>\n          <span class="role">Role: Admin</span>\n        </div></wire-multi-id-elem></div>';
 
-          setTimeout(() => {
-            const content = document.getElementById('wire-multi-id-content');
-            const nameSpan = content?.querySelector('.name');
-            const roleSpan = content?.querySelector('.role');
-            const pass =
-              nameSpan &&
-              roleSpan &&
-              nameSpan.textContent === 'Name: Alice' &&
-              roleSpan.textContent === 'Role: Admin' &&
-              nameSpan !== roleSpan; // Different DOM nodes
-            section.dataset.testResult = pass ? 'pass' : 'fail';
-          }, 100);
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="wire-multi-id"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-multi-id', document.getElementById('wire-multi-id-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire object identity preservation -->
     <section data-test="wire-identity" data-test-result="pending">
       <h2>Wire Object Identity</h2>
       <p>Tests that same object reference reuses wired content.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-identity"]');
+
+  const item = { id: 1, name: 'Stable' };
+
+  customElements.define(
+    'wire-identity-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._item = item;
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        Html`&lt;div id="wire-identity-content"&gt;
+          ${Html.wire(this.element._item, ':view')`&lt;span class="item"&gt;${this.element._item.name}&lt;/span&gt;`}
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-identity-elem');
+  document.getElementById('wire-identity-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const content = document.getElementById('wire-identity-content');
+    const span = content?.querySelector('.item');
+    const initialRef = span;
+    const initialText = span?.textContent;
+
+    item.name = 'Changed';
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const newSpan = content?.querySelector('.item');
+      const newText = newSpan?.textContent;
+
+      const pass =
+        initialText === 'Stable' &&
+        newText === 'Changed' &&
+        initialRef === newSpan;
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+})();</code></pre>
       <div id="wire-identity-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-identity"]');
 
-          // Same object reference used throughout
-          const item = { id: 1, name: 'Stable' };
+        const code = document.querySelector('[data-test="wire-identity"] pre code').textContent;
 
-          customElements.define(
-            'wire-identity-elem',
-            class extends hyperElement {
-              setup(attachStore) {
-                this.element._item = item;
-                this.element._trigger = attachStore();
-              }
-              render(Html) {
-                Html`<div id="wire-identity-content">
-                  ${Html.wire(this.element._item, ':view')`<span class="item">${this.element._item.name}</span>`}
-                </div>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('wire-identity-elem');
-          document.getElementById('wire-identity-output').appendChild(elem);
+        const expected = '<div id="wire-identity-output"><wire-identity-elem><div id="wire-identity-content">\n          <span class="item">Changed</span>\n        </div></wire-identity-elem></div>';
 
-          setTimeout(() => {
-            const content = document.getElementById('wire-identity-content');
-            const span = content?.querySelector('.item');
-            const initialRef = span;
-            const initialText = span?.textContent;
+        setTimeout(() => {
 
-            // Update name on same object
-            item.name = 'Changed';
-            elem._trigger();
+          const sec = document.querySelector('[data-test="wire-identity"]');
 
-            setTimeout(() => {
-              const newSpan = content?.querySelector('.item');
-              const newText = newSpan?.textContent;
+          if (sec.dataset.testResult === 'fail') return;
 
-              // Same DOM node should be updated in place
-              const pass =
-                initialText === 'Stable' &&
-                newText === 'Changed' &&
-                initialRef === newSpan; // Same DOM node
-              section.dataset.testResult = pass ? 'pass' : 'fail';
-            }, 100);
-          }, 100);
-        })();
-      </script>
+          window.assertSnapshot('wire-identity', document.getElementById('wire-identity-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire swap first and last -->
     <section data-test="wire-swap-ends" data-test-result="pending">
       <h2>Wire Swap First and Last</h2>
       <p>Tests swapping first and last items (triggers dual swap path in diff algorithm).</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-swap-ends"]');
+
+  const itemA = { id: 'a', text: 'First' };
+  const itemB = { id: 'b', text: 'Middle' };
+  const itemC = { id: 'c', text: 'Last' };
+
+  customElements.define(
+    'wire-swap-ends-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._items = [itemA, itemB, itemC];
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        Html`&lt;ul id="wire-swap-ends-list"&gt;${this.element._items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li data-id=${item.id}&gt;${item.text}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-swap-ends-elem');
+  document.getElementById('wire-swap-ends-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const list = document.getElementById('wire-swap-ends-list');
+    const initialOrder = Array.from(list?.querySelectorAll('li') || []).map(li =&gt; li.dataset.id);
+
+    elem._items = [itemC, itemB, itemA];
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const newOrder = Array.from(list?.querySelectorAll('li') || []).map(li =&gt; li.dataset.id);
+      const pass =
+        initialOrder.join(',') === 'a,b,c' &&
+        newOrder.join(',') === 'c,b,a';
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+})();</code></pre>
       <div id="wire-swap-ends-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-swap-ends"]');
 
-          const itemA = { id: 'a', text: 'First' };
-          const itemB = { id: 'b', text: 'Middle' };
-          const itemC = { id: 'c', text: 'Last' };
+        const code = document.querySelector('[data-test="wire-swap-ends"] pre code').textContent;
 
-          customElements.define(
-            'wire-swap-ends-elem',
-            class extends hyperElement {
-              setup(attachStore) {
-                this.element._items = [itemA, itemB, itemC];
-                this.element._trigger = attachStore();
-              }
-              render(Html) {
-                Html`<ul id="wire-swap-ends-list">${this.element._items.map(
-                  (item) => Html.wire(item, ':item')`<li data-id=${item.id}>${item.text}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('wire-swap-ends-elem');
-          document.getElementById('wire-swap-ends-output').appendChild(elem);
+        const expected = '<div id="wire-swap-ends-output"><wire-swap-ends-elem><ul id="wire-swap-ends-list"><li data-id="c">Last</li><li data-id="b">Middle</li><li data-id="a">First</li><!--◦--></ul></wire-swap-ends-elem></div>';
 
-          setTimeout(() => {
-            const list = document.getElementById('wire-swap-ends-list');
-            const initialOrder = Array.from(list?.querySelectorAll('li') || []).map(li => li.dataset.id);
+        setTimeout(() => {
 
-            // Swap first and last: [C, B, A] - triggers the a[aStart] === b[bEnd - 1] && b[bStart] === a[aEnd - 1] branch
-            elem._items = [itemC, itemB, itemA];
-            elem._trigger();
+          const sec = document.querySelector('[data-test="wire-swap-ends"]');
 
-            setTimeout(() => {
-              const newOrder = Array.from(list?.querySelectorAll('li') || []).map(li => li.dataset.id);
-              const pass =
-                initialOrder.join(',') === 'a,b,c' &&
-                newOrder.join(',') === 'c,b,a';
-              section.dataset.testResult = pass ? 'pass' : 'fail';
-            }, 100);
-          }, 100);
-        })();
-      </script>
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-swap-ends', document.getElementById('wire-swap-ends-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire sequence optimization -->
     <section data-test="wire-sequence" data-test-result="pending">
       <h2>Wire Sequence Optimization</h2>
       <p>Tests moving multiple adjacent items (triggers sequence detection path).</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-sequence"]');
+
+  const items = [
+    { id: 1, name: 'One' },
+    { id: 2, name: 'Two' },
+    { id: 3, name: 'Three' },
+    { id: 4, name: 'Four' },
+    { id: 5, name: 'Five' },
+  ];
+
+  customElements.define(
+    'wire-sequence-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._items = [...items];
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        Html`&lt;ul id="wire-sequence-list"&gt;${this.element._items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li data-id=${item.id}&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-sequence-elem');
+  document.getElementById('wire-sequence-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const list = document.getElementById('wire-sequence-list');
+
+    elem._items = [items[2], items[3], items[4], items[0], items[1]];
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const order = Array.from(list?.querySelectorAll('li') || []).map(li =&gt; li.dataset.id);
+      const pass = order.join(',') === '3,4,5,1,2';
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+})();</code></pre>
       <div id="wire-sequence-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-sequence"]');
 
-          const items = [
-            { id: 1, name: 'One' },
-            { id: 2, name: 'Two' },
-            { id: 3, name: 'Three' },
-            { id: 4, name: 'Four' },
-            { id: 5, name: 'Five' },
-          ];
+        const code = document.querySelector('[data-test="wire-sequence"] pre code').textContent;
 
-          customElements.define(
-            'wire-sequence-elem',
-            class extends hyperElement {
-              setup(attachStore) {
-                this.element._items = [...items];
-                this.element._trigger = attachStore();
-              }
-              render(Html) {
-                Html`<ul id="wire-sequence-list">${this.element._items.map(
-                  (item) => Html.wire(item, ':item')`<li data-id=${item.id}>${item.name}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('wire-sequence-elem');
-          document.getElementById('wire-sequence-output').appendChild(elem);
+        const expected = '<div id="wire-sequence-output"><wire-sequence-elem><ul id="wire-sequence-list"><li data-id="3">Three</li><li data-id="4">Four</li><li data-id="5">Five</li><li data-id="1">One</li><li data-id="2">Two</li><!--◦--></ul></wire-sequence-elem></div>';
 
-          setTimeout(() => {
-            const list = document.getElementById('wire-sequence-list');
+        setTimeout(() => {
 
-            // Move items 3,4,5 to beginning: [3, 4, 5, 1, 2]
-            // This creates a sequence of 3 items that need to be inserted together
-            elem._items = [items[2], items[3], items[4], items[0], items[1]];
-            elem._trigger();
+          const sec = document.querySelector('[data-test="wire-sequence"]');
 
-            setTimeout(() => {
-              const order = Array.from(list?.querySelectorAll('li') || []).map(li => li.dataset.id);
-              const pass = order.join(',') === '3,4,5,1,2';
-              section.dataset.testResult = pass ? 'pass' : 'fail';
-            }, 100);
-          }, 100);
-        })();
-      </script>
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-sequence', document.getElementById('wire-sequence-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire insert at beginning -->
     <section data-test="wire-insert-beginning" data-test-result="pending">
       <h2>Wire Insert at Beginning</h2>
       <p>Tests inserting new items at the beginning of a keyed list.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-insert-beginning"]');
+
+  const itemB = { id: 'b', name: 'B' };
+  const itemC = { id: 'c', name: 'C' };
+
+  customElements.define(
+    'wire-insert-beginning-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._items = [itemB, itemC];
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        Html`&lt;ul id="wire-insert-beginning-list"&gt;${this.element._items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li data-id=${item.id}&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-insert-beginning-elem');
+  document.getElementById('wire-insert-beginning-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const list = document.getElementById('wire-insert-beginning-list');
+    const initialCount = list?.querySelectorAll('li').length;
+
+    const itemA = { id: 'a', name: 'A' };
+    elem._items = [itemA, itemB, itemC];
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const lis = list?.querySelectorAll('li');
+      const order = Array.from(lis || []).map(li =&gt; li.dataset.id);
+      const pass = initialCount === 2 && order.join(',') === 'a,b,c';
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+})();</code></pre>
       <div id="wire-insert-beginning-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-insert-beginning"]');
 
-          const itemB = { id: 'b', name: 'B' };
-          const itemC = { id: 'c', name: 'C' };
+        const code = document.querySelector('[data-test="wire-insert-beginning"] pre code').textContent;
 
-          customElements.define(
-            'wire-insert-beginning-elem',
-            class extends hyperElement {
-              setup(attachStore) {
-                this.element._items = [itemB, itemC];
-                this.element._trigger = attachStore();
-              }
-              render(Html) {
-                Html`<ul id="wire-insert-beginning-list">${this.element._items.map(
-                  (item) => Html.wire(item, ':item')`<li data-id=${item.id}>${item.name}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('wire-insert-beginning-elem');
-          document.getElementById('wire-insert-beginning-output').appendChild(elem);
+        const expected = '<div id="wire-insert-beginning-output"><wire-insert-beginning-elem><ul id="wire-insert-beginning-list"><li data-id="a">A</li><li data-id="b">B</li><li data-id="c">C</li><!--◦--></ul></wire-insert-beginning-elem></div>';
 
-          setTimeout(() => {
-            const list = document.getElementById('wire-insert-beginning-list');
-            const initialCount = list?.querySelectorAll('li').length;
+        setTimeout(() => {
 
-            // Insert new item at beginning
-            const itemA = { id: 'a', name: 'A' };
-            elem._items = [itemA, itemB, itemC];
-            elem._trigger();
+          const sec = document.querySelector('[data-test="wire-insert-beginning"]');
 
-            setTimeout(() => {
-              const lis = list?.querySelectorAll('li');
-              const order = Array.from(lis || []).map(li => li.dataset.id);
-              const pass = initialCount === 2 && order.join(',') === 'a,b,c';
-              section.dataset.testResult = pass ? 'pass' : 'fail';
-            }, 100);
-          }, 100);
-        })();
-      </script>
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-insert-beginning', document.getElementById('wire-insert-beginning-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire replace items with non-keyed -->
     <section data-test="wire-replace-nonkeyed" data-test-result="pending">
       <h2>Wire Replace Items (Map Index Path)</h2>
       <p>Tests replacing items when index is found in map.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-replace-nonkeyed"]');
+
+  const itemA = { id: 'a', name: 'A' };
+  const itemB = { id: 'b', name: 'B' };
+  const itemC = { id: 'c', name: 'C' };
+  const itemD = { id: 'd', name: 'D' };
+
+  customElements.define(
+    'wire-replace-nonkeyed-elem',
+    class extends hyperElement {
+      setup(attachStore) {
+        this.element._items = [itemA, itemB, itemC];
+        this.element._trigger = attachStore();
+      }
+      render(Html) {
+        Html`&lt;ul id="wire-replace-nonkeyed-list"&gt;${this.element._items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li data-id=${item.id}&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-replace-nonkeyed-elem');
+  document.getElementById('wire-replace-nonkeyed-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const list = document.getElementById('wire-replace-nonkeyed-list');
+
+    elem._items = [itemD, itemB, itemC];
+    elem._trigger();
+
+    setTimeout(() =&gt; {
+      const order = Array.from(list?.querySelectorAll('li') || []).map(li =&gt; li.dataset.id);
+      const pass = order.join(',') === 'd,b,c';
+      section.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 100);
+  }, 100);
+})();</code></pre>
       <div id="wire-replace-nonkeyed-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-replace-nonkeyed"]');
 
-          const itemA = { id: 'a', name: 'A' };
-          const itemB = { id: 'b', name: 'B' };
-          const itemC = { id: 'c', name: 'C' };
-          const itemD = { id: 'd', name: 'D' };
+        const code = document.querySelector('[data-test="wire-replace-nonkeyed"] pre code').textContent;
 
-          customElements.define(
-            'wire-replace-nonkeyed-elem',
-            class extends hyperElement {
-              setup(attachStore) {
-                this.element._items = [itemA, itemB, itemC];
-                this.element._trigger = attachStore();
-              }
-              render(Html) {
-                Html`<ul id="wire-replace-nonkeyed-list">${this.element._items.map(
-                  (item) => Html.wire(item, ':item')`<li data-id=${item.id}>${item.name}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('wire-replace-nonkeyed-elem');
-          document.getElementById('wire-replace-nonkeyed-output').appendChild(elem);
+        const expected = '<div id="wire-replace-nonkeyed-output"><wire-replace-nonkeyed-elem><ul id="wire-replace-nonkeyed-list"><li data-id="d">D</li><li data-id="b">B</li><li data-id="c">C</li><!--◦--></ul></wire-replace-nonkeyed-elem></div>';
 
-          setTimeout(() => {
-            const list = document.getElementById('wire-replace-nonkeyed-list');
+        setTimeout(() => {
 
-            // Replace first item and add new: [D, B, C] - item A removed, D added
-            elem._items = [itemD, itemB, itemC];
-            elem._trigger();
+          const sec = document.querySelector('[data-test="wire-replace-nonkeyed"]');
 
-            setTimeout(() => {
-              const order = Array.from(list?.querySelectorAll('li') || []).map(li => li.dataset.id);
-              const pass = order.join(',') === 'd,b,c';
-              section.dataset.testResult = pass ? 'pass' : 'fail';
-            }, 100);
-          }, 100);
-        })();
-      </script>
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-replace-nonkeyed', document.getElementById('wire-replace-nonkeyed-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

@@ -47,24 +47,21 @@
     <section data-test="simple-variable" data-test-result="pending">
       <h2>Simple Variable Substitution</h2>
       <p>Basic {variable} substitution should still work.</p>
+      <pre><code>customElements.define(
+  'simple-template-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`${Html.template({ name: 'Alice' })}`;
+    }
+  }
+);</code></pre>
       <simple-template-elem template>Hello {name}!</simple-template-elem>
       <script type="module">
-        customElements.define(
-          'simple-template-elem',
-          class extends hyperElement {
-            render(Html) {
-              Html`${Html.template({ name: 'Alice' })}`;
-            }
-          }
-        );
-
+        const code = document.querySelector('[data-test="simple-variable"] pre code').textContent;
+        eval(code);
+        const expected = '<simple-template-elem template=""><!--<>--><!--<>-->Hello Alice!<!--</>--><!--</>--></simple-template-elem>';
         requestAnimationFrame(() => {
-          const section = document.querySelector(
-            '[data-test="simple-variable"]'
-          );
-          const elem = document.querySelector('simple-template-elem');
-          const pass = elem && elem.textContent.includes('Hello Alice!');
-          section.dataset.testResult = pass ? 'pass' : 'fail';
+          window.assertSnapshot('simple-variable', document.querySelector('simple-template-elem'), expected);
         });
       </script>
     </section>
@@ -75,30 +72,23 @@
       <p>
         {#if condition}...{/if} should render content when condition is truthy.
       </p>
+      <pre><code>customElements.define(
+  'if-truthy-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`${Html.template({ show: true, message: 'VISIBLE' })}`;
+    }
+  }
+);</code></pre>
       <if-truthy-elem template
         >{+if show}Message: {message}{-if}</if-truthy-elem
       >
       <script type="module">
-        customElements.define(
-          'if-truthy-elem',
-          class extends hyperElement {
-            render(Html) {
-              Html`${Html.template({ show: true, message: 'VISIBLE' })}`;
-            }
-          }
-        );
-
+        const code = document.querySelector('[data-test="if-truthy"] pre code').textContent;
+        eval(code);
+        const expected = '<if-truthy-elem template=""><!--<>--><!--<>-->Message: VISIBLE<!--</>--><!--</>--></if-truthy-elem>';
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="if-truthy"]');
-          const elem = document.querySelector('if-truthy-elem');
-          const pass = elem && elem.textContent.includes('Message: VISIBLE');
-          console.log(
-            'if-truthy:',
-            elem ? elem.textContent : 'null',
-            'pass:',
-            pass
-          );
-          section.dataset.testResult = pass ? 'pass' : 'fail';
+          window.assertSnapshot('if-truthy', document.querySelector('if-truthy-elem'), expected);
         });
       </script>
     </section>
@@ -110,30 +100,23 @@
         {#if condition}...{/if} should NOT render content when condition is
         falsy.
       </p>
+      <pre><code>customElements.define(
+  'if-falsy-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`${Html.template({ show: false })}`;
+    }
+  }
+);</code></pre>
       <if-falsy-elem template
         >Before{+if show}SHOULD_NOT_APPEAR{-if}After</if-falsy-elem
       >
       <script type="module">
-        customElements.define(
-          'if-falsy-elem',
-          class extends hyperElement {
-            render(Html) {
-              Html`${Html.template({ show: false })}`;
-            }
-          }
-        );
-
+        const code = document.querySelector('[data-test="if-falsy"] pre code').textContent;
+        eval(code);
+        const expected = '<if-falsy-elem template=""><!--<>--><!--<>-->BeforeAfter<!--</>--><!--</>--></if-falsy-elem>';
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="if-falsy"]');
-          const elem = document.querySelector('if-falsy-elem');
-          const pass = elem && elem.textContent.trim() === 'BeforeAfter';
-          console.log(
-            'if-falsy:',
-            elem ? elem.textContent : 'null',
-            'pass:',
-            pass
-          );
-          section.dataset.testResult = pass ? 'pass' : 'fail';
+          window.assertSnapshot('if-falsy', document.querySelector('if-falsy-elem'), expected);
         });
       </script>
     </section>
@@ -145,30 +128,23 @@
         {#if condition}...{else}...{/if} should render the else branch when
         condition is falsy.
       </p>
+      <pre><code>customElements.define(
+  'if-else-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`${Html.template({ active: false })}`;
+    }
+  }
+);</code></pre>
       <if-else-elem template
         >{+if active}ACTIVE{else}INACTIVE{-if}</if-else-elem
       >
       <script type="module">
-        customElements.define(
-          'if-else-elem',
-          class extends hyperElement {
-            render(Html) {
-              Html`${Html.template({ active: false })}`;
-            }
-          }
-        );
-
+        const code = document.querySelector('[data-test="if-else"] pre code').textContent;
+        eval(code);
+        const expected = '<if-else-elem template=""><!--<>--><!--<>-->INACTIVE<!--</>--><!--</>--></if-else-elem>';
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="if-else"]');
-          const elem = document.querySelector('if-else-elem');
-          const pass = elem && elem.textContent.trim() === 'INACTIVE';
-          console.log(
-            'if-else:',
-            elem ? elem.textContent : 'null',
-            'pass:',
-            pass
-          );
-          section.dataset.testResult = pass ? 'pass' : 'fail';
+          window.assertSnapshot('if-else', document.querySelector('if-else-elem'), expected);
         });
       </script>
     </section>
@@ -180,25 +156,21 @@
         {#each items}{.}{/each} should iterate over arrays. Use {.} for current
         item.
       </p>
+      <pre><code>customElements.define(
+  'each-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`${Html.template({ items: ['A', 'B', 'C'] })}`;
+    }
+  }
+);</code></pre>
       <each-elem template>{+each items}{...},{-each}</each-elem>
       <script type="module">
-        customElements.define(
-          'each-elem',
-          class extends hyperElement {
-            render(Html) {
-              Html`${Html.template({ items: ['A', 'B', 'C'] })}`;
-            }
-          }
-        );
-
+        const code = document.querySelector('[data-test="each-iteration"] pre code').textContent;
+        eval(code);
+        const expected = '<each-elem template=""><!--<>--><!--<>-->A,B,C,<!--</>--><!--</>--></each-elem>';
         requestAnimationFrame(() => {
-          const section = document.querySelector(
-            '[data-test="each-iteration"]'
-          );
-          const elem = document.querySelector('each-elem');
-          const pass = elem && elem.textContent.trim() === 'A,B,C,';
-          console.log('each:', elem ? elem.textContent : 'null', 'pass:', pass);
-          section.dataset.testResult = pass ? 'pass' : 'fail';
+          window.assertSnapshot('each-iteration', document.querySelector('each-elem'), expected);
         });
       </script>
     </section>
@@ -209,28 +181,21 @@
       <p>
         {#each items}{name}{/each} should access object properties in the loop.
       </p>
+      <pre><code>customElements.define(
+  'each-obj-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`${Html.template({ users: [{ name: 'Ann' }, { name: 'Bob' }] })}`;
+    }
+  }
+);</code></pre>
       <each-obj-elem template>{+each users}{name} {-each}</each-obj-elem>
       <script type="module">
-        customElements.define(
-          'each-obj-elem',
-          class extends hyperElement {
-            render(Html) {
-              Html`${Html.template({ users: [{ name: 'Ann' }, { name: 'Bob' }] })}`;
-            }
-          }
-        );
-
+        const code = document.querySelector('[data-test="each-objects"] pre code').textContent;
+        eval(code);
+        const expected = '<each-obj-elem template=""><!--<>--><!--<>-->Ann Bob <!--</>--><!--</>--></each-obj-elem>';
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="each-objects"]');
-          const elem = document.querySelector('each-obj-elem');
-          const pass = elem && elem.textContent.trim() === 'Ann Bob';
-          console.log(
-            'each-obj:',
-            elem ? elem.textContent : 'null',
-            'pass:',
-            pass
-          );
-          section.dataset.testResult = pass ? 'pass' : 'fail';
+          window.assertSnapshot('each-objects', document.querySelector('each-obj-elem'), expected);
         });
       </script>
     </section>
@@ -242,28 +207,21 @@
         {#unless condition}...{/unless} should render when condition is falsy
         (opposite of #if).
       </p>
+      <pre><code>customElements.define(
+  'unless-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`${Html.template({ hidden: false })}`;
+    }
+  }
+);</code></pre>
       <unless-elem template>{+unless hidden}SHOWN{-unless}</unless-elem>
       <script type="module">
-        customElements.define(
-          'unless-elem',
-          class extends hyperElement {
-            render(Html) {
-              Html`${Html.template({ hidden: false })}`;
-            }
-          }
-        );
-
+        const code = document.querySelector('[data-test="unless"] pre code').textContent;
+        eval(code);
+        const expected = '<unless-elem template=""><!--<>--><!--<>-->SHOWN<!--</>--><!--</>--></unless-elem>';
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="unless"]');
-          const elem = document.querySelector('unless-elem');
-          const pass = elem && elem.textContent.trim() === 'SHOWN';
-          console.log(
-            'unless:',
-            elem ? elem.textContent : 'null',
-            'pass:',
-            pass
-          );
-          section.dataset.testResult = pass ? 'pass' : 'fail';
+          window.assertSnapshot('unless', document.querySelector('unless-elem'), expected);
         });
       </script>
     </section>
@@ -274,29 +232,21 @@
       <p>
         {#unless condition}...{/unless} should NOT render when condition is truthy.
       </p>
+      <pre><code>customElements.define(
+  'unless-truthy-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`${Html.template({ visible: true })}`;
+    }
+  }
+);</code></pre>
       <unless-truthy-elem template>{+unless visible}HIDDEN{-unless}</unless-truthy-elem>
       <script type="module">
-        customElements.define(
-          'unless-truthy-elem',
-          class extends hyperElement {
-            render(Html) {
-              Html`${Html.template({ visible: true })}`;
-            }
-          }
-        );
-
+        const code = document.querySelector('[data-test="unless-truthy"] pre code').textContent;
+        eval(code);
+        const expected = '<unless-truthy-elem template=""><!--<>--><!--<>--><!--</>--><!--</>--></unless-truthy-elem>';
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="unless-truthy"]');
-          const elem = document.querySelector('unless-truthy-elem');
-          // Content should NOT be shown when condition is truthy
-          const pass = elem && elem.textContent.trim() === '';
-          console.log(
-            'unless-truthy:',
-            elem ? `"${elem.textContent}"` : 'null',
-            'pass:',
-            pass
-          );
-          section.dataset.testResult = pass ? 'pass' : 'fail';
+          window.assertSnapshot('unless-truthy', document.querySelector('unless-truthy-elem'), expected);
         });
       </script>
     </section>

@@ -30,6 +30,11 @@
       h2 {
         margin-top: 0;
       }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
       .metrics {
         font-family: monospace;
         background: #f5f5f5;
@@ -51,260 +56,326 @@
     <section data-test="large-list" data-test-result="pending">
       <h2>Large List (100 Items)</h2>
       <p>Tests rendering a list with 100 items.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="large-list"]');
+
+  customElements.define(
+    'large-list-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.items = Array.from({ length: 100 }, (_, i) =&gt; ({
+          id: i,
+          name: 'Item ' + i,
+        }));
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div class="list-container"&gt;
+          &lt;ul id="large-list-result"&gt;${this.items.map(
+            (item) =&gt; Html.wire(item, ':item')`&lt;li&gt;${item.name}&lt;/li&gt;`
+          )}&lt;/ul&gt;
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('large-list-elem');
+  document.getElementById('large-list-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const lis = document.querySelectorAll('#large-list-result li');
+    if (
+      lis.length === 100 &&
+      lis[0].textContent === 'Item 0' &&
+      lis[99].textContent === 'Item 99'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 500);
+})();</code></pre>
       <div id="large-list-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="large-list"]');
 
-          customElements.define(
-            'large-list-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.items = Array.from({ length: 100 }, (_, i) => ({
-                  id: i,
-                  name: 'Item ' + i,
-                }));
-                onNext();
-              }
-              render(Html) {
-                Html`<div class="list-container">
-                  <ul id="large-list-result">${this.items.map(
-                    (item) => Html.wire(item, ':item')`<li>${item.name}</li>`
-                  )}</ul>
-                </div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="large-list"] pre code').textContent;
 
-          const elem = document.createElement('large-list-elem');
-          document.getElementById('large-list-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const lis = document.querySelectorAll('#large-list-result li');
-            if (
-              lis.length === 100 &&
-              lis[0].textContent === 'Item 0' &&
-              lis[99].textContent === 'Item 99'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 500);
-        })();
-      </script>
+        const expected = '<div id="large-list-output"><large-list-elem><div class="list-container">\n          <ul id="large-list-result"><li>Item 0</li><li>Item 1</li><li>Item 2</li><li>Item 3</li><li>Item 4</li><li>Item 5</li><li>Item 6</li><li>Item 7</li><li>Item 8</li><li>Item 9</li><li>Item 10</li><li>Item 11</li><li>Item 12</li><li>Item 13</li><li>Item 14</li><li>Item 15</li><li>Item 16</li><li>Item 17</li><li>Item 18</li><li>Item 19</li><li>Item 20</li><li>Item 21</li><li>Item 22</li><li>Item 23</li><li>Item 24</li><li>Item 25</li><li>Item 26</li><li>Item 27</li><li>Item 28</li><li>Item 29</li><li>Item 30</li><li>Item 31</li><li>Item 32</li><li>Item 33</li><li>Item 34</li><li>Item 35</li><li>Item 36</li><li>Item 37</li><li>Item 38</li><li>Item 39</li><li>Item 40</li><li>Item 41</li><li>Item 42</li><li>Item 43</li><li>Item 44</li><li>Item 45</li><li>Item 46</li><li>Item 47</li><li>Item 48</li><li>Item 49</li><li>Item 50</li><li>Item 51</li><li>Item 52</li><li>Item 53</li><li>Item 54</li><li>Item 55</li><li>Item 56</li><li>Item 57</li><li>Item 58</li><li>Item 59</li><li>Item 60</li><li>Item 61</li><li>Item 62</li><li>Item 63</li><li>Item 64</li><li>Item 65</li><li>Item 66</li><li>Item 67</li><li>Item 68</li><li>Item 69</li><li>Item 70</li><li>Item 71</li><li>Item 72</li><li>Item 73</li><li>Item 74</li><li>Item 75</li><li>Item 76</li><li>Item 77</li><li>Item 78</li><li>Item 79</li><li>Item 80</li><li>Item 81</li><li>Item 82</li><li>Item 83</li><li>Item 84</li><li>Item 85</li><li>Item 86</li><li>Item 87</li><li>Item 88</li><li>Item 89</li><li>Item 90</li><li>Item 91</li><li>Item 92</li><li>Item 93</li><li>Item 94</li><li>Item 95</li><li>Item 96</li><li>Item 97</li><li>Item 98</li><li>Item 99</li><!--◦--></ul>\n        </div></large-list-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="large-list"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('large-list', document.getElementById('large-list-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Rapid re-renders (50 quick updates) -->
     <section data-test="rapid-rerender" data-test-result="pending">
       <h2>Rapid Re-renders (50 Updates)</h2>
       <p>Tests 50 rapid render cycles.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="rapid-rerender"]');
+
+  const state = { count: 0 };
+
+  customElements.define(
+    'rapid-rerender-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.state = state;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="rapid-rerender-result"&gt;count=${this.state.count}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('rapid-rerender-elem');
+  document.getElementById('rapid-rerender-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    for (let i = 1; i &lt;= 50; i++) {
+      state.count = i;
+      elem.render();
+    }
+
+    setTimeout(() =&gt; {
+      const result = document.getElementById('rapid-rerender-result');
+      if (result?.textContent === 'count=50') {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    }, 50);
+  }, 100);
+})();</code></pre>
       <div id="rapid-rerender-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="rapid-rerender"]'
-          );
 
-          // Shared state that can be mutated externally
-          const state = { count: 0 };
+        const code = document.querySelector('[data-test="rapid-rerender"] pre code').textContent;
 
-          customElements.define(
-            'rapid-rerender-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.state = state;
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="rapid-rerender-result">count=${this.state.count}</div>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('rapid-rerender-elem');
-          document.getElementById('rapid-rerender-output').appendChild(elem);
+        const expected = '<div id="rapid-rerender-output"><rapid-rerender-elem><div id="rapid-rerender-result">count=50</div></rapid-rerender-elem></div>';
 
-          setTimeout(() => {
-            // Rapid updates via shared state
-            for (let i = 1; i <= 50; i++) {
-              state.count = i;
-              elem.render();
-            }
+        setTimeout(() => {
 
-            setTimeout(() => {
-              const result = document.getElementById('rapid-rerender-result');
-              if (result?.textContent === 'count=50') {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            }, 50);
-          }, 100);
-        })();
-      </script>
+          const sec = document.querySelector('[data-test="rapid-rerender"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('rapid-rerender', document.getElementById('rapid-rerender-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Many elements on page -->
     <section data-test="many-elements" data-test-result="pending">
       <h2>Many Elements (20 Instances)</h2>
       <p>Tests creating 20 custom element instances.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="many-elements"]');
+
+  customElements.define(
+    'many-elem-instance',
+    class extends hyperElement {
+      static get observedAttributes() {
+        return ['index'];
+      }
+      render(Html) {
+        Html`&lt;span class="instance"&gt;I${this.attrs.index}&lt;/span&gt;`;
+      }
+    }
+  );
+
+  const container = document.getElementById('many-elements-output');
+
+  for (let i = 0; i &lt; 20; i++) {
+    const elem = document.createElement('many-elem-instance');
+    elem.setAttribute('index', i);
+    container.appendChild(elem);
+  }
+
+  setTimeout(() =&gt; {
+    const instances = document.querySelectorAll('#many-elements-output .instance');
+    if (
+      instances.length === 20 &&
+      instances[0].textContent === 'I0' &&
+      instances[19].textContent === 'I19'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 200);
+})();</code></pre>
       <div id="many-elements-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="many-elements"]');
 
-          customElements.define(
-            'many-elem-instance',
-            class extends hyperElement {
-              static get observedAttributes() {
-                return ['index'];
-              }
-              render(Html) {
-                Html`<span class="instance">I${this.attrs.index}</span>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="many-elements"] pre code').textContent;
 
-          const container = document.getElementById('many-elements-output');
+        eval(code);
 
-          for (let i = 0; i < 20; i++) {
-            const elem = document.createElement('many-elem-instance');
-            elem.setAttribute('index', i);
-            container.appendChild(elem);
-          }
+        const expected = '<div id="many-elements-output"><many-elem-instance index="0"><span class="instance">I0</span></many-elem-instance><many-elem-instance index="1"><span class="instance">I1</span></many-elem-instance><many-elem-instance index="2"><span class="instance">I2</span></many-elem-instance><many-elem-instance index="3"><span class="instance">I3</span></many-elem-instance><many-elem-instance index="4"><span class="instance">I4</span></many-elem-instance><many-elem-instance index="5"><span class="instance">I5</span></many-elem-instance><many-elem-instance index="6"><span class="instance">I6</span></many-elem-instance><many-elem-instance index="7"><span class="instance">I7</span></many-elem-instance><many-elem-instance index="8"><span class="instance">I8</span></many-elem-instance><many-elem-instance index="9"><span class="instance">I9</span></many-elem-instance><many-elem-instance index="10"><span class="instance">I10</span></many-elem-instance><many-elem-instance index="11"><span class="instance">I11</span></many-elem-instance><many-elem-instance index="12"><span class="instance">I12</span></many-elem-instance><many-elem-instance index="13"><span class="instance">I13</span></many-elem-instance><many-elem-instance index="14"><span class="instance">I14</span></many-elem-instance><many-elem-instance index="15"><span class="instance">I15</span></many-elem-instance><many-elem-instance index="16"><span class="instance">I16</span></many-elem-instance><many-elem-instance index="17"><span class="instance">I17</span></many-elem-instance><many-elem-instance index="18"><span class="instance">I18</span></many-elem-instance><many-elem-instance index="19"><span class="instance">I19</span></many-elem-instance></div>';
 
-          setTimeout(() => {
-            const instances = document.querySelectorAll(
-              '#many-elements-output .instance'
-            );
-            if (
-              instances.length === 20 &&
-              instances[0].textContent === 'I0' &&
-              instances[19].textContent === 'I19'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 200);
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="many-elements"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('many-elements', document.getElementById('many-elements-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: List updates (add/remove) -->
     <section data-test="list-updates" data-test-result="pending">
       <h2>List Updates (Add/Remove)</h2>
       <p>Tests dynamic list modifications.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="list-updates"]');
+
+  const state = {
+    items: [
+      { id: 1, name: 'A' },
+      { id: 2, name: 'B' },
+      { id: 3, name: 'C' },
+    ],
+  };
+
+  customElements.define(
+    'list-updates-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.state = state;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;ul id="list-updates-result"&gt;${this.state.items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('list-updates-elem');
+  document.getElementById('list-updates-output').appendChild(elem);
+
+  let passed = true;
+
+  setTimeout(() =&gt; {
+    state.items.push({ id: 4, name: 'D' });
+    elem.render();
+
+    setTimeout(() =&gt; {
+      let lis = document.querySelectorAll('#list-updates-result li');
+      if (lis.length !== 4 || lis[3].textContent !== 'D') {
+        passed = false;
+      }
+
+      state.items = state.items.filter((i) =&gt; i.id !== 2);
+      elem.render();
+
+      setTimeout(() =&gt; {
+        lis = document.querySelectorAll('#list-updates-result li');
+        if (lis.length !== 3) {
+          passed = false;
+        }
+
+        section.dataset.testResult = passed ? 'pass' : 'fail';
+      }, 50);
+    }, 50);
+  }, 100);
+})();</code></pre>
       <div id="list-updates-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="list-updates"]');
 
-          // Shared state object that can be mutated
-          const state = {
-            items: [
-              { id: 1, name: 'A' },
-              { id: 2, name: 'B' },
-              { id: 3, name: 'C' },
-            ],
-          };
+        const code = document.querySelector('[data-test="list-updates"] pre code').textContent;
 
-          customElements.define(
-            'list-updates-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                // Store reference to shared state
-                this.state = state;
-                onNext();
-              }
-              render(Html) {
-                Html`<ul id="list-updates-result">${this.state.items.map(
-                  (item) => Html.wire(item, ':item')`<li>${item.name}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('list-updates-elem');
-          document.getElementById('list-updates-output').appendChild(elem);
+        const expected = '<div id="list-updates-output"><list-updates-elem><ul id="list-updates-result"><li>A</li><li>C</li><li>D</li><!--◦--></ul></list-updates-elem></div>';
 
-          let passed = true;
+        setTimeout(() => {
 
-          setTimeout(() => {
-            // Test: Add item by mutating shared state
-            state.items.push({ id: 4, name: 'D' });
-            elem.render();
+          const sec = document.querySelector('[data-test="list-updates"]');
 
-            setTimeout(() => {
-              let lis = document.querySelectorAll('#list-updates-result li');
-              if (lis.length !== 4 || lis[3].textContent !== 'D') {
-                passed = false;
-              }
+          if (sec.dataset.testResult === 'fail') return;
 
-              // Test: Remove item by mutating shared state
-              state.items = state.items.filter((i) => i.id !== 2);
-              elem.render();
+          window.assertSnapshot('list-updates', document.getElementById('list-updates-output'), expected);
 
-              setTimeout(() => {
-                lis = document.querySelectorAll('#list-updates-result li');
-                if (lis.length !== 3) {
-                  passed = false;
-                }
-
-                section.dataset.testResult = passed ? 'pass' : 'fail';
-              }, 50);
-            }, 50);
-          }, 100);
-        })();
-      </script>
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Multiple interpolations -->
     <section data-test="many-interpolations" data-test-result="pending">
       <h2>Multiple Interpolations (20)</h2>
       <p>Tests template with 20 interpolation points.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="many-interpolations"]');
+
+  customElements.define(
+    'many-interp-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.values = Array.from({ length: 20 }, (_, i) =&gt; 'v' + i);
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="many-interp-result"&gt;${this.values.map(
+          (v, i) =&gt; Html.wire({ i }, ':v')`&lt;span class="v"&gt;${v}&lt;/span&gt;`
+        )}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('many-interp-elem');
+  document.getElementById('many-interpolations-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const spans = document.querySelectorAll('#many-interp-result .v');
+    if (
+      spans.length === 20 &&
+      spans[0].textContent === 'v0' &&
+      spans[19].textContent === 'v19'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 200);
+})();</code></pre>
       <div id="many-interpolations-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="many-interpolations"]'
-          );
 
-          customElements.define(
-            'many-interp-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.values = Array.from({ length: 20 }, (_, i) => 'v' + i);
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="many-interp-result">${this.values.map(
-                  (v, i) => Html.wire({ i }, ':v')`<span class="v">${v}</span>`
-                )}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="many-interpolations"] pre code').textContent;
 
-          const elem = document.createElement('many-interp-elem');
-          document
-            .getElementById('many-interpolations-output')
-            .appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const spans = document.querySelectorAll('#many-interp-result .v');
-            if (
-              spans.length === 20 &&
-              spans[0].textContent === 'v0' &&
-              spans[19].textContent === 'v19'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 200);
-        })();
-      </script>
+        const expected = '<div id="many-interpolations-output"><many-interp-elem><div id="many-interp-result"><span class="v">v0</span><span class="v">v1</span><span class="v">v2</span><span class="v">v3</span><span class="v">v4</span><span class="v">v5</span><span class="v">v6</span><span class="v">v7</span><span class="v">v8</span><span class="v">v9</span><span class="v">v10</span><span class="v">v11</span><span class="v">v12</span><span class="v">v13</span><span class="v">v14</span><span class="v">v15</span><span class="v">v16</span><span class="v">v17</span><span class="v">v18</span><span class="v">v19</span><!--◦--></div></many-interp-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="many-interpolations"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('many-interpolations', document.getElementById('many-interpolations-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

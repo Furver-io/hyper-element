@@ -69,22 +69,16 @@ customElements.define(
       Html`&lt;child-obj-elem config=${{ a: 2 }} name="test"&gt;&lt;/child-obj-elem&gt;`;
     }
   }
-);</code></pre>
-      
-      <parent-obj-elem></parent-obj-elem>
-      <script type="module">
-        const code = document.querySelector('[data-test="object-only-attr"] code').textContent;
-        eval(code);
+);
 
-        // Single-phase render. The static snapshot embeds the canonical
-        // ob-RND placeholder for object-typed attribute references and the
-        // PASS marker which the child writes only when its attrs.config is
-        // a real object with a === 2.
-        const expected = '<parent-obj-elem><child-obj-elem name="test" config="ob-RND"><span id="obj-result">PASS</span></child-obj-elem></parent-obj-elem>';
+document.getElementById('object-only-attr-output').innerHTML = '&lt;parent-obj-elem&gt;&lt;/parent-obj-elem&gt;';</code></pre>
+      <div id="object-only-attr-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="object-only-attr"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="object-only-attr-output"><parent-obj-elem><child-obj-elem name="test" config="ob-RND"><span id="obj-result">PASS</span></child-obj-elem></parent-obj-elem></div>';
         requestAnimationFrame(() => {
-          setTimeout(() => {
-            window.assertSnapshot('object-only-attr', document.querySelector('parent-obj-elem'), expected);
-          }, 100);
+          window.assertSnapshot('object-only-attr', document.getElementById('object-only-attr-output'), expected);
         });
       </script>
     </section>
@@ -121,21 +115,16 @@ customElements.define(
       Html`&lt;span&gt;Before&lt;/span&gt;&lt;child-preceding-elem callback=${this.getValue} config=${{ value: 42 }}&gt;&lt;/child-preceding-elem&gt;`;
     }
   }
-);</code></pre>
-      
-      <parent-preceding-elem></parent-preceding-elem>
-      <script type="module">
-        const code = document.querySelector('[data-test="complex-with-preceding"] code').textContent;
-        eval(code);
+);
 
-        // Single-phase render. PASS proves both the function callback and the
-        // object config attribute traversed the parent->child boundary correctly
-        // even with a preceding element in the same template.
-        const expected = '<parent-preceding-elem><!--<>--><span>Before</span><child-preceding-elem config="ob-RND" callback="fn-RND"><span id="preceding-result">PASS</span></child-preceding-elem><!--</>--></parent-preceding-elem>';
+document.getElementById('complex-with-preceding-output').innerHTML = '&lt;parent-preceding-elem&gt;&lt;/parent-preceding-elem&gt;';</code></pre>
+      <div id="complex-with-preceding-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="complex-with-preceding"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="complex-with-preceding-output"><parent-preceding-elem><!--<>--><span>Before</span><child-preceding-elem config="ob-RND" callback="fn-RND"><span id="preceding-result">PASS</span></child-preceding-elem><!--</>--></parent-preceding-elem></div>';
         requestAnimationFrame(() => {
-          setTimeout(() => {
-            window.assertSnapshot('complex-with-preceding', document.querySelector('parent-preceding-elem'), expected);
-          }, 100);
+          window.assertSnapshot('complex-with-preceding', document.getElementById('complex-with-preceding-output'), expected);
         });
       </script>
     </section>
@@ -163,20 +152,16 @@ customElements.define(
       Html`&lt;div&gt;Header&lt;/div&gt;&lt;child-combo-elem config=${{ x: 1, y: 2 }}&gt;&lt;/child-combo-elem&gt;`;
     }
   }
-);</code></pre>
-      
-      <parent-combo-elem></parent-combo-elem>
-      <script type="module">
-        const code = document.querySelector('[data-test="object-only-with-preceding"] code').textContent;
-        eval(code);
+);
 
-        // Single-phase render. Only the object attribute is passed and a
-        // preceding <div>Header</div> sits in the same template.
-        const expected = '<parent-combo-elem><!--<>--><div>Header</div><child-combo-elem config="ob-RND"><span id="combo-result">PASS</span></child-combo-elem><!--</>--></parent-combo-elem>';
+document.getElementById('object-only-with-preceding-output').innerHTML = '&lt;parent-combo-elem&gt;&lt;/parent-combo-elem&gt;';</code></pre>
+      <div id="object-only-with-preceding-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="object-only-with-preceding"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="object-only-with-preceding-output"><parent-combo-elem><!--<>--><div>Header</div><child-combo-elem config="ob-RND"><span id="combo-result">PASS</span></child-combo-elem><!--</>--></parent-combo-elem></div>';
         requestAnimationFrame(() => {
-          setTimeout(() => {
-            window.assertSnapshot('object-only-with-preceding', document.querySelector('parent-combo-elem'), expected);
-          }, 100);
+          window.assertSnapshot('object-only-with-preceding', document.getElementById('object-only-with-preceding-output'), expected);
         });
       </script>
     </section>
@@ -206,21 +191,16 @@ customElements.define(
       Html`&lt;child-bool-elem enabled=${true} disabled=${false}&gt;&lt;/child-bool-elem&gt;`;
     }
   }
-);</code></pre>
-      
-      <parent-bool-elem></parent-bool-elem>
-      <script type="module">
-        const code = document.querySelector('[data-test="boolean-attr"] code').textContent;
-        eval(code);
+);
 
-        // Single-phase render. Booleans are passed as object placeholders so
-        // both attributes carry the canonical ob-RND token; PASS proves the
-        // child saw the literal `true`/`false` values, not strings.
-        const expected = '<parent-bool-elem><child-bool-elem disabled="ob-RND" enabled="ob-RND"><span id="bool-result">PASS</span></child-bool-elem></parent-bool-elem>';
+document.getElementById('boolean-attr-output').innerHTML = '&lt;parent-bool-elem&gt;&lt;/parent-bool-elem&gt;';</code></pre>
+      <div id="boolean-attr-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="boolean-attr"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="boolean-attr-output"><parent-bool-elem><child-bool-elem disabled="ob-RND" enabled="ob-RND"><span id="bool-result">PASS</span></child-bool-elem></parent-bool-elem></div>';
         requestAnimationFrame(() => {
-          setTimeout(() => {
-            window.assertSnapshot('boolean-attr', document.querySelector('parent-bool-elem'), expected);
-          }, 100);
+          window.assertSnapshot('boolean-attr', document.getElementById('boolean-attr-output'), expected);
         });
       </script>
     </section>
@@ -250,20 +230,16 @@ customElements.define(
       Html`&lt;child-num-elem count=${42} pi=${3.14}&gt;&lt;/child-num-elem&gt;`;
     }
   }
-);</code></pre>
-      
-      <parent-num-elem></parent-num-elem>
-      <script type="module">
-        const code = document.querySelector('[data-test="number-attr"] code').textContent;
-        eval(code);
+);
 
-        // Single-phase render. Numbers are passed via the same ob-RND object
-        // placeholder mechanism; PASS proves typeof number, not coerced string.
-        const expected = '<parent-num-elem><child-num-elem pi="ob-RND" count="ob-RND"><span id="num-result">PASS</span></child-num-elem></parent-num-elem>';
+document.getElementById('number-attr-output').innerHTML = '&lt;parent-num-elem&gt;&lt;/parent-num-elem&gt;';</code></pre>
+      <div id="number-attr-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="number-attr"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="number-attr-output"><parent-num-elem><child-num-elem pi="ob-RND" count="ob-RND"><span id="num-result">PASS</span></child-num-elem></parent-num-elem></div>';
         requestAnimationFrame(() => {
-          setTimeout(() => {
-            window.assertSnapshot('number-attr', document.querySelector('parent-num-elem'), expected);
-          }, 100);
+          window.assertSnapshot('number-attr', document.getElementById('number-attr-output'), expected);
         });
       </script>
     </section>
@@ -298,20 +274,16 @@ customElements.define(
       &gt;&lt;/child-multiline-elem&gt;`;
     }
   }
-);</code></pre>
-      
-      <parent-multiline-elem></parent-multiline-elem>
-      <script type="module">
-        const code = document.querySelector('[data-test="multiline-attr"] code').textContent;
-        eval(code);
+);
 
-        // Single-phase render. Same canonical placeholders. PASS guards the
-        // newline-after-tag-name parsing path the issue specifically tracked.
-        const expected = '<parent-multiline-elem><child-multiline-elem config="ob-RND" expanded="ob-RND"><span id="multiline-result">PASS</span></child-multiline-elem></parent-multiline-elem>';
+document.getElementById('multiline-attr-output').innerHTML = '&lt;parent-multiline-elem&gt;&lt;/parent-multiline-elem&gt;';</code></pre>
+      <div id="multiline-attr-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="multiline-attr"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="multiline-attr-output"><parent-multiline-elem><child-multiline-elem config="ob-RND" expanded="ob-RND"><span id="multiline-result">PASS</span></child-multiline-elem></parent-multiline-elem></div>';
         requestAnimationFrame(() => {
-          setTimeout(() => {
-            window.assertSnapshot('multiline-attr', document.querySelector('parent-multiline-elem'), expected);
-          }, 100);
+          window.assertSnapshot('multiline-attr', document.getElementById('multiline-attr-output'), expected);
         });
       </script>
     </section>

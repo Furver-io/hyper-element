@@ -47,38 +47,47 @@
     <section data-test="dataset-add" data-test-result="pending">
       <h2>Adding Dataset Properties</h2>
       <p>Setting this.dataset.foo adds a data-foo attribute to the element.</p>
-      <pre id="code-dataset-add"><code>customElements.define('dataset-add-element', class extends hyperElement {
+      <pre><code>customElements.define('dataset-add-element', class extends hyperElement {
   render(Html) {
     this.count = (this.count || 0) + 1;
     if (this.count > 1) return; // Prevent infinite re-render
     this.dataset.cats = 'dogs';
     Html`dataset-add-element`;
   }
+});
+
+document.getElementById('render-dataset-add').innerHTML = '&lt;dataset-add-element&gt;&lt;/dataset-add-element&gt;';
+
+requestAnimationFrame(() => {
+  const section = document.querySelector('[data-test="dataset-add"]');
+  const elem = document.querySelector('dataset-add-element');
+  section.dataset.testResult = (elem && elem.getAttribute('data-cats') === 'dogs') ? 'pass' : 'fail';
 });</code></pre>
       <div id="render-dataset-add"></div>
       <script type="module">
-        const codeAdd = document.getElementById('code-dataset-add').textContent;
-        eval(codeAdd);
 
-        const targetAdd = document.getElementById('render-dataset-add');
-        targetAdd.innerHTML = '<dataset-add-element></dataset-add-element>';
+        const code = document.querySelector('[data-test="dataset-add"] pre code').textContent;
 
-        requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="dataset-add"]');
-          const elem = targetAdd.querySelector('dataset-add-element');
-          if (elem && elem.getAttribute('data-cats') === 'dogs') {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-          }
-        });
-      </script>
+        eval(code);
+
+        const expected = '<div id="render-dataset-add"><dataset-add-element data-cats="dogs">dataset-add-element</dataset-add-element></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="dataset-add"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('dataset-add', document.getElementById('render-dataset-add'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <section data-test="dataset-update" data-test-result="pending">
       <h2>Updating Dataset with Array</h2>
       <p>Arrays assigned to dataset are serialized to JSON in the attribute.</p>
-      <pre id="code-dataset-update"><code>customElements.define('dataset-update-element', class extends hyperElement {
+      <pre><code>customElements.define('dataset-update-element', class extends hyperElement {
   render(Html) {
     this.count = (this.count || 0) + 1;
     if (this.count > 1) return; // Prevent infinite re-render
@@ -94,33 +103,40 @@
     this.dataset.json = [5, 6, 7];
     Html`dataset-update-element`;
   }
+});
+
+document.getElementById('render-dataset-update').innerHTML = '&lt;dataset-update-element data-json="[5,6]"&gt;&lt;/dataset-update-element&gt;';
+
+requestAnimationFrame(() => {
+  const section = document.querySelector('[data-test="dataset-update"]');
+  const elem = document.querySelector('dataset-update-element');
+  section.dataset.testResult = (elem && elem.getAttribute('data-json') === '[5,6,7]') ? 'pass' : 'fail';
 });</code></pre>
       <div id="render-dataset-update"></div>
       <script type="module">
-        const codeUpdate = document.getElementById('code-dataset-update').textContent;
-        eval(codeUpdate);
 
-        const targetUpdate = document.getElementById('render-dataset-update');
-        targetUpdate.innerHTML = '<dataset-update-element data-json="[5,6]"></dataset-update-element>';
+        const code = document.querySelector('[data-test="dataset-update"] pre code').textContent;
 
-        requestAnimationFrame(() => {
-          const section = document.querySelector(
-            '[data-test="dataset-update"]'
-          );
-          const elem = targetUpdate.querySelector('dataset-update-element');
-          if (elem && elem.getAttribute('data-json') === '[5,6,7]') {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-          }
-        });
-      </script>
+        eval(code);
+
+        const expected = '<div id="render-dataset-update"><dataset-update-element data-json="[5,6,7]">dataset-update-element</dataset-update-element></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="dataset-update"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('dataset-update', document.getElementById('render-dataset-update'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <section data-test="dataset-update-camelcase" data-test-result="pending">
       <h2>CamelCase Dataset Properties</h2>
       <p>Dataset properties with camelCase map to kebab-case attributes.</p>
-      <pre id="code-dataset-update-camelcase"><code>customElements.define('dataset-update2-element', class extends hyperElement {
+      <pre><code>customElements.define('dataset-update2-element', class extends hyperElement {
   render(Html) {
     this.count = (this.count || 0) + 1;
     if (this.count > 1) return; // Prevent infinite re-render
@@ -135,27 +151,34 @@
     this.dataset.aBC = { zxy: 123 };
     Html`dataset-update2-element`;
   }
+});
+
+document.getElementById('render-dataset-update-camelcase').innerHTML = '&lt;dataset-update2-element data-a-b-c="[7,7,7]"&gt;&lt;/dataset-update2-element&gt;';
+
+requestAnimationFrame(() => {
+  const section = document.querySelector('[data-test="dataset-update-camelcase"]');
+  const elem = document.querySelector('dataset-update2-element');
+  section.dataset.testResult = (elem && elem.getAttribute('data-a-b-c') === '{"zxy":123}') ? 'pass' : 'fail';
 });</code></pre>
       <div id="render-dataset-update-camelcase"></div>
       <script type="module">
-        const codeCamel = document.getElementById('code-dataset-update-camelcase').textContent;
-        eval(codeCamel);
 
-        const targetCamel = document.getElementById('render-dataset-update-camelcase');
-        targetCamel.innerHTML = '<dataset-update2-element data-a-b-c="[7,7,7]"></dataset-update2-element>';
+        const code = document.querySelector('[data-test="dataset-update-camelcase"] pre code').textContent;
 
-        requestAnimationFrame(() => {
-          const section = document.querySelector(
-            '[data-test="dataset-update-camelcase"]'
-          );
-          const elem = targetCamel.querySelector('dataset-update2-element');
-          if (elem && elem.getAttribute('data-a-b-c') === '{"zxy":123}') {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-          }
-        });
-      </script>
+        eval(code);
+
+        const expected = '<div id="render-dataset-update-camelcase"><dataset-update2-element data-a-b-c="{&quot;zxy&quot;:123}">dataset-update2-element</dataset-update2-element></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="dataset-update-camelcase"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('dataset-update-camelcase', document.getElementById('render-dataset-update-camelcase'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <section data-test="dataset-add-dynamic" data-test-result="pending">
@@ -164,50 +187,60 @@
         Adding a data attribute via setAttribute after element is connected
         should trigger attributeChangedCallback with oldVal=null.
       </p>
-      <pre id="code-dataset-add-dynamic"><code>customElements.define('dataset-add-elem', class extends hyperElement {
+      <pre><code>customElements.define('dataset-add-elem', class extends hyperElement {
   render(Html) {
     Html`Value: ${this.dataset.newKey || 'none'}`;
   }
+});
+
+document.getElementById('render-dataset-add-dynamic').innerHTML = '&lt;dataset-add-elem&gt;&lt;/dataset-add-elem&gt;';
+
+requestAnimationFrame(() => {
+  const section = document.querySelector('[data-test="dataset-add-dynamic"]');
+  const elem = document.querySelector('dataset-add-elem');
+
+  // Verify initial state - no attribute
+  if (!elem || elem.dataset.newKey) {
+    section.dataset.testResult = 'fail';
+    console.error('Initial state wrong:', elem?.dataset?.newKey);
+    return;
+  }
+
+  // Add the attribute dynamically - triggers attributeChangedCallback with oldVal=null
+  elem.setAttribute('data-new-key', 'dynamic-value');
+
+  // Wait for the callback and re-render
+  setTimeout(() => {
+    if (
+      elem.textContent.includes('dynamic-value') &&
+      elem.dataset.newKey === 'dynamic-value'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+      console.error('Content did not update:', elem.textContent);
+    }
+  }, 100);
 });</code></pre>
       <div id="render-dataset-add-dynamic"></div>
       <script type="module">
-        const codeDynamic = document.getElementById('code-dataset-add-dynamic').textContent;
-        eval(codeDynamic);
 
-        const targetDynamic = document.getElementById('render-dataset-add-dynamic');
-        targetDynamic.innerHTML = '<dataset-add-elem></dataset-add-elem>';
+        const code = document.querySelector('[data-test="dataset-add-dynamic"] pre code').textContent;
 
-        requestAnimationFrame(() => {
-          const section = document.querySelector(
-            '[data-test="dataset-add-dynamic"]'
-          );
-          const elem = targetDynamic.querySelector('dataset-add-elem');
+        eval(code);
 
-          // Verify initial state - no attribute
-          if (!elem || elem.dataset.newKey) {
-            section.dataset.testResult = 'fail';
-            console.error('Initial state wrong:', elem?.dataset?.newKey);
-            return;
-          }
+        const expected = '<div id="render-dataset-add-dynamic"><dataset-add-elem data-new-key="dynamic-value"><!--<>-->Value: dynamic-value<!--</>--></dataset-add-elem></div>';
 
-          // Add the attribute dynamically - triggers attributeChangedCallback with oldVal=null
-          elem.setAttribute('data-new-key', 'dynamic-value');
+        setTimeout(() => {
 
-          // Wait for the callback and re-render
-          setTimeout(() => {
-            // Verify content changed to show the new value
-            if (
-              elem.textContent.includes('dynamic-value') &&
-              elem.dataset.newKey === 'dynamic-value'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-              console.error('Content did not update:', elem.textContent);
-            }
-          }, 100);
-        });
-      </script>
+          const sec = document.querySelector('[data-test="dataset-add-dynamic"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('dataset-add-dynamic', document.getElementById('render-dataset-add-dynamic'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <section data-test="dataset-remove-camelcase" data-test-result="pending">
@@ -217,47 +250,57 @@
         removeAttribute should clean up this.dataset.myKey when
         observedAttributes includes it.
       </p>
-      <pre id="code-dataset-remove-camelcase"><code>customElements.define('dataset-remove-elem', class extends hyperElement {
+      <pre><code>customElements.define('dataset-remove-elem', class extends hyperElement {
   render(Html) {
     Html`Value: ${this.dataset.myKey || 'removed'}`;
   }
+});
+
+document.getElementById('render-dataset-remove-camelcase').innerHTML = '&lt;dataset-remove-elem data-my-key="initial-value"&gt;&lt;/dataset-remove-elem&gt;';
+
+requestAnimationFrame(() => {
+  const section = document.querySelector('[data-test="dataset-remove-camelcase"]');
+  const elem = document.querySelector('dataset-remove-elem');
+
+  // Verify initial state
+  if (!elem || elem.dataset.myKey !== 'initial-value') {
+    section.dataset.testResult = 'fail';
+    console.error('Initial state wrong:', elem?.dataset?.myKey);
+    return;
+  }
+
+  // Remove the attribute - triggers attributeChangedCallback
+  elem.removeAttribute('data-my-key');
+
+  // Wait for the callback and re-render
+  setTimeout(() => {
+    if (elem.textContent.includes('removed')) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+      console.error('Content did not update:', elem.textContent);
+    }
+  }, 100);
 });</code></pre>
       <div id="render-dataset-remove-camelcase"></div>
       <script type="module">
-        const codeRemove = document.getElementById('code-dataset-remove-camelcase').textContent;
-        eval(codeRemove);
 
-        const targetRemove = document.getElementById('render-dataset-remove-camelcase');
-        targetRemove.innerHTML = '<dataset-remove-elem data-my-key="initial-value"></dataset-remove-elem>';
+        const code = document.querySelector('[data-test="dataset-remove-camelcase"] pre code').textContent;
 
-        requestAnimationFrame(() => {
-          const section = document.querySelector(
-            '[data-test="dataset-remove-camelcase"]'
-          );
-          const elem = targetRemove.querySelector('dataset-remove-elem');
+        eval(code);
 
-          // Verify initial state
-          if (!elem || elem.dataset.myKey !== 'initial-value') {
-            section.dataset.testResult = 'fail';
-            console.error('Initial state wrong:', elem?.dataset?.myKey);
-            return;
-          }
+        const expected = '<div id="render-dataset-remove-camelcase"><dataset-remove-elem><!--<>-->Value: removed<!--</>--></dataset-remove-elem></div>';
 
-          // Remove the attribute - triggers attributeChangedCallback
-          elem.removeAttribute('data-my-key');
+        setTimeout(() => {
 
-          // Wait for the callback and re-render
-          setTimeout(() => {
-            // Verify content changed to 'removed'
-            if (elem.textContent.includes('removed')) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-              console.error('Content did not update:', elem.textContent);
-            }
-          }, 100);
-        });
-      </script>
+          const sec = document.querySelector('[data-test="dataset-remove-camelcase"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('dataset-remove-camelcase', document.getElementById('render-dataset-remove-camelcase'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

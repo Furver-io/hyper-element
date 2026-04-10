@@ -30,6 +30,11 @@
       h2 {
         margin-top: 0;
       }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
     </style>
   </head>
   <body>
@@ -40,329 +45,419 @@
     <section data-test="setup-before-render" data-test-result="pending">
       <h2>setup() Called Before render()</h2>
       <p>Tests that setup() executes before the first render().</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="setup-before-render"]');
+  const callOrder = [];
+
+  customElements.define(
+    'setup-order-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        callOrder.push('setup');
+        this.value = 'from-setup';
+        onNext();
+      }
+      render(Html) {
+        callOrder.push('render');
+        Html`&lt;div id="setup-order-result"&gt;${this.value}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('setup-order-elem');
+  document.getElementById('setup-order-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('setup-order-result');
+    if (
+      callOrder[0] === 'setup' &&
+      callOrder[1] === 'render' &&
+      result?.textContent === 'from-setup'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="setup-order-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="setup-before-render"]'
-          );
-          const callOrder = [];
 
-          customElements.define(
-            'setup-order-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                callOrder.push('setup');
-                this.value = 'from-setup';
-                onNext();
-              }
-              render(Html) {
-                callOrder.push('render');
-                Html`<div id="setup-order-result">${this.value}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="setup-before-render"] pre code').textContent;
 
-          const elem = document.createElement('setup-order-elem');
-          document.getElementById('setup-order-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('setup-order-result');
-            if (
-              callOrder[0] === 'setup' &&
-              callOrder[1] === 'render' &&
-              result?.textContent === 'from-setup'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="setup-order-output"><setup-order-elem><div id="setup-order-result">from-setup</div></setup-order-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="setup-before-render"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('setup-before-render', document.getElementById('setup-order-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: render() called once on init -->
     <section data-test="render-once-init" data-test-result="pending">
       <h2>render() Called Once on Init</h2>
       <p>Tests that render() is called exactly once during initialization.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="render-once-init"]');
+  let renderCount = 0;
+
+  customElements.define(
+    'render-once-elem',
+    class extends hyperElement {
+      render(Html) {
+        renderCount++;
+        Html`&lt;div id="render-once-result"&gt;renders: ${renderCount}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('render-once-elem');
+  document.getElementById('render-once-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('render-once-result');
+    if (renderCount === 1 && result?.textContent === 'renders: 1') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="render-once-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="render-once-init"]'
-          );
-          let renderCount = 0;
 
-          customElements.define(
-            'render-once-elem',
-            class extends hyperElement {
-              render(Html) {
-                renderCount++;
-                Html`<div id="render-once-result">renders: ${renderCount}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="render-once-init"] pre code').textContent;
 
-          const elem = document.createElement('render-once-elem');
-          document.getElementById('render-once-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('render-once-result');
-            if (renderCount === 1 && result?.textContent === 'renders: 1') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="render-once-output"><render-once-elem><div id="render-once-result">renders: 1</div></render-once-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="render-once-init"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('render-once-init', document.getElementById('render-once-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: teardown() called on disconnect -->
     <section data-test="teardown-disconnect" data-test-result="pending">
       <h2>Teardown Called on Disconnect</h2>
       <p>Tests that teardown function is called when element is removed.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="teardown-disconnect"]');
+  let teardownCalled = false;
+
+  customElements.define(
+    'teardown-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        onNext();
+        return () =&gt; {
+          teardownCalled = true;
+        };
+      }
+      render(Html) {
+        Html`&lt;div&gt;teardown test&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const container = document.getElementById('teardown-output');
+  const elem = document.createElement('teardown-elem');
+  container.appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    container.removeChild(elem);
+
+    requestAnimationFrame(() =&gt; {
+      if (teardownCalled) {
+        section.dataset.testResult = 'pass';
+        container.innerHTML = '&lt;div id="teardown-result"&gt;Teardown was called&lt;/div&gt;';
+      } else {
+        section.dataset.testResult = 'fail';
+        container.innerHTML = '&lt;div id="teardown-result"&gt;Teardown NOT called&lt;/div&gt;';
+      }
+    });
+  });
+})();</code></pre>
       <div id="teardown-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="teardown-disconnect"]'
-          );
-          let teardownCalled = false;
 
-          customElements.define(
-            'teardown-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                onNext();
-                return () => {
-                  teardownCalled = true;
-                };
-              }
-              render(Html) {
-                Html`<div>teardown test</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="teardown-disconnect"] pre code').textContent;
 
-          const container = document.getElementById('teardown-output');
-          const elem = document.createElement('teardown-elem');
-          container.appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            // Remove element
-            container.removeChild(elem);
+        const expected = '<div id="teardown-output"><div id="teardown-result">Teardown was called</div></div>';
 
-            requestAnimationFrame(() => {
-              if (teardownCalled) {
-                section.dataset.testResult = 'pass';
-                container.innerHTML =
-                  '<div id="teardown-result">Teardown was called</div>';
-              } else {
-                section.dataset.testResult = 'fail';
-                container.innerHTML =
-                  '<div id="teardown-result">Teardown NOT called</div>';
-              }
-            });
-          });
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="teardown-disconnect"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('teardown-disconnect', document.getElementById('teardown-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Re-render on attribute change -->
     <section data-test="rerender-attr-change" data-test-result="pending">
       <h2>Re-render on Attribute Change</h2>
       <p>Tests that changing an observed attribute triggers re-render.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="rerender-attr-change"]');
+  let renderCount = 0;
+
+  customElements.define(
+    'attr-change-elem',
+    class extends hyperElement {
+      render(Html) {
+        renderCount++;
+        Html`&lt;div id="attr-change-result"&gt;${this.attrs.message} (renders: ${renderCount})&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('attr-change-elem');
+  elem.setAttribute('message', 'initial');
+  document.getElementById('attr-change-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    elem.setAttribute('message', 'updated');
+
+    requestAnimationFrame(() =&gt; {
+      const result = document.getElementById('attr-change-result');
+      if (
+        renderCount === 2 &&
+        result?.textContent === 'updated (renders: 2)'
+      ) {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    });
+  });
+})();</code></pre>
       <div id="attr-change-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="rerender-attr-change"]'
-          );
-          let renderCount = 0;
 
-          customElements.define(
-            'attr-change-elem',
-            class extends hyperElement {
-              render(Html) {
-                renderCount++;
-                Html`<div id="attr-change-result">${this.attrs.message} (renders: ${renderCount})</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="rerender-attr-change"] pre code').textContent;
 
-          const elem = document.createElement('attr-change-elem');
-          elem.setAttribute('message', 'initial');
-          document.getElementById('attr-change-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            // Change attribute
-            elem.setAttribute('message', 'updated');
+        const expected = '<div id="attr-change-output"><attr-change-elem message="updated"><div id="attr-change-result">updated (renders: 2)</div></attr-change-elem></div>';
 
-            requestAnimationFrame(() => {
-              const result = document.getElementById('attr-change-result');
-              if (
-                renderCount === 2 &&
-                result?.textContent === 'updated (renders: 2)'
-              ) {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            });
-          });
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="rerender-attr-change"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('rerender-attr-change', document.getElementById('attr-change-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Different attribute value triggers re-render -->
     <section data-test="same-attr-no-render" data-test-result="pending">
       <h2>Different Attribute Value Triggers Re-render</h2>
       <p>Tests that setting a different value triggers re-render.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="same-attr-no-render"]');
+  let renderCount = 0;
+
+  customElements.define(
+    'same-attr-elem',
+    class extends hyperElement {
+      render(Html) {
+        renderCount++;
+        Html`&lt;div id="same-attr-result"&gt;value=${this.attrs.value} renders=${renderCount}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('same-attr-elem');
+  elem.setAttribute('value', 'initial');
+  document.getElementById('same-attr-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const countBefore = renderCount;
+    elem.setAttribute('value', 'changed');
+
+    requestAnimationFrame(() =&gt; {
+      const result = document.getElementById('same-attr-result');
+      if (
+        renderCount &gt; countBefore &&
+        result?.textContent.includes('value=changed')
+      ) {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    });
+  });
+})();</code></pre>
       <div id="same-attr-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="same-attr-no-render"]'
-          );
-          let renderCount = 0;
 
-          customElements.define(
-            'same-attr-elem',
-            class extends hyperElement {
-              render(Html) {
-                renderCount++;
-                Html`<div id="same-attr-result">value=${this.attrs.value} renders=${renderCount}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="same-attr-no-render"] pre code').textContent;
 
-          const elem = document.createElement('same-attr-elem');
-          elem.setAttribute('value', 'initial');
-          document.getElementById('same-attr-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const countBefore = renderCount;
-            // Set different value - should trigger re-render
-            elem.setAttribute('value', 'changed');
+        const expected = '<div id="same-attr-output"><same-attr-elem value="changed"><div id="same-attr-result">value=changed renders=2</div></same-attr-elem></div>';
 
-            requestAnimationFrame(() => {
-              const result = document.getElementById('same-attr-result');
-              // Should have re-rendered with new value
-              if (
-                renderCount > countBefore &&
-                result?.textContent.includes('value=changed')
-              ) {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            });
-          });
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="same-attr-no-render"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('same-attr-no-render', document.getElementById('same-attr-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: onNext triggers re-render with data -->
     <section data-test="onnext-rerender" data-test-result="pending">
       <h2>onNext() Triggers Re-render</h2>
       <p>Tests that calling onNext() triggers a new render with store data.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="onnext-rerender"]');
+  let onNextRef;
+  let renderCount = 0;
+
+  customElements.define(
+    'onnext-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        onNextRef = onNext;
+        this.count = 0;
+        onNext(() =&gt; this.count);
+      }
+      render(Html, count) {
+        renderCount++;
+        Html`&lt;div id="onnext-result"&gt;count=${count} renders=${renderCount}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('onnext-elem');
+  document.getElementById('onnext-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    elem.count = 5;
+    onNextRef(() =&gt; elem.count);
+
+    requestAnimationFrame(() =&gt; {
+      const result = document.getElementById('onnext-result');
+      if (
+        renderCount === 2 &&
+        result?.textContent.includes('count=5')
+      ) {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    });
+  });
+})();</code></pre>
       <div id="onnext-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="onnext-rerender"]'
-          );
-          let onNextRef;
-          let renderCount = 0;
 
-          customElements.define(
-            'onnext-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                onNextRef = onNext;
-                this.count = 0;
-                onNext(() => this.count);
-              }
-              render(Html, count) {
-                renderCount++;
-                Html`<div id="onnext-result">count=${count} renders=${renderCount}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="onnext-rerender"] pre code').textContent;
 
-          const elem = document.createElement('onnext-elem');
-          document.getElementById('onnext-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            // Update count and trigger re-render
-            elem.count = 5;
-            onNextRef(() => elem.count);
+        const expected = '<div id="onnext-output"><onnext-elem><div id="onnext-result">count=5 renders=2</div></onnext-elem></div>';
 
-            requestAnimationFrame(() => {
-              const result = document.getElementById('onnext-result');
-              if (
-                renderCount === 2 &&
-                result?.textContent.includes('count=5')
-              ) {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            });
-          });
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="onnext-rerender"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('onnext-rerender', document.getElementById('onnext-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Manual render() call -->
     <section data-test="manual-render" data-test-result="pending">
       <h2>Manual render() Call</h2>
       <p>Tests that manually calling render() updates the DOM.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="manual-render"]');
+  let renderCount = 0;
+
+  const state = { message: 'initial' };
+
+  customElements.define(
+    'manual-render-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.state = state;
+        onNext();
+      }
+      render(Html) {
+        renderCount++;
+        Html`&lt;div id="manual-render-result"&gt;${this.state.message} (${renderCount})&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('manual-render-elem');
+  document.getElementById('manual-render-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    state.message = 'updated';
+    elem.render();
+
+    requestAnimationFrame(() =&gt; {
+      const result = document.getElementById('manual-render-result');
+      if (renderCount === 2 && result?.textContent === 'updated (2)') {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    });
+  });
+})();</code></pre>
       <div id="manual-render-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="manual-render"]');
-          let renderCount = 0;
 
-          // Shared state object that can be mutated
-          const state = { message: 'initial' };
+        const code = document.querySelector('[data-test="manual-render"] pre code').textContent;
 
-          customElements.define(
-            'manual-render-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                // Store reference to shared state
-                this.state = state;
-                onNext();
-              }
-              render(Html) {
-                renderCount++;
-                Html`<div id="manual-render-result">${this.state.message} (${renderCount})</div>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('manual-render-elem');
-          document.getElementById('manual-render-output').appendChild(elem);
+        const expected = '<div id="manual-render-output"><manual-render-elem><div id="manual-render-result">updated (2)</div></manual-render-elem></div>';
 
-          requestAnimationFrame(() => {
-            // Update shared state and re-render
-            state.message = 'updated';
-            elem.render();
+        setTimeout(() => {
 
-            requestAnimationFrame(() => {
-              const result = document.getElementById('manual-render-result');
-              if (renderCount === 2 && result?.textContent === 'updated (2)') {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            });
-          });
-        })();
-      </script>
+          const sec = document.querySelector('[data-test="manual-render"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('manual-render', document.getElementById('manual-render-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Reconnection after disconnect -->
@@ -371,164 +466,223 @@
       <p>
         Tests that element works correctly after being removed and re-added.
       </p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="reconnection"]');
+  let setupCount = 0;
+  let teardownCount = 0;
+
+  customElements.define(
+    'reconnect-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        setupCount++;
+        this.id = setupCount;
+        onNext();
+        return () =&gt; {
+          teardownCount++;
+        };
+      }
+      render(Html) {
+        Html`&lt;div id="reconnect-result"&gt;setup=${setupCount} teardown=${teardownCount}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const container = document.getElementById('reconnect-output');
+  const elem = document.createElement('reconnect-elem');
+  container.appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    container.removeChild(elem);
+
+    requestAnimationFrame(() =&gt; {
+      container.appendChild(elem);
+
+      requestAnimationFrame(() =&gt; {
+        const result = document.getElementById('reconnect-result');
+        if (
+          setupCount === 2 &&
+          teardownCount === 1 &&
+          result?.textContent === 'setup=2 teardown=1'
+        ) {
+          section.dataset.testResult = 'pass';
+        } else {
+          section.dataset.testResult = 'fail';
+        }
+      });
+    });
+  });
+})();</code></pre>
       <div id="reconnect-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="reconnection"]');
-          let setupCount = 0;
-          let teardownCount = 0;
 
-          customElements.define(
-            'reconnect-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                setupCount++;
-                this.id = setupCount;
-                onNext();
-                return () => {
-                  teardownCount++;
-                };
-              }
-              render(Html) {
-                Html`<div id="reconnect-result">setup=${setupCount} teardown=${teardownCount}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="reconnection"] pre code').textContent;
 
-          const container = document.getElementById('reconnect-output');
-          const elem = document.createElement('reconnect-elem');
-          container.appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            // Remove
-            container.removeChild(elem);
+        const expected = '<div id="reconnect-output"><reconnect-elem><div id="reconnect-result">setup=2 teardown=1</div></reconnect-elem></div>';
 
-            requestAnimationFrame(() => {
-              // Re-add
-              container.appendChild(elem);
+        setTimeout(() => {
 
-              requestAnimationFrame(() => {
-                const result = document.getElementById('reconnect-result');
-                // setup called twice (once per connect), teardown once
-                if (
-                  setupCount === 2 &&
-                  teardownCount === 1 &&
-                  result?.textContent === 'setup=2 teardown=1'
-                ) {
-                  section.dataset.testResult = 'pass';
-                } else {
-                  section.dataset.testResult = 'fail';
-                }
-              });
-            });
-          });
-        })();
-      </script>
+          const sec = document.querySelector('[data-test="reconnection"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('reconnection', document.getElementById('reconnect-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Element with innerHTML present before connect -->
     <section data-test="initial-content" data-test-result="pending">
       <h2>Initial innerHTML Available</h2>
       <p>Tests that this.wrappedContent has initial innerHTML.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="initial-content"]');
+
+  customElements.define(
+    'initial-content-elem',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;div id="initial-content-result"&gt;wrapped: ${this.wrappedContent}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('initial-content-result');
+    if (result?.textContent === 'wrapped: Original Content') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="initial-content-output">
         <initial-content-elem>Original Content</initial-content-elem>
       </div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="initial-content"]'
-          );
 
-          customElements.define(
-            'initial-content-elem',
-            class extends hyperElement {
-              render(Html) {
-                Html`<div id="initial-content-result">wrapped: ${this.wrappedContent}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="initial-content"] pre code').textContent;
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('initial-content-result');
-            if (result?.textContent === 'wrapped: Original Content') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        eval(code);
+
+        const expected = '<div id="initial-content-output">\n        <initial-content-elem><div id="initial-content-result">wrapped: Original Content</div></initial-content-elem>\n      </div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="initial-content"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('initial-content', document.getElementById('initial-content-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: this.element reference -->
     <section data-test="element-ref" data-test-result="pending">
       <h2>this.element Reference</h2>
       <p>Tests that this.element refers to the DOM element.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="element-ref"]');
+
+  customElements.define(
+    'element-ref-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.tagName = this.element.tagName.toLowerCase();
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="element-ref-result"&gt;tag: ${this.tagName}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('element-ref-elem');
+  document.getElementById('element-ref-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('element-ref-result');
+    if (result?.textContent === 'tag: element-ref-elem') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="element-ref-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="element-ref"]');
 
-          customElements.define(
-            'element-ref-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.tagName = this.element.tagName.toLowerCase();
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="element-ref-result">tag: ${this.tagName}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="element-ref"] pre code').textContent;
 
-          const elem = document.createElement('element-ref-elem');
-          document.getElementById('element-ref-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('element-ref-result');
-            if (result?.textContent === 'tag: element-ref-elem') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="element-ref-output"><element-ref-elem><div id="element-ref-result">tag: element-ref-elem</div></element-ref-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="element-ref"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('element-ref', document.getElementById('element-ref-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: innerShadow getter -->
     <section data-test="inner-shadow" data-test-result="pending">
       <h2>innerShadow Getter</h2>
       <p>Tests that innerShadow returns rendered HTML.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="inner-shadow"]');
+  let elemRef;
+
+  customElements.define(
+    'inner-shadow-elem',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;span class="test"&gt;content&lt;/span&gt;`;
+      }
+    }
+  );
+
+  elemRef = document.createElement('inner-shadow-elem');
+  document.getElementById('inner-shadow-output').appendChild(elemRef);
+
+  requestAnimationFrame(() =&gt; {
+    const shadow = elemRef.innerShadow;
+    if (shadow.includes('&lt;span class="test"&gt;content&lt;/span&gt;')) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="inner-shadow-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="inner-shadow"]');
-          let elemRef;
 
-          customElements.define(
-            'inner-shadow-elem',
-            class extends hyperElement {
-              render(Html) {
-                Html`<span class="test">content</span>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="inner-shadow"] pre code').textContent;
 
-          elemRef = document.createElement('inner-shadow-elem');
-          document.getElementById('inner-shadow-output').appendChild(elemRef);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const shadow = elemRef.innerShadow;
-            if (shadow.includes('<span class="test">content</span>')) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="inner-shadow-output"><inner-shadow-elem><span class="test">content</span></inner-shadow-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="inner-shadow"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('inner-shadow', document.getElementById('inner-shadow-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

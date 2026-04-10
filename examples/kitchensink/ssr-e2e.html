@@ -58,11 +58,78 @@
 
     <!-- Phase 1-2: SSR Output (Server-side, verified here) -->
     <section data-test="phase-1-2-ssr" data-test-result="pending">
-      <h2><span class="phase-indicator">Phase 1-2</span> SSR Define & Serialize</h2>
+      <h2><span class="phase-indicator">Phase 1-2</span> SSR Define &amp; Serialize</h2>
       <p>
         Server imported component definition and serialized to HTML string.
       </p>
       <pre id="ssr-html-output">Loading SSR output...</pre>
+      <pre><code>var imports1 = await import('./ssr-e2e-component.mjs');
+var tagName = imports1.tagName;
+var definition = imports1.definition;
+var imports2 = await import('./ssr-e2e-output.js');
+var ssrHtml = imports2.ssrHtml;
+
+function setResult(phase, passed, message) {
+  var section = document.querySelector('[data-test="phase-' + phase + '"]');
+  section.dataset.testResult = passed ? 'pass' : 'fail';
+  var statusEl = document.getElementById('phase-' + phase.split('-')[0] + '-status');
+  if (statusEl) statusEl.textContent = message;
+}
+
+// Phase 1-2: verify SSR output
+var ssrOutputEl = document.getElementById('ssr-html-output');
+ssrOutputEl.textContent = ssrHtml;
+if (ssrHtml.includes('&lt;ssr-e2e-counter&gt;') &amp;&amp; ssrHtml.includes('Count: 0')) {
+  setResult('1-2-ssr', true, '');
+} else {
+  setResult('1-2-ssr', false, '');
+}
+
+// Phase 3: mount
+var mountPoint = document.getElementById('ssr-mount-point');
+mountPoint.innerHTML = ssrHtml;
+var componentEl = mountPoint.querySelector('ssr-e2e-counter');
+var isNotDefined = customElements.get('ssr-e2e-counter') === undefined;
+var tagExists = componentEl !== null;
+var htmlMatches = mountPoint.innerHTML === ssrHtml;
+setResult('3-mount', tagExists &amp;&amp; isNotDefined &amp;&amp; htmlMatches,
+  'tag=' + tagExists + ', undef=' + isNotDefined + ', html=' + htmlMatches);
+
+// Phase 4: pre-hydrate clicks
+var btn = document.getElementById('ssr-e2e-btn');
+if (btn) {
+  btn.click();
+  btn.click();
+  setResult('4-pre-hydrate', true, 'Clicked button 2 times before hydration');
+} else {
+  setResult('4-pre-hydrate', false, 'Button not found in SSR output');
+}
+
+// Phase 5: define + replay
+await new Promise(function (r) { setTimeout(r, 50); });
+class SsrE2eCounter extends hyperElement {
+  setup(onNext) { return definition.setup.call(this, onNext); }
+  handleClick() { return definition.handleClick.call(this); }
+  render(Html, store) { return definition.render.call(this, Html, store); }
+}
+customElements.define(tagName, SsrE2eCounter);
+await new Promise(function (r) { setTimeout(r, 100); });
+var counterEl = document.querySelector('ssr-e2e-counter');
+var replayedContent = counterEl.textContent;
+setResult('5-replay', replayedContent.includes('Count: 2'),
+  'After replay: ' + replayedContent.trim());
+
+// Phase 6: post-hydrate
+var hydratedBtn = counterEl.querySelector('button');
+if (hydratedBtn) {
+  hydratedBtn.click();
+  await new Promise(function (r) { setTimeout(r, 50); });
+  var post = counterEl.textContent;
+  setResult('6-post-hydrate', post.includes('Count: 3'),
+    'After post-hydrate click: ' + post.trim());
+} else {
+  setResult('6-post-hydrate', false, 'Button not found after hydration');
+}</code></pre>
     </section>
 
     <!-- Phase 3: Mount -->
@@ -105,132 +172,16 @@
     </section>
 
     <script type="module">
-      import { tagName, definition } from './ssr-e2e-component.mjs';
-      import { ssrHtml } from './ssr-e2e-output.js';
-
-      // Test state
-      const results = {
-        phase12: false,
-        phase3: false,
-        phase4: false,
-        phase5: false,
-        phase6: false,
-      };
-
-      function setResult(phase, passed, message) {
-        const section = document.querySelector(`[data-test="phase-${phase}"]`);
-        section.dataset.testResult = passed ? 'pass' : 'fail';
-        const statusEl = document.getElementById(`phase-${phase.split('-')[0]}-status`);
-        if (statusEl) {
-          statusEl.textContent = message;
-        }
+      var code = document.querySelector('[data-test="phase-1-2-ssr"] pre code').textContent;
+      try {
+        var fn = new Function('return (async () => { ' + code + ' })();');
+        await fn();
+      } catch (e) {
+        console.error('SSR E2E error:', e);
+        document.querySelectorAll('[data-test-result="pending"]').forEach(function (s) {
+          s.dataset.testResult = 'fail';
+        });
       }
-
-      // ===== Phase 1-2: Verify SSR output =====
-      const ssrOutputEl = document.getElementById('ssr-html-output');
-      ssrOutputEl.textContent = ssrHtml;
-
-      if (ssrHtml.includes('<ssr-e2e-counter>') && ssrHtml.includes('Count: 0')) {
-        setResult('1-2-ssr', true, '');
-        document.querySelector('[data-test="phase-1-2-ssr"]').dataset.testResult = 'pass';
-        results.phase12 = true;
-      } else {
-        setResult('1-2-ssr', false, '');
-        document.querySelector('[data-test="phase-1-2-ssr"]').dataset.testResult = 'fail';
-      }
-
-      // ===== Phase 3: Mount SSR HTML =====
-      const mountPoint = document.getElementById('ssr-mount-point');
-      mountPoint.innerHTML = ssrHtml;
-
-      // Verify: component tag exists but NOT defined
-      const componentEl = mountPoint.querySelector('ssr-e2e-counter');
-      const isNotDefined = customElements.get('ssr-e2e-counter') === undefined;
-      const tagExists = componentEl !== null;
-      // Verify: mounted HTML matches renderElement() output exactly
-      const htmlMatches = mountPoint.innerHTML === ssrHtml;
-
-      if (tagExists && isNotDefined && htmlMatches) {
-        setResult('3-mount', true, `Tag exists: ${tagExists}, Not defined yet: ${isNotDefined}, HTML from renderElement: ${htmlMatches}`);
-        results.phase3 = true;
-      } else {
-        setResult('3-mount', false, `Tag exists: ${tagExists}, Not defined: ${isNotDefined}, HTML matches: ${htmlMatches}`);
-      }
-
-      // ===== Phase 4: Pre-hydrate Clicks =====
-      // Click the button BEFORE defining the component
-      const btn = document.getElementById('ssr-e2e-btn');
-      if (btn) {
-        btn.click(); // Click 1
-        btn.click(); // Click 2
-
-        // Verify clicks were captured (check buffer exists)
-        // We can't directly access the buffer, but we verify via Phase 5
-        setResult('4-pre-hydrate', true, 'Clicked button 2 times before hydration');
-        results.phase4 = true;
-      } else {
-        setResult('4-pre-hydrate', false, 'Button not found in SSR output');
-      }
-
-      // ===== Phase 5: Define component and verify replay =====
-      // Small delay to ensure event capture had time to buffer
-      await new Promise((r) => setTimeout(r, 50));
-
-      // Create the component class from the shared definition
-      class SsrE2eCounter extends hyperElement {
-        setup(onNext) {
-          return definition.setup.call(this, onNext);
-        }
-
-        handleClick() {
-          return definition.handleClick.call(this);
-        }
-
-        render(Html, store) {
-          return definition.render.call(this, Html, store);
-        }
-      }
-
-      // Define the custom element - this triggers hydration
-      customElements.define(tagName, SsrE2eCounter);
-
-      // Wait for hydration and replay to complete
-      await new Promise((r) => setTimeout(r, 100));
-
-      // Verify: count should be 2 after replay
-      const counterEl = document.querySelector('ssr-e2e-counter');
-      const replayedContent = counterEl.textContent;
-
-      if (replayedContent.includes('Count: 2')) {
-        setResult('5-replay', true, `After replay: "${replayedContent.trim()}" (expected Count: 2)`);
-        results.phase5 = true;
-      } else {
-        setResult('5-replay', false, `After replay: "${replayedContent.trim()}" (expected Count: 2)`);
-      }
-
-      // ===== Phase 6: Post-hydrate Click =====
-      // Click AFTER hydration - should work normally
-      const hydratedBtn = counterEl.querySelector('button');
-      if (hydratedBtn) {
-        hydratedBtn.click(); // Click 3
-
-        // Wait for render
-        await new Promise((r) => setTimeout(r, 50));
-
-        const postHydrateContent = counterEl.textContent;
-
-        if (postHydrateContent.includes('Count: 3')) {
-          setResult('6-post-hydrate', true, `After post-hydrate click: "${postHydrateContent.trim()}" (expected Count: 3)`);
-          results.phase6 = true;
-        } else {
-          setResult('6-post-hydrate', false, `After post-hydrate click: "${postHydrateContent.trim()}" (expected Count: 3)`);
-        }
-      } else {
-        setResult('6-post-hydrate', false, 'Button not found after hydration');
-      }
-
-      // Summary
-      console.log('SSR E2E Test Results:', results);
     </script>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

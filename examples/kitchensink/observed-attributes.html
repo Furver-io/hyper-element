@@ -30,6 +30,11 @@
       h2 {
         margin-top: 0;
       }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
       button {
         margin: 0.25rem;
         padding: 0.5rem 1rem;
@@ -50,428 +55,583 @@
         Tests that attributes trigger re-render WITHOUT declaring
         observedAttributes.
       </p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="basic-reactive"]');
+
+  customElements.define(
+    'basic-reactive-elem',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;div id="basic-reactive-result"&gt;name=${this.attrs.name}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('basic-reactive-elem');
+  elem.setAttribute('name', 'initial');
+  document.getElementById('basic-reactive-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    elem.setAttribute('name', 'updated');
+
+    requestAnimationFrame(() =&gt; {
+      const result = document.getElementById('basic-reactive-result');
+      if (result?.textContent === 'name=updated') {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    });
+  });
+})();</code></pre>
       <div id="basic-reactive-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="basic-reactive"]');
 
-          customElements.define(
-            'basic-reactive-elem',
-            class extends hyperElement {
-              // NO observedAttributes needed!
-              render(Html) {
-                Html`<div id="basic-reactive-result">name=${this.attrs.name}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="basic-reactive"] pre code').textContent;
 
-          const elem = document.createElement('basic-reactive-elem');
-          elem.setAttribute('name', 'initial');
-          document.getElementById('basic-reactive-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            elem.setAttribute('name', 'updated');
+        const expected = '<div id="basic-reactive-output"><basic-reactive-elem name="updated"><div id="basic-reactive-result">name=updated</div></basic-reactive-elem></div>';
 
-            requestAnimationFrame(() => {
-              const result = document.getElementById('basic-reactive-result');
-              if (result?.textContent === 'name=updated') {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            });
-          });
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="basic-reactive"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('basic-reactive', document.getElementById('basic-reactive-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Any attribute is reactive -->
     <section data-test="any-attr-reactive" data-test-result="pending">
       <h2>Any Attribute is Reactive</h2>
       <p>Tests that ANY attribute triggers re-render automatically.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="any-attr-reactive"]');
+
+  customElements.define(
+    'any-attr-elem',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;div id="any-attr-result"&gt;foo=${this.attrs.foo} bar=${this.attrs.bar} random=${this.attrs.random}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('any-attr-elem');
+  document.getElementById('any-attr-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    elem.setAttribute('foo', 'a');
+    elem.setAttribute('bar', 'b');
+    elem.setAttribute('random', 'c');
+
+    requestAnimationFrame(() =&gt; {
+      const result = document.getElementById('any-attr-result');
+      if (result?.textContent === 'foo=a bar=b random=c') {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    });
+  });
+})();</code></pre>
       <div id="any-attr-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="any-attr-reactive"]'
-          );
 
-          customElements.define(
-            'any-attr-elem',
-            class extends hyperElement {
-              render(Html) {
-                Html`<div id="any-attr-result">foo=${this.attrs.foo} bar=${this.attrs.bar} random=${this.attrs.random}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="any-attr-reactive"] pre code').textContent;
 
-          const elem = document.createElement('any-attr-elem');
-          document.getElementById('any-attr-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            elem.setAttribute('foo', 'a');
-            elem.setAttribute('bar', 'b');
-            elem.setAttribute('random', 'c');
+        const expected = '<div id="any-attr-output"><any-attr-elem foo="a" bar="b" random="c"><div id="any-attr-result">foo=a bar=b random=c</div></any-attr-elem></div>';
 
-            requestAnimationFrame(() => {
-              const result = document.getElementById('any-attr-result');
-              if (result?.textContent === 'foo=a bar=b random=c') {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            });
-          });
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="any-attr-reactive"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('any-attr-reactive', document.getElementById('any-attr-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Multiple attributes -->
     <section data-test="multiple-attrs" data-test-result="pending">
       <h2>Multiple Attributes</h2>
       <p>Tests multiple attributes at once.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="multiple-attrs"]');
+
+  customElements.define(
+    'multiple-attrs-elem',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;div id="multiple-attrs-result"&gt;first=${this.attrs.first} second=${this.attrs.second} third=${this.attrs.third}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('multiple-attrs-elem');
+  elem.setAttribute('first', 'a');
+  elem.setAttribute('second', 'b');
+  elem.setAttribute('third', 'c');
+  document.getElementById('multiple-attrs-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('multiple-attrs-result');
+    if (result?.textContent === 'first=a second=b third=c') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="multiple-attrs-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="multiple-attrs"]');
 
-          customElements.define(
-            'multiple-attrs-elem',
-            class extends hyperElement {
-              render(Html) {
-                Html`<div id="multiple-attrs-result">first=${this.attrs.first} second=${this.attrs.second} third=${this.attrs.third}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="multiple-attrs"] pre code').textContent;
 
-          const elem = document.createElement('multiple-attrs-elem');
-          elem.setAttribute('first', 'a');
-          elem.setAttribute('second', 'b');
-          elem.setAttribute('third', 'c');
-          document.getElementById('multiple-attrs-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('multiple-attrs-result');
-            if (result?.textContent === 'first=a second=b third=c') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="multiple-attrs-output"><multiple-attrs-elem first="a" second="b" third="c"><div id="multiple-attrs-result">first=a second=b third=c</div></multiple-attrs-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="multiple-attrs"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('multiple-attrs', document.getElementById('multiple-attrs-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Attribute removal -->
     <section data-test="attr-removal" data-test-result="pending">
       <h2>Attribute Removal</h2>
       <p>Tests that removing an attribute updates correctly.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="attr-removal"]');
+
+  customElements.define(
+    'attr-removal-elem',
+    class extends hyperElement {
+      render(Html) {
+        const has = this.attrs.removable !== undefined;
+        Html`&lt;div id="attr-removal-result"&gt;has=${has} value=${this.attrs.removable}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('attr-removal-elem');
+  elem.setAttribute('removable', 'initial');
+  document.getElementById('attr-removal-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    elem.removeAttribute('removable');
+
+    requestAnimationFrame(() =&gt; {
+      const result = document.getElementById('attr-removal-result');
+      if (result?.textContent === 'has=false value=undefined') {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    });
+  });
+})();</code></pre>
       <div id="attr-removal-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="attr-removal"]');
 
-          customElements.define(
-            'attr-removal-elem',
-            class extends hyperElement {
-              render(Html) {
-                const has = this.attrs.removable !== undefined;
-                Html`<div id="attr-removal-result">has=${has} value=${this.attrs.removable}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="attr-removal"] pre code').textContent;
 
-          const elem = document.createElement('attr-removal-elem');
-          elem.setAttribute('removable', 'initial');
-          document.getElementById('attr-removal-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            // Remove attribute
-            elem.removeAttribute('removable');
+        const expected = '<div id="attr-removal-output"><attr-removal-elem><div id="attr-removal-result">has=false value=undefined</div></attr-removal-elem></div>';
 
-            requestAnimationFrame(() => {
-              const result = document.getElementById('attr-removal-result');
-              if (result?.textContent === 'has=false value=undefined') {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            });
-          });
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="attr-removal"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('attr-removal', document.getElementById('attr-removal-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: data-* attribute -->
     <section data-test="data-attr-reactive" data-test-result="pending">
       <h2>data-* Attribute Reactivity</h2>
       <p>Tests that data-* attributes work automatically.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="data-attr-reactive"]');
+
+  customElements.define(
+    'data-attr-elem',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;div id="data-attr-result"&gt;dataset.value=${this.dataset.value}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('data-attr-elem');
+  elem.setAttribute('data-value', '42');
+  document.getElementById('data-attr-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('data-attr-result');
+    if (result?.textContent === 'dataset.value=42') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="data-attr-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="data-attr-reactive"]'
-          );
 
-          customElements.define(
-            'data-attr-elem',
-            class extends hyperElement {
-              render(Html) {
-                // Access via dataset (parsed value)
-                Html`<div id="data-attr-result">dataset.value=${this.dataset.value}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="data-attr-reactive"] pre code').textContent;
 
-          const elem = document.createElement('data-attr-elem');
-          elem.setAttribute('data-value', '42');
-          document.getElementById('data-attr-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('data-attr-result');
-            // data-value should be parsed as number
-            if (result?.textContent === 'dataset.value=42') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="data-attr-output"><data-attr-elem data-value="42"><div id="data-attr-result">dataset.value=42</div></data-attr-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="data-attr-reactive"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('data-attr-reactive', document.getElementById('data-attr-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Attribute set before DOM insertion -->
     <section data-test="attr-before-insert" data-test-result="pending">
       <h2>Attribute Set Before Insert</h2>
       <p>Tests attributes set before element is in DOM.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="attr-before-insert"]');
+
+  customElements.define(
+    'attr-before-elem',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;div id="attr-before-result"&gt;preset=${this.attrs.preset}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('attr-before-elem');
+  elem.setAttribute('preset', 'early');
+
+  document.getElementById('attr-before-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('attr-before-result');
+    if (result?.textContent === 'preset=early') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="attr-before-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="attr-before-insert"]'
-          );
 
-          customElements.define(
-            'attr-before-elem',
-            class extends hyperElement {
-              render(Html) {
-                Html`<div id="attr-before-result">preset=${this.attrs.preset}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="attr-before-insert"] pre code').textContent;
 
-          const elem = document.createElement('attr-before-elem');
-          // Set attribute BEFORE appending to DOM
-          elem.setAttribute('preset', 'early');
+        eval(code);
 
-          document.getElementById('attr-before-output').appendChild(elem);
+        const expected = '<div id="attr-before-output"><attr-before-elem preset="early"><div id="attr-before-result">preset=early</div></attr-before-elem></div>';
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('attr-before-result');
-            if (result?.textContent === 'preset=early') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="attr-before-insert"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('attr-before-insert', document.getElementById('attr-before-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Rapid attribute changes -->
     <section data-test="rapid-changes" data-test-result="pending">
       <h2>Rapid Attribute Changes</h2>
       <p>Tests handling multiple rapid attribute changes.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="rapid-changes"]');
+  let renderCount = 0;
+
+  customElements.define(
+    'rapid-changes-elem',
+    class extends hyperElement {
+      render(Html) {
+        renderCount++;
+        Html`&lt;div id="rapid-changes-result"&gt;value=${this.attrs.value} renders=${renderCount}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('rapid-changes-elem');
+  document.getElementById('rapid-changes-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    elem.setAttribute('value', '1');
+    elem.setAttribute('value', '2');
+    elem.setAttribute('value', '3');
+    elem.setAttribute('value', 'final');
+
+    requestAnimationFrame(() =&gt; {
+      const result = document.getElementById('rapid-changes-result');
+      if (result?.textContent.includes('value=final')) {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    });
+  });
+})();</code></pre>
       <div id="rapid-changes-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="rapid-changes"]');
-          let renderCount = 0;
 
-          customElements.define(
-            'rapid-changes-elem',
-            class extends hyperElement {
-              render(Html) {
-                renderCount++;
-                Html`<div id="rapid-changes-result">value=${this.attrs.value} renders=${renderCount}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="rapid-changes"] pre code').textContent;
 
-          const elem = document.createElement('rapid-changes-elem');
-          document.getElementById('rapid-changes-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            // Rapid changes
-            elem.setAttribute('value', '1');
-            elem.setAttribute('value', '2');
-            elem.setAttribute('value', '3');
-            elem.setAttribute('value', 'final');
+        const expected = '<div id="rapid-changes-output"><rapid-changes-elem value="final"><div id="rapid-changes-result">value=final renders=2</div></rapid-changes-elem></div>';
 
-            requestAnimationFrame(() => {
-              const result = document.getElementById('rapid-changes-result');
-              // Should have final value, multiple renders occurred
-              if (result?.textContent.includes('value=final')) {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            });
-          });
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="rapid-changes"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('rapid-changes', document.getElementById('rapid-changes-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Attribute with special characters -->
     <section data-test="special-char-attr" data-test-result="pending">
       <h2>Attribute with Special Characters</h2>
       <p>Tests attribute values containing special characters.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="special-char-attr"]');
+
+  customElements.define(
+    'special-char-elem',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;div id="special-char-result"&gt;${this.attrs.content}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('special-char-elem');
+  elem.setAttribute('content', 'Hello &lt;World&gt; &amp; "Friends"');
+  document.getElementById('special-char-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('special-char-result');
+    if (
+      result?.textContent === 'Hello &lt;World&gt; &amp; "Friends"' &&
+      result?.innerHTML.includes('&amp;lt;World&amp;gt;')
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="special-char-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="special-char-attr"]'
-          );
 
-          customElements.define(
-            'special-char-elem',
-            class extends hyperElement {
-              render(Html) {
-                Html`<div id="special-char-result">${this.attrs.content}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="special-char-attr"] pre code').textContent;
 
-          const elem = document.createElement('special-char-elem');
-          elem.setAttribute('content', 'Hello <World> & "Friends"');
-          document.getElementById('special-char-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('special-char-result');
-            // The special chars should be preserved (and escaped in output)
-            if (
-              result?.textContent === 'Hello <World> & "Friends"' &&
-              result?.innerHTML.includes('&lt;World&gt;')
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="special-char-output"><special-char-elem content="Hello &lt;World&gt; &amp; &quot;Friends&quot;"><div id="special-char-result">Hello &lt;World&gt; &amp; "Friends"</div></special-char-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="special-char-attr"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('special-char-attr', document.getElementById('special-char-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Numeric string coercion -->
     <section data-test="numeric-coercion" data-test-result="pending">
       <h2>Numeric String Coercion</h2>
       <p>Tests that numeric strings are converted to numbers.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="numeric-coercion"]');
+
+  customElements.define(
+    'numeric-coerce-elem',
+    class extends hyperElement {
+      render(Html) {
+        const count = this.attrs.count;
+        const isNumber = typeof count === 'number';
+        Html`&lt;div id="numeric-result"&gt;count=${count} isNumber=${isNumber}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('numeric-coerce-elem');
+  elem.setAttribute('count', '42');
+  document.getElementById('numeric-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('numeric-result');
+    if (result?.textContent === 'count=42 isNumber=true') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="numeric-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="numeric-coercion"]'
-          );
 
-          customElements.define(
-            'numeric-coerce-elem',
-            class extends hyperElement {
-              render(Html) {
-                const count = this.attrs.count;
-                const isNumber = typeof count === 'number';
-                Html`<div id="numeric-result">count=${count} isNumber=${isNumber}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="numeric-coercion"] pre code').textContent;
 
-          const elem = document.createElement('numeric-coerce-elem');
-          elem.setAttribute('count', '42');
-          document.getElementById('numeric-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('numeric-result');
-            if (result?.textContent === 'count=42 isNumber=true') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="numeric-output"><numeric-coerce-elem count="42"><div id="numeric-result">count=42 isNumber=true</div></numeric-coerce-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="numeric-coercion"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('numeric-coercion', document.getElementById('numeric-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Boolean attribute (presence-based) -->
     <section data-test="boolean-attr" data-test-result="pending">
       <h2>Boolean Attribute (Presence)</h2>
       <p>Tests boolean attributes that use presence (disabled, hidden).</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="boolean-attr"]');
+
+  customElements.define(
+    'boolean-attr-elem',
+    class extends hyperElement {
+      render(Html) {
+        const isDisabled = this.attrs.disabled !== undefined;
+        Html`&lt;div id="boolean-attr-result"&gt;disabled=${isDisabled}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('boolean-attr-elem');
+  elem.setAttribute('disabled', '');
+  document.getElementById('boolean-attr-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    const result = document.getElementById('boolean-attr-result');
+    if (result?.textContent === 'disabled=true') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="boolean-attr-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="boolean-attr"]');
 
-          customElements.define(
-            'boolean-attr-elem',
-            class extends hyperElement {
-              render(Html) {
-                const isDisabled = this.attrs.disabled !== undefined;
-                Html`<div id="boolean-attr-result">disabled=${isDisabled}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="boolean-attr"] pre code').textContent;
 
-          const elem = document.createElement('boolean-attr-elem');
-          // Set as empty string (boolean attribute style)
-          elem.setAttribute('disabled', '');
-          document.getElementById('boolean-attr-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('boolean-attr-result');
-            if (result?.textContent === 'disabled=true') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="boolean-attr-output"><boolean-attr-elem disabled=""><div id="boolean-attr-result">disabled=true</div></boolean-attr-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="boolean-attr"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('boolean-attr', document.getElementById('boolean-attr-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Functional API without observedAttributes -->
     <section data-test="functional-no-observed" data-test-result="pending">
       <h2>Functional API (No observedAttributes)</h2>
       <p>Tests functional API works without declaring observedAttributes.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="functional-no-observed"]');
+
+  hyperElement('functional-reactive-elem', {
+    render: (Html, ctx) =&gt; {
+      Html`&lt;div id="functional-result"&gt;name=${ctx.attrs.name} count=${ctx.attrs.count}&lt;/div&gt;`;
+    },
+  });
+
+  const elem = document.createElement('functional-reactive-elem');
+  elem.setAttribute('name', 'test');
+  elem.setAttribute('count', '5');
+  document.getElementById('functional-output').appendChild(elem);
+
+  requestAnimationFrame(() =&gt; {
+    elem.setAttribute('name', 'updated');
+
+    requestAnimationFrame(() =&gt; {
+      const result = document.getElementById('functional-result');
+      if (result?.textContent === 'name=updated count=5') {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    });
+  });
+})();</code></pre>
       <div id="functional-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="functional-no-observed"]'
-          );
 
-          hyperElement('functional-reactive-elem', {
-            render: (Html, ctx) => {
-              Html`<div id="functional-result">name=${ctx.attrs.name} count=${ctx.attrs.count}</div>`;
-            },
-          });
+        const code = document.querySelector('[data-test="functional-no-observed"] pre code').textContent;
 
-          const elem = document.createElement('functional-reactive-elem');
-          elem.setAttribute('name', 'test');
-          elem.setAttribute('count', '5');
-          document.getElementById('functional-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            elem.setAttribute('name', 'updated');
+        const expected = '<div id="functional-output"><functional-reactive-elem name="updated" count="5"><div id="functional-result">name=updated count=5</div></functional-reactive-elem></div>';
 
-            requestAnimationFrame(() => {
-              const result = document.getElementById('functional-result');
-              if (result?.textContent === 'name=updated count=5') {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            });
-          });
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="functional-no-observed"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('functional-no-observed', document.getElementById('functional-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

@@ -47,7 +47,7 @@
         When innerHTML is modified, the element re-renders with updated
         wrappedContent.
       </p>
-      <pre><code id="mutations-source">customElements.define(
+      <pre><code>customElements.define(
   'change-content',
   class extends hyperElement {
     render(Html) {
@@ -56,28 +56,38 @@
   }
 );
 
+const elem = document.createElement('change-content');
+elem.textContent = 'initial';
+document.getElementById('content-mut-output').appendChild(elem);
+
 // Change content after initial render
 setTimeout(() => {
-  document.querySelector('change-content').innerHTML = 'CHANGED';
+  elem.innerHTML = 'CHANGED';
+  // Verify re-render after mutation
+  setTimeout(() => {
+    const section = document.querySelector('[data-test="change-content"]');
+    section.dataset.testResult = elem.textContent.includes('CHANGED') ? 'pass' : 'fail';
+  }, 100);
 }, 50);</code></pre>
-      <change-content>initial</change-content>
+      <div id="content-mut-output"></div>
       <script type="module">
-        const source = document.getElementById('mutations-source').textContent;
-        eval(source);
 
-        // Check after mutation
+        const code = document.querySelector('[data-test="change-content"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="content-mut-output"><change-content><!--<>-->Content is: CHANGED<!--</>--></change-content></div>';
+
         setTimeout(() => {
-          const section = document.querySelector(
-            '[data-test="change-content"]'
-          );
-          const elem = document.querySelector('change-content');
-          if (elem && elem.textContent.includes('CHANGED')) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-          }
-        }, 150);
-      </script>
+
+          const sec = document.querySelector('[data-test="change-content"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('change-content', document.getElementById('content-mut-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

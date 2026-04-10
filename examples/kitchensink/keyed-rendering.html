@@ -30,6 +30,11 @@
       h2 {
         margin-top: 0;
       }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
     </style>
   </head>
   <body>
@@ -40,305 +45,388 @@
     <section data-test="wire-basic-list" data-test-result="pending">
       <h2>Basic Wire Keyed List</h2>
       <p>Tests that Html.wire() renders a list with keyed items.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-basic-list"]');
+
+  customElements.define(
+    'wire-basic-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.items = [
+          { id: 1, name: 'Alice' },
+          { id: 2, name: 'Bob' },
+          { id: 3, name: 'Charlie' },
+        ];
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;ul id="wire-basic-result"&gt;${this.items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-basic-elem');
+  document.getElementById('wire-basic-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const lis = document.querySelectorAll('#wire-basic-result li');
+    if (
+      lis.length === 3 &&
+      lis[0].textContent === 'Alice' &&
+      lis[1].textContent === 'Bob' &&
+      lis[2].textContent === 'Charlie'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 100);
+})();</code></pre>
       <div id="wire-basic-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="wire-basic-list"]'
-          );
 
-          customElements.define(
-            'wire-basic-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.items = [
-                  { id: 1, name: 'Alice' },
-                  { id: 2, name: 'Bob' },
-                  { id: 3, name: 'Charlie' },
-                ];
-                onNext();
-              }
-              render(Html) {
-                Html`<ul id="wire-basic-result">${this.items.map(
-                  (item) => Html.wire(item, ':item')`<li>${item.name}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="wire-basic-list"] pre code').textContent;
 
-          const elem = document.createElement('wire-basic-elem');
-          document.getElementById('wire-basic-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const lis = document.querySelectorAll('#wire-basic-result li');
-            if (
-              lis.length === 3 &&
-              lis[0].textContent === 'Alice' &&
-              lis[1].textContent === 'Bob' &&
-              lis[2].textContent === 'Charlie'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        })();
-      </script>
+        const expected = '<div id="wire-basic-output"><wire-basic-elem><ul id="wire-basic-result"><li>Alice</li><li>Bob</li><li>Charlie</li><!--◦--></ul></wire-basic-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="wire-basic-list"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-basic-list', document.getElementById('wire-basic-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire with item update -->
     <section data-test="wire-item-update" data-test-result="pending">
       <h2>Wire Item Update</h2>
       <p>Tests that updating item properties re-renders correctly.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-item-update"]');
+
+  const items = [
+    { id: 1, name: 'First' },
+    { id: 2, name: 'Second' },
+  ];
+
+  customElements.define(
+    'wire-update-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.items = items;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;ul id="wire-update-result"&gt;${this.items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-update-elem');
+  document.getElementById('wire-update-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    items[0].name = 'Updated First';
+    items[1].name = 'Updated Second';
+    elem.render();
+
+    setTimeout(() =&gt; {
+      const lis = document.querySelectorAll('#wire-update-result li');
+      if (
+        lis.length === 2 &&
+        lis[0].textContent === 'Updated First' &&
+        lis[1].textContent === 'Updated Second'
+      ) {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    }, 50);
+  }, 100);
+})();</code></pre>
       <div id="wire-update-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="wire-item-update"]'
-          );
 
-          const items = [
-            { id: 1, name: 'First' },
-            { id: 2, name: 'Second' },
-          ];
+        const code = document.querySelector('[data-test="wire-item-update"] pre code').textContent;
 
-          customElements.define(
-            'wire-update-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.items = items;
-                onNext();
-              }
-              render(Html) {
-                Html`<ul id="wire-update-result">${this.items.map(
-                  (item) => Html.wire(item, ':item')`<li>${item.name}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('wire-update-elem');
-          document.getElementById('wire-update-output').appendChild(elem);
+        const expected = '<div id="wire-update-output"><wire-update-elem><ul id="wire-update-result"><li>Updated First</li><li>Updated Second</li><!--◦--></ul></wire-update-elem></div>';
 
-          setTimeout(() => {
-            // Update items
-            items[0].name = 'Updated First';
-            items[1].name = 'Updated Second';
-            elem.render();
+        setTimeout(() => {
 
-            setTimeout(() => {
-              const lis = document.querySelectorAll('#wire-update-result li');
-              if (
-                lis.length === 2 &&
-                lis[0].textContent === 'Updated First' &&
-                lis[1].textContent === 'Updated Second'
-              ) {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            }, 50);
-          }, 100);
-        })();
-      </script>
+          const sec = document.querySelector('[data-test="wire-item-update"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-item-update', document.getElementById('wire-update-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire renders list correctly -->
     <section data-test="wire-remove" data-test-result="pending">
       <h2>Wire Renders Filtered List</h2>
       <p>Tests that filtering and re-rendering shows correct items.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-remove"]');
+
+  customElements.define(
+    'wire-remove-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.items = [
+          { id: 1, name: 'A', show: true },
+          { id: 2, name: 'B', show: false },
+          { id: 3, name: 'C', show: true },
+        ];
+        onNext();
+      }
+      render(Html) {
+        const visible = this.items.filter((i) =&gt; i.show);
+        Html`&lt;ul id="wire-remove-result"&gt;${visible.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-remove-elem');
+  document.getElementById('wire-remove-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const lis = document.querySelectorAll('#wire-remove-result li');
+    if (
+      lis.length === 2 &&
+      lis[0].textContent === 'A' &&
+      lis[1].textContent === 'C'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 100);
+})();</code></pre>
       <div id="wire-remove-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-remove"]');
 
-          customElements.define(
-            'wire-remove-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.items = [
-                  { id: 1, name: 'A', show: true },
-                  { id: 2, name: 'B', show: false },
-                  { id: 3, name: 'C', show: true },
-                ];
-                onNext();
-              }
-              render(Html) {
-                // Filter items before mapping
-                const visible = this.items.filter((i) => i.show);
-                Html`<ul id="wire-remove-result">${visible.map(
-                  (item) => Html.wire(item, ':item')`<li>${item.name}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="wire-remove"] pre code').textContent;
 
-          const elem = document.createElement('wire-remove-elem');
-          document.getElementById('wire-remove-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const lis = document.querySelectorAll('#wire-remove-result li');
-            // Only show=true items should render
-            if (
-              lis.length === 2 &&
-              lis[0].textContent === 'A' &&
-              lis[1].textContent === 'C'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        })();
-      </script>
+        const expected = '<div id="wire-remove-output"><wire-remove-elem><ul id="wire-remove-result"><li>A</li><li>C</li><!--◦--></ul></wire-remove-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="wire-remove"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-remove', document.getElementById('wire-remove-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire with item addition -->
     <section data-test="wire-add" data-test-result="pending">
       <h2>Wire Item Addition</h2>
       <p>Tests that adding items to a wired list works correctly.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-add"]');
+
+  const sharedItems = [{ id: 1, name: 'Original' }];
+
+  customElements.define(
+    'wire-add-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.items = sharedItems;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;ul id="wire-add-result"&gt;${this.items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-add-elem');
+  document.getElementById('wire-add-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    sharedItems.push(
+      { id: 2, name: 'Added' },
+      { id: 3, name: 'Also Added' }
+    );
+    elem.render();
+
+    setTimeout(() =&gt; {
+      const lis = document.querySelectorAll('#wire-add-result li');
+      if (
+        lis.length === 3 &&
+        lis[0].textContent === 'Original' &&
+        lis[1].textContent === 'Added' &&
+        lis[2].textContent === 'Also Added'
+      ) {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    }, 50);
+  }, 100);
+})();</code></pre>
       <div id="wire-add-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-add"]');
 
-          // Shared array reference - component will use this directly
-          const sharedItems = [{ id: 1, name: 'Original' }];
+        const code = document.querySelector('[data-test="wire-add"] pre code').textContent;
 
-          customElements.define(
-            'wire-add-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                // Store reference to shared array (not a copy)
-                this.items = sharedItems;
-                onNext();
-              }
-              render(Html) {
-                Html`<ul id="wire-add-result">${this.items.map(
-                  (item) => Html.wire(item, ':item')`<li>${item.name}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('wire-add-elem');
-          document.getElementById('wire-add-output').appendChild(elem);
+        const expected = '<div id="wire-add-output"><wire-add-elem><ul id="wire-add-result"><li>Original</li><li>Added</li><li>Also Added</li><!--◦--></ul></wire-add-elem></div>';
 
-          setTimeout(() => {
-            // Add items by mutating the shared array
-            sharedItems.push(
-              { id: 2, name: 'Added' },
-              { id: 3, name: 'Also Added' }
-            );
-            elem.render();
+        setTimeout(() => {
 
-            setTimeout(() => {
-              const lis = document.querySelectorAll('#wire-add-result li');
-              if (
-                lis.length === 3 &&
-                lis[0].textContent === 'Original' &&
-                lis[1].textContent === 'Added' &&
-                lis[2].textContent === 'Also Added'
-              ) {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            }, 50);
-          }, 100);
-        })();
-      </script>
+          const sec = document.querySelector('[data-test="wire-add"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-add', document.getElementById('wire-add-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire empty list -->
     <section data-test="wire-empty" data-test-result="pending">
       <h2>Wire Empty List</h2>
       <p>Tests that an empty wired list renders correctly.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-empty"]');
+
+  customElements.define(
+    'wire-empty-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.items = [];
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;ul id="wire-empty-result"&gt;${this.items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-empty-elem');
+  document.getElementById('wire-empty-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const ul = document.getElementById('wire-empty-result');
+    const lis = ul?.querySelectorAll('li');
+    if (ul && lis?.length === 0) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 100);
+})();</code></pre>
       <div id="wire-empty-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="wire-empty"]');
 
-          customElements.define(
-            'wire-empty-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.items = [];
-                onNext();
-              }
-              render(Html) {
-                Html`<ul id="wire-empty-result">${this.items.map(
-                  (item) => Html.wire(item, ':item')`<li>${item.name}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="wire-empty"] pre code').textContent;
 
-          const elem = document.createElement('wire-empty-elem');
-          document.getElementById('wire-empty-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const ul = document.getElementById('wire-empty-result');
-            const lis = ul?.querySelectorAll('li');
-            if (ul && lis?.length === 0) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        })();
-      </script>
+        const expected = '<div id="wire-empty-output"><wire-empty-elem><ul id="wire-empty-result"><!--◦--></ul></wire-empty-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="wire-empty"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-empty', document.getElementById('wire-empty-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Wire with different IDs per object -->
     <section data-test="wire-multiple-ids" data-test-result="pending">
       <h2>Wire Multiple IDs per Object</h2>
       <p>Tests using different wire IDs for the same object.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="wire-multiple-ids"]');
+
+  const user = { name: 'Alice', role: 'Admin' };
+
+  customElements.define(
+    'wire-ids-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.user = user;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="wire-ids-result"&gt;
+          ${Html.wire(this.user, ':card')`&lt;div class="card"&gt;Card: ${this.user.name}&lt;/div&gt;`}
+          ${Html.wire(this.user, ':badge')`&lt;span class="badge"&gt;Badge: ${this.user.role}&lt;/span&gt;`}
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('wire-ids-elem');
+  document.getElementById('wire-ids-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const card = document.querySelector('#wire-ids-result .card');
+    const badge = document.querySelector('#wire-ids-result .badge');
+    if (
+      card &&
+      badge &&
+      card.textContent.includes('Card: Alice') &&
+      badge.textContent.includes('Badge: Admin')
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 100);
+})();</code></pre>
       <div id="wire-ids-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="wire-multiple-ids"]'
-          );
 
-          const user = { name: 'Alice', role: 'Admin' };
+        const code = document.querySelector('[data-test="wire-multiple-ids"] pre code').textContent;
 
-          customElements.define(
-            'wire-ids-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.user = user;
-                onNext();
-              }
-              render(Html) {
-                // Same object, different wire IDs = different DOM nodes
-                Html`<div id="wire-ids-result">
-                  ${Html.wire(this.user, ':card')`<div class="card">Card: ${this.user.name}</div>`}
-                  ${Html.wire(this.user, ':badge')`<span class="badge">Badge: ${this.user.role}</span>`}
-                </div>`;
-              }
-            }
-          );
+        eval(code);
 
-          const elem = document.createElement('wire-ids-elem');
-          document.getElementById('wire-ids-output').appendChild(elem);
+        const expected = '<div id="wire-ids-output"><wire-ids-elem><div id="wire-ids-result">\n          <div class="card">Card: Alice</div>\n          <span class="badge">Badge: Admin</span>\n        </div></wire-ids-elem></div>';
 
-          setTimeout(() => {
-            const card = document.querySelector('#wire-ids-result .card');
-            const badge = document.querySelector('#wire-ids-result .badge');
-            if (
-              card &&
-              badge &&
-              card.textContent.includes('Card: Alice') &&
-              badge.textContent.includes('Badge: Admin')
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="wire-multiple-ids"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('wire-multiple-ids', document.getElementById('wire-ids-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

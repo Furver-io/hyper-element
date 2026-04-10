@@ -47,32 +47,22 @@
     <section data-test="simple-element" data-test-result="pending">
       <h2>Simple Element</h2>
       <p>A minimal custom element that renders static content.</p>
-      <pre><code>class extends hyperElement {
-  render(Html) {
-    Html`Hello from hyper-element!`
+      <pre><code>customElements.define(
+  'simple-element',
+  class extends hyperElement {
+    render(Html) {
+      Html`Hello from hyper-element!`;
+    }
   }
-}</code></pre>
+);
+document.getElementById('simple-output').innerHTML = '&lt;simple-element&gt;&lt;/simple-element&gt;';</code></pre>
       <div id="simple-output"></div>
       <script type="module">
-        const section = document.querySelector('[data-test="simple-element"]');
-        const code = section.querySelector('code').textContent;
-
-        // Define element first using code from <pre><code>
-        customElements.define('simple-element', eval(`(${code})`));
-
-        // Then create and append it
-        const elem = document.createElement('simple-element');
-        document.getElementById('simple-output').appendChild(elem);
-
+        const code = document.querySelector('[data-test="simple-element"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="simple-output"><simple-element>Hello from hyper-element!</simple-element></div>';
         requestAnimationFrame(() => {
-          const expected = '<simple-element>Hello from hyper-element!</simple-element>';
-          if (elem && elem.outerHTML === expected) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Expected HTML:', expected);
-            console.error('Actual HTML:', elem ? elem.outerHTML : null);
-          }
+          window.assertSnapshot('simple-element', document.getElementById('simple-output'), expected);
         });
       </script>
     </section>

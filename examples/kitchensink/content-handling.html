@@ -47,7 +47,7 @@
     <section data-test="wrapped-content" data-test-result="pending">
       <h2>Wrapped Content</h2>
       <p>The this.wrappedContent property contains the original innerHTML.</p>
-      <pre><code id="code-wrapped-content">customElements.define(
+      <pre><code>customElements.define(
   'content-element',
   class extends hyperElement {
     render(Html) {
@@ -58,19 +58,11 @@
 );</code></pre>
       <content-element>hello world</content-element>
       <script type="module">
-        const code = document.getElementById('code-wrapped-content').textContent;
+        const code = document.querySelector('[data-test="wrapped-content"] pre code').textContent;
         eval(code);
-
+        const expected = '<content-element><!--<>-->Transformed: HELLO WORLD<!--</>--></content-element>';
         requestAnimationFrame(() => {
-          const section = document.querySelector(
-            '[data-test="wrapped-content"]'
-          );
-          const elem = document.querySelector('content-element');
-          if (elem && elem.textContent.includes('HELLO WORLD')) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-          }
+          window.assertSnapshot('wrapped-content', document.querySelector('content-element'), expected);
         });
       </script>
     </section>

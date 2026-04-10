@@ -45,40 +45,29 @@
     <section data-test="basic-list" data-test-result="pending">
       <h2>Basic List Rendering</h2>
       <p>Renders a simple list with {+each} syntax.</p>
+      <pre><code>customElements.define(
+  'each-basic-elem',
+  class extends hyperElement {
+    render(Html) {
+      const users = [
+        { name: 'Alice' },
+        { name: 'Bob' },
+        { name: 'Charlie' },
+      ];
+      Html`&lt;ul id="each-basic-result"&gt;{+each ${users}}&lt;li&gt;{name}&lt;/li&gt;{-each}&lt;/ul&gt;`;
+    }
+  }
+);
+
+const elem1 = document.createElement('each-basic-elem');
+document.getElementById('basic-list-output').appendChild(elem1);</code></pre>
       <div id="basic-list-output"></div>
       <script type="module">
-        customElements.define(
-          'each-basic-elem',
-          class extends hyperElement {
-            render(Html) {
-              const users = [
-                { name: 'Alice' },
-                { name: 'Bob' },
-                { name: 'Charlie' },
-              ];
-              Html`<ul id="each-basic-result">{+each ${users}}<li>{name}</li>{-each}</ul>`;
-            }
-          }
-        );
-
-        const elem1 = document.createElement('each-basic-elem');
-        document.getElementById('basic-list-output').appendChild(elem1);
-
+        const code = document.querySelector('[data-test="basic-list"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="basic-list-output"><each-basic-elem><ul id="each-basic-result"><li>Alice</li><li>Bob</li><li>Charlie</li><!--◦--></ul></each-basic-elem></div>';
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="basic-list"]');
-          const result = document.getElementById('each-basic-result');
-          const items = result?.querySelectorAll('li') || [];
-          if (
-            items.length === 3 &&
-            items[0].textContent === 'Alice' &&
-            items[1].textContent === 'Bob' &&
-            items[2].textContent === 'Charlie'
-          ) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Basic list test failed:', result?.innerHTML);
-          }
+          window.assertSnapshot('basic-list', document.getElementById('basic-list-output'), expected);
         });
       </script>
     </section>
@@ -87,40 +76,28 @@
     <section data-test="multiple-props" data-test-result="pending">
       <h2>Multiple Properties</h2>
       <p>Renders items with multiple property references.</p>
+      <pre><code>customElements.define(
+  'each-multi-elem',
+  class extends hyperElement {
+    render(Html) {
+      const users = [
+        { name: 'Alice', age: 30 },
+        { name: 'Bob', age: 25 },
+      ];
+      Html`&lt;ul id="each-multi-result"&gt;{+each ${users}}&lt;li&gt;{name} ({age})&lt;/li&gt;{-each}&lt;/ul&gt;`;
+    }
+  }
+);
+
+const elem2 = document.createElement('each-multi-elem');
+document.getElementById('multiple-props-output').appendChild(elem2);</code></pre>
       <div id="multiple-props-output"></div>
       <script type="module">
-        customElements.define(
-          'each-multi-elem',
-          class extends hyperElement {
-            render(Html) {
-              const users = [
-                { name: 'Alice', age: 30 },
-                { name: 'Bob', age: 25 },
-              ];
-              Html`<ul id="each-multi-result">{+each ${users}}<li>{name} ({age})</li>{-each}</ul>`;
-            }
-          }
-        );
-
-        const elem2 = document.createElement('each-multi-elem');
-        document.getElementById('multiple-props-output').appendChild(elem2);
-
+        const code = document.querySelector('[data-test="multiple-props"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="multiple-props-output"><each-multi-elem><ul id="each-multi-result"><li>Alice (30)</li><li>Bob (25)</li><!--◦--></ul></each-multi-elem></div>';
         requestAnimationFrame(() => {
-          const section = document.querySelector(
-            '[data-test="multiple-props"]'
-          );
-          const result = document.getElementById('each-multi-result');
-          const items = result?.querySelectorAll('li') || [];
-          if (
-            items.length === 2 &&
-            items[0].textContent === 'Alice (30)' &&
-            items[1].textContent === 'Bob (25)'
-          ) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Multiple props test failed:', result?.innerHTML);
-          }
+          window.assertSnapshot('multiple-props', document.getElementById('multiple-props-output'), expected);
         });
       </script>
     </section>
@@ -129,38 +106,28 @@
     <section data-test="nested-props" data-test-result="pending">
       <h2>Nested Property Access</h2>
       <p>Accesses nested object properties with dot notation.</p>
+      <pre><code>customElements.define(
+  'each-nested-elem',
+  class extends hyperElement {
+    render(Html) {
+      const users = [
+        { name: 'Alice', address: { city: 'NYC' } },
+        { name: 'Bob', address: { city: 'LA' } },
+      ];
+      Html`&lt;ul id="each-nested-result"&gt;{+each ${users}}&lt;li&gt;{name} - {address.city}&lt;/li&gt;{-each}&lt;/ul&gt;`;
+    }
+  }
+);
+
+const elem3 = document.createElement('each-nested-elem');
+document.getElementById('nested-props-output').appendChild(elem3);</code></pre>
       <div id="nested-props-output"></div>
       <script type="module">
-        customElements.define(
-          'each-nested-elem',
-          class extends hyperElement {
-            render(Html) {
-              const users = [
-                { name: 'Alice', address: { city: 'NYC' } },
-                { name: 'Bob', address: { city: 'LA' } },
-              ];
-              Html`<ul id="each-nested-result">{+each ${users}}<li>{name} - {address.city}</li>{-each}</ul>`;
-            }
-          }
-        );
-
-        const elem3 = document.createElement('each-nested-elem');
-        document.getElementById('nested-props-output').appendChild(elem3);
-
+        const code = document.querySelector('[data-test="nested-props"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="nested-props-output"><each-nested-elem><ul id="each-nested-result"><li>Alice - NYC</li><li>Bob - LA</li><!--◦--></ul></each-nested-elem></div>';
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="nested-props"]');
-          const result = document.getElementById('each-nested-result');
-          const items = result?.querySelectorAll('li') || [];
-          if (
-            items.length === 2 &&
-            items[0].textContent === 'Alice - NYC' &&
-            items[1].textContent === 'Bob - LA'
-          ) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Nested props test failed:', result?.innerHTML);
-          }
+          window.assertSnapshot('nested-props', document.getElementById('nested-props-output'), expected);
         });
       </script>
     </section>
@@ -169,38 +136,25 @@
     <section data-test="primitive-array" data-test-result="pending">
       <h2>Primitive Arrays with {...}</h2>
       <p>Uses {...} to reference current item in primitive arrays.</p>
+      <pre><code>customElements.define(
+  'each-primitive-elem',
+  class extends hyperElement {
+    render(Html) {
+      const numbers = [1, 2, 3];
+      Html`&lt;ul id="each-primitive-result"&gt;{+each ${numbers}}&lt;li&gt;{...}&lt;/li&gt;{-each}&lt;/ul&gt;`;
+    }
+  }
+);
+
+const elem4 = document.createElement('each-primitive-elem');
+document.getElementById('primitive-array-output').appendChild(elem4);</code></pre>
       <div id="primitive-array-output"></div>
       <script type="module">
-        customElements.define(
-          'each-primitive-elem',
-          class extends hyperElement {
-            render(Html) {
-              const numbers = [1, 2, 3];
-              Html`<ul id="each-primitive-result">{+each ${numbers}}<li>{...}</li>{-each}</ul>`;
-            }
-          }
-        );
-
-        const elem4 = document.createElement('each-primitive-elem');
-        document.getElementById('primitive-array-output').appendChild(elem4);
-
+        const code = document.querySelector('[data-test="primitive-array"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="primitive-array-output"><each-primitive-elem><ul id="each-primitive-result"><li>1</li><li>2</li><li>3</li><!--◦--></ul></each-primitive-elem></div>';
         requestAnimationFrame(() => {
-          const section = document.querySelector(
-            '[data-test="primitive-array"]'
-          );
-          const result = document.getElementById('each-primitive-result');
-          const items = result?.querySelectorAll('li') || [];
-          if (
-            items.length === 3 &&
-            items[0].textContent === '1' &&
-            items[1].textContent === '2' &&
-            items[2].textContent === '3'
-          ) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Primitive array test failed:', result?.innerHTML);
-          }
+          window.assertSnapshot('primitive-array', document.getElementById('primitive-array-output'), expected);
         });
       </script>
     </section>
@@ -209,35 +163,25 @@
     <section data-test="index-ref" data-test-result="pending">
       <h2>{@index} Reference</h2>
       <p>Uses {@index} to show the current array index.</p>
+      <pre><code>customElements.define(
+  'each-index-elem',
+  class extends hyperElement {
+    render(Html) {
+      const items = [{ name: 'First' }, { name: 'Second' }];
+      Html`&lt;ul id="each-index-result"&gt;{+each ${items}}&lt;li&gt;{@}: {name}&lt;/li&gt;{-each}&lt;/ul&gt;`;
+    }
+  }
+);
+
+const elem5 = document.createElement('each-index-elem');
+document.getElementById('index-ref-output').appendChild(elem5);</code></pre>
       <div id="index-ref-output"></div>
       <script type="module">
-        customElements.define(
-          'each-index-elem',
-          class extends hyperElement {
-            render(Html) {
-              const items = [{ name: 'First' }, { name: 'Second' }];
-              Html`<ul id="each-index-result">{+each ${items}}<li>{@}: {name}</li>{-each}</ul>`;
-            }
-          }
-        );
-
-        const elem5 = document.createElement('each-index-elem');
-        document.getElementById('index-ref-output').appendChild(elem5);
-
+        const code = document.querySelector('[data-test="index-ref"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="index-ref-output"><each-index-elem><ul id="each-index-result"><li>0: First</li><li>1: Second</li><!--◦--></ul></each-index-elem></div>';
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="index-ref"]');
-          const result = document.getElementById('each-index-result');
-          const items = result?.querySelectorAll('li') || [];
-          if (
-            items.length === 2 &&
-            items[0].textContent === '0: First' &&
-            items[1].textContent === '1: Second'
-          ) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Index ref test failed:', result?.innerHTML);
-          }
+          window.assertSnapshot('index-ref', document.getElementById('index-ref-output'), expected);
         });
       </script>
     </section>
@@ -246,37 +190,25 @@
     <section data-test="empty-array" data-test-result="pending">
       <h2>Empty Array</h2>
       <p>Renders nothing for an empty array.</p>
+      <pre><code>customElements.define(
+  'each-empty-elem',
+  class extends hyperElement {
+    render(Html) {
+      const items = [];
+      Html`&lt;div id="each-empty-result"&gt;&lt;span&gt;before&lt;/span&gt;{+each ${items}}&lt;li&gt;{name}&lt;/li&gt;{-each}&lt;span&gt;after&lt;/span&gt;&lt;/div&gt;`;
+    }
+  }
+);
+
+const elem6 = document.createElement('each-empty-elem');
+document.getElementById('empty-array-output').appendChild(elem6);</code></pre>
       <div id="empty-array-output"></div>
       <script type="module">
-        customElements.define(
-          'each-empty-elem',
-          class extends hyperElement {
-            render(Html) {
-              const items = [];
-              Html`<div id="each-empty-result"><span>before</span>{+each ${items}}<li>{name}</li>{-each}<span>after</span></div>`;
-            }
-          }
-        );
-
-        const elem6 = document.createElement('each-empty-elem');
-        document.getElementById('empty-array-output').appendChild(elem6);
-
+        const code = document.querySelector('[data-test="empty-array"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="empty-array-output"><each-empty-elem><div id="each-empty-result"><span>before</span><!--◦--><span>after</span></div></each-empty-elem></div>';
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="empty-array"]');
-          const result = document.getElementById('each-empty-result');
-          const lis = result?.querySelectorAll('li') || [];
-          const spans = result?.querySelectorAll('span') || [];
-          if (
-            lis.length === 0 &&
-            spans.length === 2 &&
-            spans[0].textContent === 'before' &&
-            spans[1].textContent === 'after'
-          ) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Empty array test failed:', result?.innerHTML);
-          }
+          window.assertSnapshot('empty-array', document.getElementById('empty-array-output'), expected);
         });
       </script>
     </section>
@@ -285,40 +217,26 @@
     <section data-test="xss-prevention" data-test-result="pending">
       <h2>XSS Prevention</h2>
       <p>Property values should be escaped to prevent XSS.</p>
+      <pre><code>customElements.define(
+  'each-xss-elem',
+  class extends hyperElement {
+    render(Html) {
+      const malicious = '&lt;scr' + 'ipt&gt;alert("XSS")&lt;\/scr' + 'ipt&gt;';
+      const users = [{ name: malicious }];
+      Html`&lt;ul id="each-xss-result"&gt;{+each ${users}}&lt;li&gt;{name}&lt;/li&gt;{-each}&lt;/ul&gt;`;
+    }
+  }
+);
+
+const elem7 = document.createElement('each-xss-elem');
+document.getElementById('xss-prevention-output').appendChild(elem7);</code></pre>
       <div id="xss-prevention-output"></div>
       <script type="module">
-        customElements.define(
-          'each-xss-elem',
-          class extends hyperElement {
-            render(Html) {
-              // Use concatenation to avoid HTML parser issues
-              const malicious = '<scr' + 'ipt>alert("XSS")<\/scr' + 'ipt>';
-              const users = [{ name: malicious }];
-              Html`<ul id="each-xss-result">{+each ${users}}<li>{name}</li>{-each}</ul>`;
-            }
-          }
-        );
-
-        const elem7 = document.createElement('each-xss-elem');
-        document.getElementById('xss-prevention-output').appendChild(elem7);
-
+        const code = document.querySelector('[data-test="xss-prevention"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="xss-prevention-output"><each-xss-elem><ul id="each-xss-result"><li>&lt;script&gt;alert("XSS")&lt;/script&gt;</li><!--◦--></ul></each-xss-elem></div>';
         requestAnimationFrame(() => {
-          const section = document.querySelector(
-            '[data-test="xss-prevention"]'
-          );
-          const result = document.getElementById('each-xss-result');
-          const li = result?.querySelector('li');
-          // The script tag should be escaped, shown as text
-          if (
-            li &&
-            li.textContent.includes('<script>') &&
-            li.innerHTML.includes('&lt;script&gt;')
-          ) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('XSS prevention test failed:', result?.innerHTML);
-          }
+          window.assertSnapshot('xss-prevention', document.getElementById('xss-prevention-output'), expected);
         });
       </script>
     </section>
@@ -327,50 +245,50 @@
     <section data-test="dom-reuse" data-test-result="pending">
       <h2>DOM Reuse (Wire)</h2>
       <p>Verifies that DOM nodes are reused on re-render (via wire).</p>
+      <pre><code>const reuseUsers = [{ name: 'Alice' }, { name: 'Bob' }];
+
+customElements.define(
+  'each-reuse-elem',
+  class extends hyperElement {
+    render(Html) {
+      Html`&lt;ul id="each-reuse-result"&gt;{+each ${reuseUsers}}&lt;li&gt;{name}&lt;/li&gt;{-each}&lt;/ul&gt;`;
+    }
+  }
+);
+
+const elem8 = document.createElement('each-reuse-elem');
+document.getElementById('dom-reuse-output').appendChild(elem8);
+
+requestAnimationFrame(() =&gt; {
+  const result = document.getElementById('each-reuse-result');
+  const firstLi = result?.querySelector('li');
+
+  if (firstLi) {
+    firstLi._testMarker = 'original';
+  }
+
+  reuseUsers[0].name = 'Alice Updated';
+  elem8.render(elem8.Html);
+
+  requestAnimationFrame(() =&gt; {
+    const newFirstLi = result?.querySelector('li');
+    if (!newFirstLi || newFirstLi._testMarker !== 'original') {
+      const section = document.querySelector('[data-test="dom-reuse"]');
+      section.dataset.testResult = 'fail';
+      console.error('DOM reuse test failed - node was recreated');
+    }
+  });
+});</code></pre>
       <div id="dom-reuse-output"></div>
       <script type="module">
-        // Keep the same object references across renders
-        const reuseUsers = [{ name: 'Alice' }, { name: 'Bob' }];
-
-        customElements.define(
-          'each-reuse-elem',
-          class extends hyperElement {
-            render(Html) {
-              Html`<ul id="each-reuse-result">{+each ${reuseUsers}}<li>{name}</li>{-each}</ul>`;
-            }
-          }
-        );
-
-        const elem8 = document.createElement('each-reuse-elem');
-        document.getElementById('dom-reuse-output').appendChild(elem8);
-
-        requestAnimationFrame(() => {
-          const result = document.getElementById('each-reuse-result');
-          const firstLi = result?.querySelector('li');
-
-          // Mark the first li with a custom property
-          if (firstLi) {
-            firstLi._testMarker = 'original';
-          }
-
-          // Re-render with SAME data objects (update a property to trigger render)
-          reuseUsers[0].name = 'Alice Updated';
-          elem8.render(elem8.Html);
-
-          requestAnimationFrame(() => {
-            const section = document.querySelector('[data-test="dom-reuse"]');
-            const newFirstLi = result?.querySelector('li');
-
-            // If wire is working, the same DOM node should be reused
-            // (even though the content changed, the node is the same)
-            if (newFirstLi && newFirstLi._testMarker === 'original') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-              console.error('DOM reuse test failed - node was recreated');
-            }
-          });
-        });
+        const code = document.querySelector('[data-test="dom-reuse"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="dom-reuse-output"><each-reuse-elem><ul id="each-reuse-result"><li>Alice Updated</li><li>Bob</li><!--◦--></ul></each-reuse-elem></div>';
+        setTimeout(() => {
+          const section = document.querySelector('[data-test="dom-reuse"]');
+          if (section.dataset.testResult === 'fail') return;
+          window.assertSnapshot('dom-reuse', document.getElementById('dom-reuse-output'), expected);
+        }, 200);
       </script>
     </section>
 
@@ -378,72 +296,35 @@
     <section data-test="nested-each" data-test-result="pending">
       <h2>Nested Each Blocks</h2>
       <p>Renders nested lists using {+each {property}} syntax.</p>
+      <pre><code>customElements.define(
+  'each-nested-list-elem',
+  class extends hyperElement {
+    render(Html) {
+      const categories = [
+        {
+          name: 'Fruits',
+          items: [{ title: 'Apple' }, { title: 'Banana' }],
+        },
+        { name: 'Veggies', items: [{ title: 'Carrot' }] },
+      ];
+      Html`&lt;div id="each-nested-list-result"&gt;{+each ${categories}}&lt;section&gt;&lt;h3&gt;{name}&lt;/h3&gt;&lt;ul&gt;{+each {items}}&lt;li&gt;{title}&lt;/li&gt;{-each}&lt;/ul&gt;&lt;/section&gt;{-each}&lt;/div&gt;`;
+    }
+  }
+);
+
+const elem9 = document.createElement('each-nested-list-elem');
+document.getElementById('nested-each-output').appendChild(elem9);</code></pre>
       <div id="nested-each-output"></div>
       <script type="module">
-        customElements.define(
-          'each-nested-list-elem',
-          class extends hyperElement {
-            render(Html) {
-              const categories = [
-                {
-                  name: 'Fruits',
-                  items: [{ title: 'Apple' }, { title: 'Banana' }],
-                },
-                { name: 'Veggies', items: [{ title: 'Carrot' }] },
-              ];
-              Html`<div id="each-nested-list-result">{+each ${categories}}<section><h3>{name}</h3><ul>{+each {items}}<li>{title}</li>{-each}</ul></section>{-each}</div>`;
-            }
-          }
-        );
-
-        const elem9 = document.createElement('each-nested-list-elem');
-        document.getElementById('nested-each-output').appendChild(elem9);
-
+        const code = document.querySelector('[data-test="nested-each"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="nested-each-output"><each-nested-list-elem><div id="each-nested-list-result"><section><h3>Fruits</h3><ul><li>Apple</li><li>Banana</li><!--◦--></ul></section><section><h3>Veggies</h3><ul><li>Carrot</li><!--◦--></ul></section><!--◦--></div></each-nested-list-elem></div>';
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="nested-each"]');
-          const result = document.getElementById('each-nested-list-result');
-          const sections = result?.querySelectorAll('section') || [];
-          const h3s = result?.querySelectorAll('h3') || [];
-          const lis = result?.querySelectorAll('li') || [];
-
-          if (
-            sections.length === 2 &&
-            h3s.length === 2 &&
-            h3s[0].textContent === 'Fruits' &&
-            h3s[1].textContent === 'Veggies' &&
-            lis.length === 3 &&
-            lis[0].textContent === 'Apple' &&
-            lis[1].textContent === 'Banana' &&
-            lis[2].textContent === 'Carrot'
-          ) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Nested each test failed:', result?.innerHTML);
-          }
+          window.assertSnapshot('nested-each', document.getElementById('nested-each-output'), expected);
         });
       </script>
     </section>
 
-    <script type="module">
-      // Summary at the end
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          const tests = document.querySelectorAll('[data-test]');
-          const passed = document.querySelectorAll(
-            '[data-test-result="pass"]'
-          ).length;
-          const failed = document.querySelectorAll(
-            '[data-test-result="fail"]'
-          ).length;
-          const pending = document.querySelectorAll(
-            '[data-test-result="pending"]'
-          ).length;
-          console.log(
-            `Tests: ${passed} passed, ${failed} failed, ${pending} pending`
-          );
-        }, 500);
-      });
-    </script>
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
   </body>
 </html>

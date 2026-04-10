@@ -30,6 +30,11 @@
       h2 {
         margin-top: 0;
       }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
     </style>
   </head>
   <body>
@@ -40,766 +45,1002 @@
     <section data-test="frag-text-string" data-test-result="pending">
       <h2>Fragment { text: string }</h2>
       <p>Tests fragment returning { text: 'string' }.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-text-string"]');
+
+  customElements.define(
+    'frag-text-string-elem',
+    class extends hyperElement {
+      Content() {
+        return { text: 'Plain text content' };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-text-string-result"&gt;${{ Content: {} }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-text-string-elem');
+  document.getElementById('frag-text-string-output').appendChild(elem);
+
+  setTimeout(() => {
+    const result = document.getElementById('frag-text-string-result');
+    if (result && result.textContent === 'Plain text content') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 50);
+})();</code></pre>
       <div id="frag-text-string-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-text-string"]'
-          );
 
-          customElements.define(
-            'frag-text-string-elem',
-            class extends hyperElement {
-              Content() {
-                return { text: 'Plain text content' };
-              }
-              render(Html) {
-                Html`<div id="frag-text-string-result">${{ Content: {} }}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-text-string"] pre code').textContent;
 
-          const elem = document.createElement('frag-text-string-elem');
-          document.getElementById('frag-text-string-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const result = document.getElementById('frag-text-string-result');
-            if (result && result.textContent === 'Plain text content') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 50);
-        })();
-      </script>
+        const expected = '<div id="frag-text-string-output"><frag-text-string-elem><div id="frag-text-string-result">Plain text content</div></frag-text-string-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-text-string"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-text-string', document.getElementById('frag-text-string-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: text property with HTML (should be escaped) -->
     <section data-test="frag-text-escaped" data-test-result="pending">
       <h2>Fragment { text: html } - Escaped</h2>
       <p>Tests that text property escapes HTML.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-text-escaped"]');
+
+  customElements.define(
+    'frag-text-escaped-elem',
+    class extends hyperElement {
+      Content() {
+        return { text: '&lt;b&gt;should be escaped&lt;/b&gt;' };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-text-escaped-result"&gt;${{ Content: {} }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-text-escaped-elem');
+  document.getElementById('frag-text-escaped-output').appendChild(elem);
+
+  setTimeout(() => {
+    const result = document.getElementById('frag-text-escaped-result');
+    // Should show as text, not as bold
+    if (
+      result &&
+      result.textContent.includes('&lt;b&gt;should be escaped&lt;/b&gt;') &&
+      result.innerHTML.includes('&amp;lt;b&amp;gt;')
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 50);
+})();</code></pre>
       <div id="frag-text-escaped-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-text-escaped"]'
-          );
 
-          customElements.define(
-            'frag-text-escaped-elem',
-            class extends hyperElement {
-              Content() {
-                return { text: '<b>should be escaped</b>' };
-              }
-              render(Html) {
-                Html`<div id="frag-text-escaped-result">${{ Content: {} }}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-text-escaped"] pre code').textContent;
 
-          const elem = document.createElement('frag-text-escaped-elem');
-          document.getElementById('frag-text-escaped-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const result = document.getElementById('frag-text-escaped-result');
-            // Should show as text, not as bold
-            if (
-              result &&
-              result.textContent.includes('<b>should be escaped</b>') &&
-              result.innerHTML.includes('&lt;b&gt;')
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 50);
-        })();
-      </script>
+        const expected = '<div id="frag-text-escaped-output"><frag-text-escaped-elem><div id="frag-text-escaped-result">&lt;b&gt;should be escaped&lt;/b&gt;</div></frag-text-escaped-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-text-escaped"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-text-escaped', document.getElementById('frag-text-escaped-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: html property (raw/unsafe) -->
     <section data-test="frag-html-raw" data-test-result="pending">
       <h2>Fragment { html: string } - Raw HTML</h2>
       <p>Tests that html property renders as raw HTML.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-html-raw"]');
+
+  customElements.define(
+    'frag-html-raw-elem',
+    class extends hyperElement {
+      Content() {
+        return { html: '&lt;strong&gt;bold&lt;/strong&gt; and &lt;em&gt;italic&lt;/em&gt;' };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-html-raw-result"&gt;${{ Content: {} }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-html-raw-elem');
+  document.getElementById('frag-html-raw-output').appendChild(elem);
+
+  setTimeout(() => {
+    const result = document.getElementById('frag-html-raw-result');
+    const strong = result?.querySelector('strong');
+    const em = result?.querySelector('em');
+    if (
+      strong &&
+      em &&
+      strong.textContent === 'bold' &&
+      em.textContent === 'italic'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 50);
+})();</code></pre>
       <div id="frag-html-raw-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="frag-html-raw"]');
 
-          customElements.define(
-            'frag-html-raw-elem',
-            class extends hyperElement {
-              Content() {
-                return { html: '<strong>bold</strong> and <em>italic</em>' };
-              }
-              render(Html) {
-                Html`<div id="frag-html-raw-result">${{ Content: {} }}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-html-raw"] pre code').textContent;
 
-          const elem = document.createElement('frag-html-raw-elem');
-          document.getElementById('frag-html-raw-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const result = document.getElementById('frag-html-raw-result');
-            const strong = result?.querySelector('strong');
-            const em = result?.querySelector('em');
-            if (
-              strong &&
-              em &&
-              strong.textContent === 'bold' &&
-              em.textContent === 'italic'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 50);
-        })();
-      </script>
+        const expected = '<div id="frag-html-raw-output"><frag-html-raw-elem><div id="frag-html-raw-result"><!--<>--><strong>bold</strong> and <em>italic</em><!--</>--></div></frag-html-raw-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-html-raw"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-html-raw', document.getElementById('frag-html-raw-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: any property with string -->
     <section data-test="frag-any-string" data-test-result="pending">
       <h2>Fragment { any: string }</h2>
       <p>Tests fragment returning { any: 'string' }.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-any-string"]');
+
+  customElements.define(
+    'frag-any-string-elem',
+    class extends hyperElement {
+      Content() {
+        return { any: 'Any string value' };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-any-string-result"&gt;${{ Content: {} }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-any-string-elem');
+  document.getElementById('frag-any-string-output').appendChild(elem);
+
+  setTimeout(() => {
+    const result = document.getElementById('frag-any-string-result');
+    if (result && result.textContent === 'Any string value') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 50);
+})();</code></pre>
       <div id="frag-any-string-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-any-string"]'
-          );
 
-          customElements.define(
-            'frag-any-string-elem',
-            class extends hyperElement {
-              Content() {
-                return { any: 'Any string value' };
-              }
-              render(Html) {
-                Html`<div id="frag-any-string-result">${{ Content: {} }}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-any-string"] pre code').textContent;
 
-          const elem = document.createElement('frag-any-string-elem');
-          document.getElementById('frag-any-string-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const result = document.getElementById('frag-any-string-result');
-            if (result && result.textContent === 'Any string value') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 50);
-        })();
-      </script>
+        const expected = '<div id="frag-any-string-output"><frag-any-string-elem><div id="frag-any-string-result">Any string value</div></frag-any-string-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-any-string"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-any-string', document.getElementById('frag-any-string-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: any property with number -->
     <section data-test="frag-any-number" data-test-result="pending">
       <h2>Fragment { any: number }</h2>
       <p>Tests fragment returning { any: 42 }.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-any-number"]');
+
+  customElements.define(
+    'frag-any-number-elem',
+    class extends hyperElement {
+      Content() {
+        return { any: 42 };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-any-number-result"&gt;${{ Content: {} }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-any-number-elem');
+  document.getElementById('frag-any-number-output').appendChild(elem);
+
+  setTimeout(() => {
+    const result = document.getElementById('frag-any-number-result');
+    if (result && result.textContent === '42') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 50);
+})();</code></pre>
       <div id="frag-any-number-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-any-number"]'
-          );
 
-          customElements.define(
-            'frag-any-number-elem',
-            class extends hyperElement {
-              Content() {
-                return { any: 42 };
-              }
-              render(Html) {
-                Html`<div id="frag-any-number-result">${{ Content: {} }}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-any-number"] pre code').textContent;
 
-          const elem = document.createElement('frag-any-number-elem');
-          document.getElementById('frag-any-number-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const result = document.getElementById('frag-any-number-result');
-            if (result && result.textContent === '42') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 50);
-        })();
-      </script>
+        const expected = '<div id="frag-any-number-output"><frag-any-number-elem><div id="frag-any-number-result">42</div></frag-any-number-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-any-number"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-any-number', document.getElementById('frag-any-number-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: any property with boolean -->
     <section data-test="frag-any-bool" data-test-result="pending">
       <h2>Fragment { any: boolean }</h2>
       <p>Tests fragment returning { any: true }.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-any-bool"]');
+
+  customElements.define(
+    'frag-any-bool-elem',
+    class extends hyperElement {
+      Content() {
+        return { any: true };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-any-bool-result"&gt;${{ Content: {} }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-any-bool-elem');
+  document.getElementById('frag-any-bool-output').appendChild(elem);
+
+  setTimeout(() => {
+    const result = document.getElementById('frag-any-bool-result');
+    if (result && result.textContent === 'true') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 50);
+})();</code></pre>
       <div id="frag-any-bool-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="frag-any-bool"]');
 
-          customElements.define(
-            'frag-any-bool-elem',
-            class extends hyperElement {
-              Content() {
-                return { any: true };
-              }
-              render(Html) {
-                Html`<div id="frag-any-bool-result">${{ Content: {} }}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-any-bool"] pre code').textContent;
 
-          const elem = document.createElement('frag-any-bool-elem');
-          document.getElementById('frag-any-bool-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const result = document.getElementById('frag-any-bool-result');
-            if (result && result.textContent === 'true') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 50);
-        })();
-      </script>
+        const expected = '<div id="frag-any-bool-output"><frag-any-bool-elem><div id="frag-any-bool-result">true</div></frag-any-bool-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-any-bool"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-any-bool', document.getElementById('frag-any-bool-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: template with simple variables -->
     <section data-test="frag-template-simple" data-test-result="pending">
       <h2>Fragment { template, values } - Simple</h2>
       <p>Tests fragment with template string and values object.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-template-simple"]');
+
+  customElements.define(
+    'frag-template-simple-elem',
+    class extends hyperElement {
+      Greeting(data) {
+        return {
+          template: '&lt;span&gt;Hello, {name}!&lt;/span&gt;',
+          values: data,
+        };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-template-simple-result"&gt;${{
+          Greeting: { name: 'World' },
+        }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-template-simple-elem');
+  document.getElementById('frag-template-simple-output').appendChild(elem);
+
+  setTimeout(() => {
+    const result = document.getElementById('frag-template-simple-result');
+    if (result && result.textContent.includes('Hello, World!')) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 100);
+})();</code></pre>
       <div id="frag-template-simple-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-template-simple"]'
-          );
 
-          customElements.define(
-            'frag-template-simple-elem',
-            class extends hyperElement {
-              Greeting(data) {
-                return {
-                  template: '<span>Hello, {name}!</span>',
-                  values: data,
-                };
-              }
-              render(Html) {
-                Html`<div id="frag-template-simple-result">${{
-                  Greeting: { name: 'World' },
-                }}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-template-simple"] pre code').textContent;
 
-          const elem = document.createElement('frag-template-simple-elem');
-          document
-            .getElementById('frag-template-simple-output')
-            .appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const result = document.getElementById(
-              'frag-template-simple-result'
-            );
-            if (result && result.textContent.includes('Hello, World!')) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        })();
-      </script>
+        const expected = '<div id="frag-template-simple-output"><frag-template-simple-elem><div id="frag-template-simple-result"><!--<>--><span>Hello, World!</span><!--</>--></div></frag-template-simple-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-template-simple"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-template-simple', document.getElementById('frag-template-simple-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: template with array values (mapping) -->
     <section data-test="frag-template-array" data-test-result="pending">
       <h2>Fragment { template, values: array }</h2>
       <p>Tests template mapped over array of values.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-template-array"]');
+
+  customElements.define(
+    'frag-template-array-elem',
+    class extends hyperElement {
+      Items(data) {
+        return {
+          template: '&lt;li&gt;{name}&lt;/li&gt;',
+          values: data.items,
+        };
+      }
+      render(Html) {
+        Html`&lt;ul id="frag-template-array-result"&gt;${{
+          Items: {
+            items: [
+              { name: 'One' },
+              { name: 'Two' },
+              { name: 'Three' },
+            ],
+          },
+        }}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-template-array-elem');
+  document.getElementById('frag-template-array-output').appendChild(elem);
+
+  setTimeout(() => {
+    const result = document.getElementById('frag-template-array-result');
+    const lis = result?.querySelectorAll('li');
+    if (
+      lis?.length === 3 &&
+      lis[0].textContent === 'One' &&
+      lis[1].textContent === 'Two' &&
+      lis[2].textContent === 'Three'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 100);
+})();</code></pre>
       <div id="frag-template-array-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-template-array"]'
-          );
 
-          customElements.define(
-            'frag-template-array-elem',
-            class extends hyperElement {
-              Items(data) {
-                return {
-                  template: '<li>{name}</li>',
-                  values: data.items,
-                };
-              }
-              render(Html) {
-                Html`<ul id="frag-template-array-result">${{
-                  Items: {
-                    items: [
-                      { name: 'One' },
-                      { name: 'Two' },
-                      { name: 'Three' },
-                    ],
-                  },
-                }}</ul>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-template-array"] pre code').textContent;
 
-          const elem = document.createElement('frag-template-array-elem');
-          document
-            .getElementById('frag-template-array-output')
-            .appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const result = document.getElementById(
-              'frag-template-array-result'
-            );
-            const lis = result?.querySelectorAll('li');
-            if (
-              lis?.length === 3 &&
-              lis[0].textContent === 'One' &&
-              lis[1].textContent === 'Two' &&
-              lis[2].textContent === 'Three'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        })();
-      </script>
+        const expected = '<div id="frag-template-array-output"><frag-template-array-elem><ul id="frag-template-array-result"><!--<>--><li>One</li><li>Two</li><li>Three</li><!--</>--></ul></frag-template-array-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-template-array"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-template-array', document.getElementById('frag-template-array-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: once:true caching -->
     <section data-test="frag-once-true" data-test-result="pending">
       <h2>Fragment { once: true } - Caching</h2>
       <p>Tests that once:true fragments only execute once.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-once-true"]');
+  let callCount = 0;
+
+  customElements.define(
+    'frag-once-elem',
+    class extends hyperElement {
+      Cached() {
+        callCount++;
+        return {
+          text: 'Cached content (call #' + callCount + ')',
+          once: true,
+        };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-once-result"&gt;${{ Cached: {} }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-once-elem');
+  document.getElementById('frag-once-output').appendChild(elem);
+
+  setTimeout(() => {
+    // Re-render multiple times
+    elem.render();
+    elem.render();
+    elem.render();
+
+    setTimeout(() => {
+      const result = document.getElementById('frag-once-result');
+      // Should still show #1 because it's cached
+      if (
+        result &&
+        result.textContent.includes('call #1') &&
+        callCount === 1
+      ) {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    }, 50);
+  }, 50);
+})();</code></pre>
       <div id="frag-once-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-once-true"]'
-          );
-          let callCount = 0;
 
-          customElements.define(
-            'frag-once-elem',
-            class extends hyperElement {
-              Cached() {
-                callCount++;
-                return {
-                  text: 'Cached content (call #' + callCount + ')',
-                  once: true,
-                };
-              }
-              render(Html) {
-                Html`<div id="frag-once-result">${{ Cached: {} }}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-once-true"] pre code').textContent;
 
-          const elem = document.createElement('frag-once-elem');
-          document.getElementById('frag-once-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            // Re-render multiple times
-            elem.render();
-            elem.render();
-            elem.render();
+        const expected = '<div id="frag-once-output"><frag-once-elem><div id="frag-once-result">Cached content (call #1)</div></frag-once-elem></div>';
 
-            setTimeout(() => {
-              const result = document.getElementById('frag-once-result');
-              // Should still show #1 because it's cached
-              if (
-                result &&
-                result.textContent.includes('call #1') &&
-                callCount === 1
-              ) {
-                section.dataset.testResult = 'pass';
-              } else {
-                section.dataset.testResult = 'fail';
-              }
-            }, 50);
-          }, 50);
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-once-true"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-once-true', document.getElementById('frag-once-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: placeholder with async text -->
     <section data-test="frag-placeholder" data-test-result="pending">
       <h2>Fragment { text: Promise, placeholder }</h2>
       <p>Tests placeholder shown while async resolves.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-placeholder"]');
+  let sawPlaceholder = false;
+
+  customElements.define(
+    'frag-placeholder-elem',
+    class extends hyperElement {
+      Content() {
+        return {
+          text: new Promise((resolve) =>
+            setTimeout(() => resolve('Loaded!'), 100)
+          ),
+          placeholder: 'Loading...',
+        };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-placeholder-result"&gt;${{ Content: {} }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-placeholder-elem');
+  document.getElementById('frag-placeholder-output').appendChild(elem);
+
+  // Check for placeholder immediately
+  setTimeout(() => {
+    const result = document.getElementById('frag-placeholder-result');
+    if (result?.textContent === 'Loading...') {
+      sawPlaceholder = true;
+    }
+  }, 20);
+
+  // Check for resolved value
+  setTimeout(() => {
+    const result = document.getElementById('frag-placeholder-result');
+    if (sawPlaceholder && result?.textContent === 'Loaded!') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 200);
+})();</code></pre>
       <div id="frag-placeholder-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-placeholder"]'
-          );
-          let sawPlaceholder = false;
 
-          customElements.define(
-            'frag-placeholder-elem',
-            class extends hyperElement {
-              Content() {
-                return {
-                  text: new Promise((resolve) =>
-                    setTimeout(() => resolve('Loaded!'), 100)
-                  ),
-                  placeholder: 'Loading...',
-                };
-              }
-              render(Html) {
-                Html`<div id="frag-placeholder-result">${{ Content: {} }}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-placeholder"] pre code').textContent;
 
-          const elem = document.createElement('frag-placeholder-elem');
-          document.getElementById('frag-placeholder-output').appendChild(elem);
+        eval(code);
 
-          // Check for placeholder immediately
-          setTimeout(() => {
-            const result = document.getElementById('frag-placeholder-result');
-            if (result?.textContent === 'Loading...') {
-              sawPlaceholder = true;
-            }
-          }, 20);
+        const expected = '<div id="frag-placeholder-output"><frag-placeholder-elem><div id="frag-placeholder-result">Loaded!</div></frag-placeholder-elem></div>';
 
-          // Check for resolved value
-          setTimeout(() => {
-            const result = document.getElementById('frag-placeholder-result');
-            if (sawPlaceholder && result?.textContent === 'Loaded!') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 200);
-        })();
-      </script>
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-placeholder"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-placeholder', document.getElementById('frag-placeholder-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: async html -->
     <section data-test="frag-async-html" data-test-result="pending">
       <h2>Fragment { html: Promise }</h2>
       <p>Tests async raw HTML fragment.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-async-html"]');
+
+  customElements.define(
+    'frag-async-html-elem',
+    class extends hyperElement {
+      Content() {
+        return {
+          html: new Promise((resolve) =>
+            setTimeout(() => resolve('&lt;strong&gt;Async Bold&lt;/strong&gt;'), 50)
+          ),
+          placeholder: '...',
+        };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-async-html-result"&gt;${{ Content: {} }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-async-html-elem');
+  document.getElementById('frag-async-html-output').appendChild(elem);
+
+  setTimeout(() => {
+    const result = document.getElementById('frag-async-html-result');
+    const strong = result?.querySelector('strong');
+    if (strong && strong.textContent === 'Async Bold') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 150);
+})();</code></pre>
       <div id="frag-async-html-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-async-html"]'
-          );
 
-          customElements.define(
-            'frag-async-html-elem',
-            class extends hyperElement {
-              Content() {
-                return {
-                  html: new Promise((resolve) =>
-                    setTimeout(() => resolve('<strong>Async Bold</strong>'), 50)
-                  ),
-                  placeholder: '...',
-                };
-              }
-              render(Html) {
-                Html`<div id="frag-async-html-result">${{ Content: {} }}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-async-html"] pre code').textContent;
 
-          const elem = document.createElement('frag-async-html-elem');
-          document.getElementById('frag-async-html-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const result = document.getElementById('frag-async-html-result');
-            const strong = result?.querySelector('strong');
-            if (strong && strong.textContent === 'Async Bold') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 150);
-        })();
-      </script>
+        const expected = '<div id="frag-async-html-output"><frag-async-html-elem><div id="frag-async-html-result"><!--<>--><strong>Async Bold</strong><!--</>--></div></frag-async-html-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-async-html"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-async-html', document.getElementById('frag-async-html-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: async any -->
     <section data-test="frag-async-any" data-test-result="pending">
       <h2>Fragment { any: Promise }</h2>
       <p>Tests async any value fragment.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-async-any"]');
+
+  customElements.define(
+    'frag-async-any-elem',
+    class extends hyperElement {
+      Content() {
+        return {
+          any: new Promise((resolve) =>
+            setTimeout(() => resolve('Async Value'), 50)
+          ),
+          placeholder: 'Wait...',
+        };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-async-any-result"&gt;${{ Content: {} }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-async-any-elem');
+  document.getElementById('frag-async-any-output').appendChild(elem);
+
+  setTimeout(() => {
+    const result = document.getElementById('frag-async-any-result');
+    if (result?.textContent === 'Async Value') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 150);
+})();</code></pre>
       <div id="frag-async-any-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-async-any"]'
-          );
 
-          customElements.define(
-            'frag-async-any-elem',
-            class extends hyperElement {
-              Content() {
-                return {
-                  any: new Promise((resolve) =>
-                    setTimeout(() => resolve('Async Value'), 50)
-                  ),
-                  placeholder: 'Wait...',
-                };
-              }
-              render(Html) {
-                Html`<div id="frag-async-any-result">${{ Content: {} }}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-async-any"] pre code').textContent;
 
-          const elem = document.createElement('frag-async-any-elem');
-          document.getElementById('frag-async-any-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const result = document.getElementById('frag-async-any-result');
-            if (result?.textContent === 'Async Value') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 150);
-        })();
-      </script>
+        const expected = '<div id="frag-async-any-output"><frag-async-any-elem><div id="frag-async-any-result">Async Value</div></frag-async-any-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-async-any"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-async-any', document.getElementById('frag-async-any-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: fragment with data parameter -->
     <section data-test="frag-with-data" data-test-result="pending">
       <h2>Fragment with Data Parameter</h2>
       <p>Tests fragment receiving data from render call.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-with-data"]');
+
+  customElements.define(
+    'frag-data-elem',
+    class extends hyperElement {
+      Display(data) {
+        return {
+          text: `Name: ${data.name}, Age: ${data.age}`,
+        };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-data-result"&gt;${{
+          Display: { name: 'Alice', age: 30 },
+        }}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-data-elem');
+  document.getElementById('frag-data-output').appendChild(elem);
+
+  setTimeout(() => {
+    const result = document.getElementById('frag-data-result');
+    if (result?.textContent === 'Name: Alice, Age: 30') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 50);
+})();</code></pre>
       <div id="frag-data-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-with-data"]'
-          );
 
-          customElements.define(
-            'frag-data-elem',
-            class extends hyperElement {
-              Display(data) {
-                return {
-                  text: `Name: ${data.name}, Age: ${data.age}`,
-                };
-              }
-              render(Html) {
-                Html`<div id="frag-data-result">${{
-                  Display: { name: 'Alice', age: 30 },
-                }}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-with-data"] pre code').textContent;
 
-          const elem = document.createElement('frag-data-elem');
-          document.getElementById('frag-data-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const result = document.getElementById('frag-data-result');
-            if (result?.textContent === 'Name: Alice, Age: 30') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 50);
-        })();
-      </script>
+        const expected = '<div id="frag-data-output"><frag-data-elem><div id="frag-data-result">Name: Alice, Age: 30</div></frag-data-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-with-data"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-with-data', document.getElementById('frag-data-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: multiple fragments in same element -->
     <section data-test="frag-multiple" data-test-result="pending">
       <h2>Multiple Fragments</h2>
       <p>Tests using multiple different fragments in one element.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-multiple"]');
+
+  customElements.define(
+    'frag-multiple-elem',
+    class extends hyperElement {
+      Header(data) {
+        return { text: `Header: ${data.title}` };
+      }
+      Body(data) {
+        return { html: `&lt;p&gt;${data.content}&lt;/p&gt;` };
+      }
+      Footer() {
+        return { text: 'Footer text' };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-multiple-result"&gt;
+          &lt;div class="h"&gt;${{ Header: { title: 'Title' } }}&lt;/div&gt;
+          &lt;div class="b"&gt;${{ Body: { content: 'Body content' } }}&lt;/div&gt;
+          &lt;div class="f"&gt;${{ Footer: {} }}&lt;/div&gt;
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-multiple-elem');
+  document.getElementById('frag-multiple-output').appendChild(elem);
+
+  setTimeout(() => {
+    const h = document.querySelector('#frag-multiple-result .h');
+    const b = document.querySelector('#frag-multiple-result .b p');
+    const f = document.querySelector('#frag-multiple-result .f');
+    if (
+      h?.textContent === 'Header: Title' &&
+      b?.textContent === 'Body content' &&
+      f?.textContent === 'Footer text'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 50);
+})();</code></pre>
       <div id="frag-multiple-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="frag-multiple"]');
 
-          customElements.define(
-            'frag-multiple-elem',
-            class extends hyperElement {
-              Header(data) {
-                return { text: `Header: ${data.title}` };
-              }
-              Body(data) {
-                return { html: `<p>${data.content}</p>` };
-              }
-              Footer() {
-                return { text: 'Footer text' };
-              }
-              render(Html) {
-                Html`<div id="frag-multiple-result">
-                  <div class="h">${{ Header: { title: 'Title' } }}</div>
-                  <div class="b">${{ Body: { content: 'Body content' } }}</div>
-                  <div class="f">${{ Footer: {} }}</div>
-                </div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-multiple"] pre code').textContent;
 
-          const elem = document.createElement('frag-multiple-elem');
-          document.getElementById('frag-multiple-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const h = document.querySelector('#frag-multiple-result .h');
-            const b = document.querySelector('#frag-multiple-result .b p');
-            const f = document.querySelector('#frag-multiple-result .f');
-            if (
-              h?.textContent === 'Header: Title' &&
-              b?.textContent === 'Body content' &&
-              f?.textContent === 'Footer text'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 50);
-        })();
-      </script>
+        const expected = '<div id="frag-multiple-output"><frag-multiple-elem><div id="frag-multiple-result">\n          <div class="h">Header: Title</div>\n          <div class="b"><!--<>--><p>Body content</p><!--</>--></div>\n          <div class="f">Footer text</div>\n        </div></frag-multiple-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-multiple"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-multiple', document.getElementById('frag-multiple-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: fragment returning empty object -->
     <section data-test="frag-empty-obj" data-test-result="pending">
       <h2>Fragment Returning Empty Object</h2>
       <p>Tests fragment that returns {}.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-empty-obj"]');
+
+  customElements.define(
+    'frag-empty-elem',
+    class extends hyperElement {
+      Empty() {
+        return {};
+      }
+      render(Html) {
+        Html`&lt;div id="frag-empty-result"&gt;before${{ Empty: {} }}after&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-empty-elem');
+  document.getElementById('frag-empty-output').appendChild(elem);
+
+  setTimeout(() => {
+    const result = document.getElementById('frag-empty-result');
+    // Empty object should render as [object Object] or similar
+    // This tests that it doesn't crash
+    if (result) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 50);
+})();</code></pre>
       <div id="frag-empty-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-empty-obj"]'
-          );
 
-          customElements.define(
-            'frag-empty-elem',
-            class extends hyperElement {
-              Empty() {
-                return {};
-              }
-              render(Html) {
-                Html`<div id="frag-empty-result">before${{ Empty: {} }}after</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-empty-obj"] pre code').textContent;
 
-          const elem = document.createElement('frag-empty-elem');
-          document.getElementById('frag-empty-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const result = document.getElementById('frag-empty-result');
-            // Empty object should render as [object Object] or similar
-            // This tests that it doesn't crash
-            if (result) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 50);
-        })();
-      </script>
+        const expected = '<div id="frag-empty-output"><frag-empty-elem><div id="frag-empty-result">before[object Object]after</div></frag-empty-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-empty-obj"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-empty-obj', document.getElementById('frag-empty-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: fragment with advanced template ({+if}) -->
     <section data-test="frag-advanced-template" data-test-result="pending">
       <h2>Fragment with Advanced Template</h2>
       <p>Tests fragment using {+if} in template.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-advanced-template"]');
+
+  customElements.define(
+    'frag-advanced-elem',
+    class extends hyperElement {
+      Status(data) {
+        return {
+          template: '{+if active}Active{else}Inactive{-if}',
+          values: data,
+        };
+      }
+      render(Html) {
+        Html`&lt;div id="frag-advanced-result"&gt;
+          &lt;span class="on"&gt;${{ Status: { active: true } }}&lt;/span&gt;
+          &lt;span class="off"&gt;${{ Status: { active: false } }}&lt;/span&gt;
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-advanced-elem');
+  document.getElementById('frag-advanced-output').appendChild(elem);
+
+  setTimeout(() => {
+    const on = document.querySelector('#frag-advanced-result .on');
+    const off = document.querySelector('#frag-advanced-result .off');
+    if (
+      on?.textContent === 'Active' &&
+      off?.textContent === 'Inactive'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 100);
+})();</code></pre>
       <div id="frag-advanced-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-advanced-template"]'
-          );
 
-          customElements.define(
-            'frag-advanced-elem',
-            class extends hyperElement {
-              Status(data) {
-                return {
-                  template: '{+if active}Active{else}Inactive{-if}',
-                  values: data,
-                };
-              }
-              render(Html) {
-                Html`<div id="frag-advanced-result">
-                  <span class="on">${{ Status: { active: true } }}</span>
-                  <span class="off">${{ Status: { active: false } }}</span>
-                </div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-advanced-template"] pre code').textContent;
 
-          const elem = document.createElement('frag-advanced-elem');
-          document.getElementById('frag-advanced-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const on = document.querySelector('#frag-advanced-result .on');
-            const off = document.querySelector('#frag-advanced-result .off');
-            if (
-              on?.textContent === 'Active' &&
-              off?.textContent === 'Inactive'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        })();
-      </script>
+        const expected = '<div id="frag-advanced-output"><frag-advanced-elem><div id="frag-advanced-result">\n          <span class="on"><!--<>-->Active<!--</>--></span>\n          <span class="off"><!--<>-->Inactive<!--</>--></span>\n        </div></frag-advanced-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-advanced-template"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-advanced-template', document.getElementById('frag-advanced-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: fragment with advanced template ({+each}) -->
     <section data-test="frag-each-template" data-test-result="pending">
       <h2>Fragment with {+each} Template</h2>
       <p>Tests fragment using {+each} in template.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="frag-each-template"]');
+
+  customElements.define(
+    'frag-each-elem',
+    class extends hyperElement {
+      List(data) {
+        return {
+          template: '{+each items}&lt;li&gt;{name}&lt;/li&gt;{-each}',
+          values: data,
+        };
+      }
+      render(Html) {
+        Html`&lt;ul id="frag-each-result"&gt;${{
+          List: { items: [{ name: 'A' }, { name: 'B' }] },
+        }}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('frag-each-elem');
+  document.getElementById('frag-each-output').appendChild(elem);
+
+  setTimeout(() => {
+    const lis = document.querySelectorAll('#frag-each-result li');
+    if (
+      lis.length === 2 &&
+      lis[0].textContent === 'A' &&
+      lis[1].textContent === 'B'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 100);
+})();</code></pre>
       <div id="frag-each-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="frag-each-template"]'
-          );
 
-          customElements.define(
-            'frag-each-elem',
-            class extends hyperElement {
-              List(data) {
-                return {
-                  template: '{+each items}<li>{name}</li>{-each}',
-                  values: data,
-                };
-              }
-              render(Html) {
-                Html`<ul id="frag-each-result">${{
-                  List: { items: [{ name: 'A' }, { name: 'B' }] },
-                }}</ul>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="frag-each-template"] pre code').textContent;
 
-          const elem = document.createElement('frag-each-elem');
-          document.getElementById('frag-each-output').appendChild(elem);
+        eval(code);
 
-          setTimeout(() => {
-            const lis = document.querySelectorAll('#frag-each-result li');
-            if (
-              lis.length === 2 &&
-              lis[0].textContent === 'A' &&
-              lis[1].textContent === 'B'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        })();
-      </script>
+        const expected = '<div id="frag-each-output"><frag-each-elem><ul id="frag-each-result"><!--<>--><li>A</li><li>B</li><!--</>--></ul></frag-each-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="frag-each-template"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('frag-each-template', document.getElementById('frag-each-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

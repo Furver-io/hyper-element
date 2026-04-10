@@ -30,6 +30,11 @@
       h2 {
         margin-top: 0;
       }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
     </style>
   </head>
   <body>
@@ -40,660 +45,876 @@
     <section data-test="nested-if-each" data-test-result="pending">
       <h2>Conditional Inside {+each} (via wire)</h2>
       <p>Tests conditional rendering inside loops using Html.wire().</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="nested-if-each"]');
+
+  customElements.define(
+    'nested-if-each-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.users = [
+          { name: 'Alice', admin: true },
+          { name: 'Bob', admin: false },
+          { name: 'Carol', admin: true },
+        ];
+        onNext();
+      }
+      render(Html) {
+        // Use wire with conditional inside
+        Html`&lt;ul id="nested-if-each-result"&gt;${this.users.map(
+          (user) =>
+            Html.wire(
+              user,
+              ':user'
+            )`&lt;li&gt;${user.name}${user.admin ? ' (admin)' : ''}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('nested-if-each-elem');
+  document.getElementById('nested-if-each-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const lis = document.querySelectorAll('#nested-if-each-result li');
+    if (
+      lis.length === 3 &&
+      lis[0].textContent.includes('Alice') &&
+      lis[0].textContent.includes('(admin)') &&
+      lis[1].textContent === 'Bob' &&
+      !lis[1].textContent.includes('admin') &&
+      lis[2].textContent.includes('(admin)')
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="nested-if-each-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="nested-if-each"]'
-          );
 
-          customElements.define(
-            'nested-if-each-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.users = [
-                  { name: 'Alice', admin: true },
-                  { name: 'Bob', admin: false },
-                  { name: 'Carol', admin: true },
-                ];
-                onNext();
-              }
-              render(Html) {
-                // Use wire with conditional inside
-                Html`<ul id="nested-if-each-result">${this.users.map(
-                  (user) =>
-                    Html.wire(
-                      user,
-                      ':user'
-                    )`<li>${user.name}${user.admin ? ' (admin)' : ''}</li>`
-                )}</ul>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="nested-if-each"] pre code').textContent;
 
-          const elem = document.createElement('nested-if-each-elem');
-          document.getElementById('nested-if-each-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const lis = document.querySelectorAll('#nested-if-each-result li');
-            if (
-              lis.length === 3 &&
-              lis[0].textContent.includes('Alice') &&
-              lis[0].textContent.includes('(admin)') &&
-              lis[1].textContent === 'Bob' &&
-              !lis[1].textContent.includes('admin') &&
-              lis[2].textContent.includes('(admin)')
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="nested-if-each-output"><nested-if-each-elem><ul id="nested-if-each-result"><li>Alice (admin)</li><li>Bob</li><li>Carol (admin)</li><!--◦--></ul></nested-if-each-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="nested-if-each"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('nested-if-each', document.getElementById('nested-if-each-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Multiple if blocks -->
     <section data-test="multiple-if" data-test-result="pending">
       <h2>Multiple {+if} Blocks</h2>
       <p>Tests multiple independent {+if} blocks.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="multiple-if"]');
+
+  customElements.define(
+    'multiple-if-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.showA = true;
+        this.showB = false;
+        this.showC = true;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="multiple-if-result"&gt;{+if ${this.showA}}A{-if}{+if ${this.showB}}B{-if}{+if ${this.showC}}C{-if}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('multiple-if-elem');
+  document.getElementById('multiple-if-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('multiple-if-result');
+    if (result?.textContent === 'AC') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="multiple-if-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="multiple-if"]');
 
-          customElements.define(
-            'multiple-if-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.showA = true;
-                this.showB = false;
-                this.showC = true;
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="multiple-if-result">{+if ${this.showA}}A{-if}{+if ${this.showB}}B{-if}{+if ${this.showC}}C{-if}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="multiple-if"] pre code').textContent;
 
-          const elem = document.createElement('multiple-if-elem');
-          document.getElementById('multiple-if-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('multiple-if-result');
-            if (result?.textContent === 'AC') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="multiple-if-output"><multiple-if-elem><div id="multiple-if-result"><!--<>-->A<!--</>--><!--<>--><!--</>--><!--<>-->C<!--</>--></div></multiple-if-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="multiple-if"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('multiple-if', document.getElementById('multiple-if-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Multiple each blocks -->
     <section data-test="multiple-each" data-test-result="pending">
       <h2>Multiple {+each} Blocks</h2>
       <p>Tests multiple independent {+each} blocks.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="multiple-each"]');
+
+  customElements.define(
+    'multiple-each-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.nums = [1, 2, 3];
+        this.letters = ['a', 'b'];
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="multiple-each-result"&gt;
+          &lt;span class="nums"&gt;{+each ${this.nums}}{...}{-each}&lt;/span&gt;
+          &lt;span class="letters"&gt;{+each ${this.letters}}{...}{-each}&lt;/span&gt;
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('multiple-each-elem');
+  document.getElementById('multiple-each-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const nums = document.querySelector('#multiple-each-result .nums');
+    const letters = document.querySelector('#multiple-each-result .letters');
+    if (nums?.textContent === '123' && letters?.textContent === 'ab') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="multiple-each-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="multiple-each"]');
 
-          customElements.define(
-            'multiple-each-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.nums = [1, 2, 3];
-                this.letters = ['a', 'b'];
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="multiple-each-result">
-                  <span class="nums">{+each ${this.nums}}{...}{-each}</span>
-                  <span class="letters">{+each ${this.letters}}{...}{-each}</span>
-                </div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="multiple-each"] pre code').textContent;
 
-          const elem = document.createElement('multiple-each-elem');
-          document.getElementById('multiple-each-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const nums = document.querySelector('#multiple-each-result .nums');
-            const letters = document.querySelector(
-              '#multiple-each-result .letters'
-            );
-            if (nums?.textContent === '123' && letters?.textContent === 'ab') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="multiple-each-output"><multiple-each-elem><div id="multiple-each-result">\n          <span class="nums">123<!--◦--></span>\n          <span class="letters">ab<!--◦--></span>\n        </div></multiple-each-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="multiple-each"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('multiple-each', document.getElementById('multiple-each-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: {+each} with null array -->
     <section data-test="each-null" data-test-result="pending">
       <h2>{+each} with null Array</h2>
       <p>Tests {+each} when array is null.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="each-null"]');
+
+  customElements.define(
+    'each-null-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.items = null;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="each-null-result"&gt;start{+each ${this.items}}&lt;span&gt;{...}&lt;/span&gt;{-each}end&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('each-null-elem');
+  document.getElementById('each-null-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('each-null-result');
+    // Should render "startend" with nothing in between
+    if (result?.textContent === 'startend') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="each-null-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="each-null"]');
 
-          customElements.define(
-            'each-null-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.items = null;
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="each-null-result">start{+each ${this.items}}<span>{...}</span>{-each}end</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="each-null"] pre code').textContent;
 
-          const elem = document.createElement('each-null-elem');
-          document.getElementById('each-null-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('each-null-result');
-            // Should render "startend" with nothing in between
-            if (result?.textContent === 'startend') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="each-null-output"><each-null-elem><div id="each-null-result">start<!--◦-->end</div></each-null-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="each-null"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('each-null', document.getElementById('each-null-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: {+each} with undefined array -->
     <section data-test="each-undefined" data-test-result="pending">
       <h2>{+each} with undefined Array</h2>
       <p>Tests {+each} when array is undefined.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="each-undefined"]');
+
+  customElements.define(
+    'each-undefined-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.items = undefined;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="each-undefined-result"&gt;before{+each ${this.items}}&lt;span&gt;{...}&lt;/span&gt;{-each}after&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('each-undefined-elem');
+  document.getElementById('each-undefined-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('each-undefined-result');
+    if (result?.textContent === 'beforeafter') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="each-undefined-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="each-undefined"]'
-          );
 
-          customElements.define(
-            'each-undefined-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.items = undefined;
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="each-undefined-result">before{+each ${this.items}}<span>{...}</span>{-each}after</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="each-undefined"] pre code').textContent;
 
-          const elem = document.createElement('each-undefined-elem');
-          document.getElementById('each-undefined-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('each-undefined-result');
-            if (result?.textContent === 'beforeafter') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="each-undefined-output"><each-undefined-elem><div id="each-undefined-result">before<!--◦-->after</div></each-undefined-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="each-undefined"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('each-undefined', document.getElementById('each-undefined-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: {+if} with else branch -->
     <section data-test="if-else-branch" data-test-result="pending">
       <h2>{+if} with {else} Branch</h2>
       <p>Tests {+if}...{else}...{-if} with both branches.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="if-else-branch"]');
+
+  customElements.define(
+    'if-else-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.isTrue = true;
+        this.isFalse = false;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="if-else-result"&gt;
+          &lt;span class="true"&gt;{+if ${this.isTrue}}YES{else}NO{-if}&lt;/span&gt;
+          &lt;span class="false"&gt;{+if ${this.isFalse}}YES{else}NO{-if}&lt;/span&gt;
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('if-else-elem');
+  document.getElementById('if-else-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const t = document.querySelector('#if-else-result .true');
+    const f = document.querySelector('#if-else-result .false');
+    if (t?.textContent === 'YES' && f?.textContent === 'NO') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="if-else-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="if-else-branch"]'
-          );
 
-          customElements.define(
-            'if-else-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.isTrue = true;
-                this.isFalse = false;
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="if-else-result">
-                  <span class="true">{+if ${this.isTrue}}YES{else}NO{-if}</span>
-                  <span class="false">{+if ${this.isFalse}}YES{else}NO{-if}</span>
-                </div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="if-else-branch"] pre code').textContent;
 
-          const elem = document.createElement('if-else-elem');
-          document.getElementById('if-else-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const t = document.querySelector('#if-else-result .true');
-            const f = document.querySelector('#if-else-result .false');
-            if (t?.textContent === 'YES' && f?.textContent === 'NO') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="if-else-output"><if-else-elem><div id="if-else-result">\n          <span class="true"><!--<>-->YES<!--</>--></span>\n          <span class="false"><!--<>-->NO<!--</>--></span>\n        </div></if-else-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="if-else-branch"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('if-else-branch', document.getElementById('if-else-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: {+unless} with truthy value -->
     <section data-test="unless-truthy" data-test-result="pending">
       <h2>{+unless} with Truthy Value</h2>
       <p>Tests {+unless} hides content when true.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="unless-truthy"]');
+
+  customElements.define(
+    'unless-truthy-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.hidden = true;
+        this.shown = false;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="unless-truthy-result"&gt;
+          &lt;span class="hidden"&gt;[{+unless ${this.hidden}}HIDDEN{-unless}]&lt;/span&gt;
+          &lt;span class="shown"&gt;[{+unless ${this.shown}}SHOWN{-unless}]&lt;/span&gt;
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('unless-truthy-elem');
+  document.getElementById('unless-truthy-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const hidden = document.querySelector('#unless-truthy-result .hidden');
+    const shown = document.querySelector('#unless-truthy-result .shown');
+    if (
+      hidden?.textContent === '[]' &&
+      shown?.textContent === '[SHOWN]'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="unless-truthy-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="unless-truthy"]');
 
-          customElements.define(
-            'unless-truthy-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.hidden = true;
-                this.shown = false;
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="unless-truthy-result">
-                  <span class="hidden">[{+unless ${this.hidden}}HIDDEN{-unless}]</span>
-                  <span class="shown">[{+unless ${this.shown}}SHOWN{-unless}]</span>
-                </div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="unless-truthy"] pre code').textContent;
 
-          const elem = document.createElement('unless-truthy-elem');
-          document.getElementById('unless-truthy-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const hidden = document.querySelector(
-              '#unless-truthy-result .hidden'
-            );
-            const shown = document.querySelector(
-              '#unless-truthy-result .shown'
-            );
-            if (
-              hidden?.textContent === '[]' &&
-              shown?.textContent === '[SHOWN]'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="unless-truthy-output"><unless-truthy-elem><div id="unless-truthy-result">\n          <span class="hidden">[<!--<>--><!--</>-->]</span>\n          <span class="shown">[<!--<>-->SHOWN<!--</>-->]</span>\n        </div></unless-truthy-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="unless-truthy"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('unless-truthy', document.getElementById('unless-truthy-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Nested property access in each -->
     <section data-test="each-nested-prop" data-test-result="pending">
       <h2>{+each} with Nested Property Access</h2>
       <p>Tests accessing nested properties like {address.city}.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="each-nested-prop"]');
+
+  customElements.define(
+    'each-nested-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.users = [
+          { name: 'Alice', address: { city: 'NYC' } },
+          { name: 'Bob', address: { city: 'LA' } },
+        ];
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;ul id="each-nested-result"&gt;{+each ${this.users}}&lt;li&gt;{name} in {address.city}&lt;/li&gt;{-each}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('each-nested-elem');
+  document.getElementById('each-nested-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const lis = document.querySelectorAll('#each-nested-result li');
+    if (
+      lis.length === 2 &&
+      lis[0].textContent === 'Alice in NYC' &&
+      lis[1].textContent === 'Bob in LA'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="each-nested-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="each-nested-prop"]'
-          );
 
-          customElements.define(
-            'each-nested-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.users = [
-                  { name: 'Alice', address: { city: 'NYC' } },
-                  { name: 'Bob', address: { city: 'LA' } },
-                ];
-                onNext();
-              }
-              render(Html) {
-                Html`<ul id="each-nested-result">{+each ${this.users}}<li>{name} in {address.city}</li>{-each}</ul>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="each-nested-prop"] pre code').textContent;
 
-          const elem = document.createElement('each-nested-elem');
-          document.getElementById('each-nested-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const lis = document.querySelectorAll('#each-nested-result li');
-            if (
-              lis.length === 2 &&
-              lis[0].textContent === 'Alice in NYC' &&
-              lis[1].textContent === 'Bob in LA'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="each-nested-output"><each-nested-elem><ul id="each-nested-result"><li>Alice in NYC</li><li>Bob in LA</li><!--◦--></ul></each-nested-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="each-nested-prop"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('each-nested-prop', document.getElementById('each-nested-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: {@} index in each -->
     <section data-test="each-index" data-test-result="pending">
       <h2>{@} Index in {+each}</h2>
       <p>Tests {@} for current iteration index.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="each-index"]');
+
+  customElements.define(
+    'each-index-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.items = ['a', 'b', 'c'];
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="each-index-result"&gt;{+each ${this.items}}{@}:{...},{-each}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('each-index-elem');
+  document.getElementById('each-index-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('each-index-result');
+    if (result?.textContent === '0:a,1:b,2:c,') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="each-index-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="each-index"]');
 
-          customElements.define(
-            'each-index-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.items = ['a', 'b', 'c'];
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="each-index-result">{+each ${this.items}}{@}:{...},{-each}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="each-index"] pre code').textContent;
 
-          const elem = document.createElement('each-index-elem');
-          document.getElementById('each-index-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('each-index-result');
-            if (result?.textContent === '0:a,1:b,2:c,') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="each-index-output"><each-index-elem><div id="each-index-result"><!--<>-->0:a,<!--</>--><!--<>-->1:b,<!--</>--><!--<>-->2:c,<!--</>--><!--◦--></div></each-index-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="each-index"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('each-index', document.getElementById('each-index-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: {...} spread with objects -->
     <section data-test="each-spread-obj" data-test-result="pending">
       <h2>{...} Spread with Primitives</h2>
       <p>Tests {...} showing primitive values directly.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="each-spread-obj"]');
+
+  customElements.define(
+    'each-spread-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        // Use primitives - objects show as [object Object]
+        this.items = ['first', 'second', 'third'];
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="each-spread-result"&gt;{+each ${this.items}}[{...}]{-each}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('each-spread-elem');
+  document.getElementById('each-spread-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('each-spread-result');
+    if (result?.textContent === '[first][second][third]') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="each-spread-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="each-spread-obj"]'
-          );
 
-          customElements.define(
-            'each-spread-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                // Use primitives - objects show as [object Object]
-                this.items = ['first', 'second', 'third'];
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="each-spread-result">{+each ${this.items}}[{...}]{-each}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="each-spread-obj"] pre code').textContent;
 
-          const elem = document.createElement('each-spread-elem');
-          document.getElementById('each-spread-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('each-spread-result');
-            if (result?.textContent === '[first][second][third]') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="each-spread-output"><each-spread-elem><div id="each-spread-result"><!--<>-->[first]<!--</>--><!--<>-->[second]<!--</>--><!--<>-->[third]<!--</>--><!--◦--></div></each-spread-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="each-spread-obj"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('each-spread-obj', document.getElementById('each-spread-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: if with 0 (falsy) -->
     <section data-test="if-zero-falsy" data-test-result="pending">
       <h2>{+if} with 0 (Falsy)</h2>
       <p>Tests {+if} correctly treats 0 as falsy.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="if-zero-falsy"]');
+
+  customElements.define(
+    'if-zero-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.zero = 0;
+        this.one = 1;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="if-zero-result"&gt;
+          &lt;span class="zero"&gt;[{+if ${this.zero}}SHOWN{-if}]&lt;/span&gt;
+          &lt;span class="one"&gt;[{+if ${this.one}}SHOWN{-if}]&lt;/span&gt;
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('if-zero-elem');
+  document.getElementById('if-zero-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const zero = document.querySelector('#if-zero-result .zero');
+    const one = document.querySelector('#if-zero-result .one');
+    if (zero?.textContent === '[]' && one?.textContent === '[SHOWN]') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="if-zero-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="if-zero-falsy"]');
 
-          customElements.define(
-            'if-zero-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.zero = 0;
-                this.one = 1;
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="if-zero-result">
-                  <span class="zero">[{+if ${this.zero}}SHOWN{-if}]</span>
-                  <span class="one">[{+if ${this.one}}SHOWN{-if}]</span>
-                </div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="if-zero-falsy"] pre code').textContent;
 
-          const elem = document.createElement('if-zero-elem');
-          document.getElementById('if-zero-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const zero = document.querySelector('#if-zero-result .zero');
-            const one = document.querySelector('#if-zero-result .one');
-            if (zero?.textContent === '[]' && one?.textContent === '[SHOWN]') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="if-zero-output"><if-zero-elem><div id="if-zero-result">\n          <span class="zero">[<!--<>--><!--</>-->]</span>\n          <span class="one">[<!--<>-->SHOWN<!--</>-->]</span>\n        </div></if-zero-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="if-zero-falsy"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('if-zero-falsy', document.getElementById('if-zero-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: if with empty string (falsy) -->
     <section data-test="if-empty-str" data-test-result="pending">
       <h2>{+if} with Empty String (Falsy)</h2>
       <p>Tests {+if} correctly treats '' as falsy.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="if-empty-str"]');
+
+  customElements.define(
+    'if-empty-str-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.empty = '';
+        this.notEmpty = 'x';
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="if-empty-str-result"&gt;
+          &lt;span class="empty"&gt;[{+if ${this.empty}}SHOWN{-if}]&lt;/span&gt;
+          &lt;span class="not"&gt;[{+if ${this.notEmpty}}SHOWN{-if}]&lt;/span&gt;
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('if-empty-str-elem');
+  document.getElementById('if-empty-str-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const empty = document.querySelector('#if-empty-str-result .empty');
+    const not = document.querySelector('#if-empty-str-result .not');
+    if (empty?.textContent === '[]' && not?.textContent === '[SHOWN]') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="if-empty-str-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="if-empty-str"]');
 
-          customElements.define(
-            'if-empty-str-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.empty = '';
-                this.notEmpty = 'x';
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="if-empty-str-result">
-                  <span class="empty">[{+if ${this.empty}}SHOWN{-if}]</span>
-                  <span class="not">[{+if ${this.notEmpty}}SHOWN{-if}]</span>
-                </div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="if-empty-str"] pre code').textContent;
 
-          const elem = document.createElement('if-empty-str-elem');
-          document.getElementById('if-empty-str-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const empty = document.querySelector('#if-empty-str-result .empty');
-            const not = document.querySelector('#if-empty-str-result .not');
-            if (empty?.textContent === '[]' && not?.textContent === '[SHOWN]') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="if-empty-str-output"><if-empty-str-elem><div id="if-empty-str-result">\n          <span class="empty">[<!--<>--><!--</>-->]</span>\n          <span class="not">[<!--<>-->SHOWN<!--</>-->]</span>\n        </div></if-empty-str-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="if-empty-str"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('if-empty-str', document.getElementById('if-empty-str-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: each with primitive array -->
     <section data-test="each-primitives" data-test-result="pending">
       <h2>{+each} with Primitive Array</h2>
       <p>Tests {+each} with array of strings/numbers.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="each-primitives"]');
+
+  customElements.define(
+    'each-primitives-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.strings = ['apple', 'banana', 'cherry'];
+        this.numbers = [10, 20, 30];
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="each-primitives-result"&gt;
+          &lt;span class="str"&gt;{+each ${this.strings}}{...} {-each}&lt;/span&gt;
+          &lt;span class="num"&gt;{+each ${this.numbers}}{...} {-each}&lt;/span&gt;
+        &lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('each-primitives-elem');
+  document.getElementById('each-primitives-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const str = document.querySelector('#each-primitives-result .str');
+    const num = document.querySelector('#each-primitives-result .num');
+    if (
+      str?.textContent === 'apple banana cherry ' &&
+      num?.textContent === '10 20 30 '
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="each-primitives-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="each-primitives"]'
-          );
 
-          customElements.define(
-            'each-primitives-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.strings = ['apple', 'banana', 'cherry'];
-                this.numbers = [10, 20, 30];
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="each-primitives-result">
-                  <span class="str">{+each ${this.strings}}{...} {-each}</span>
-                  <span class="num">{+each ${this.numbers}}{...} {-each}</span>
-                </div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="each-primitives"] pre code').textContent;
 
-          const elem = document.createElement('each-primitives-elem');
-          document.getElementById('each-primitives-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const str = document.querySelector('#each-primitives-result .str');
-            const num = document.querySelector('#each-primitives-result .num');
-            if (
-              str?.textContent === 'apple banana cherry ' &&
-              num?.textContent === '10 20 30 '
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="each-primitives-output"><each-primitives-elem><div id="each-primitives-result">\n          <span class="str"><!--<>-->apple <!--</>--><!--<>-->banana <!--</>--><!--<>-->cherry <!--</>--><!--◦--></span>\n          <span class="num"><!--<>-->10 <!--</>--><!--<>-->20 <!--</>--><!--<>-->30 <!--</>--><!--◦--></span>\n        </div></each-primitives-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="each-primitives"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('each-primitives', document.getElementById('each-primitives-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Complex nesting with wire() and conditionals -->
     <section data-test="complex-nesting" data-test-result="pending">
       <h2>Complex Nesting (wire + conditional)</h2>
       <p>Tests nested structures using Html.wire() with JS conditionals.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="complex-nesting"]');
+
+  customElements.define(
+    'complex-nesting-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.groups = [
+          { name: 'Active', active: true, count: 3 },
+          { name: 'Inactive', active: false, count: 0 },
+          { name: 'Pending', active: true, count: 1 },
+        ];
+        onNext();
+      }
+      render(Html) {
+        // Use Html.wire() with JS conditionals for complex nesting
+        Html`&lt;div id="complex-nesting-result"&gt;${this.groups.map(
+          (group) =>
+            Html.wire(
+              group,
+              ':group'
+            )`&lt;div class="group"&gt;${group.name}${group.active ? `: ${group.count} items` : ''}&lt;/div&gt;`
+        )}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('complex-nesting-elem');
+  document.getElementById('complex-nesting-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const groups = document.querySelectorAll('#complex-nesting-result .group');
+    if (
+      groups.length === 3 &&
+      groups[0].textContent.includes('Active: 3 items') &&
+      groups[1].textContent === 'Inactive' &&
+      groups[2].textContent.includes('Pending: 1 items')
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="complex-nesting-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="complex-nesting"]'
-          );
 
-          customElements.define(
-            'complex-nesting-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.groups = [
-                  { name: 'Active', active: true, count: 3 },
-                  { name: 'Inactive', active: false, count: 0 },
-                  { name: 'Pending', active: true, count: 1 },
-                ];
-                onNext();
-              }
-              render(Html) {
-                // Use Html.wire() with JS conditionals for complex nesting
-                Html`<div id="complex-nesting-result">${this.groups.map(
-                  (group) =>
-                    Html.wire(
-                      group,
-                      ':group'
-                    )`<div class="group">${group.name}${group.active ? `: ${group.count} items` : ''}</div>`
-                )}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="complex-nesting"] pre code').textContent;
 
-          const elem = document.createElement('complex-nesting-elem');
-          document.getElementById('complex-nesting-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const groups = document.querySelectorAll(
-              '#complex-nesting-result .group'
-            );
-            if (
-              groups.length === 3 &&
-              groups[0].textContent.includes('Active: 3 items') &&
-              groups[1].textContent === 'Inactive' &&
-              groups[2].textContent.includes('Pending: 1 items')
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="complex-nesting-output"><complex-nesting-elem><div id="complex-nesting-result"><div class="group">Active: 3 items</div><div class="group">Inactive</div><div class="group">Pending: 1 items</div><!--◦--></div></complex-nesting-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="complex-nesting"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('complex-nesting', document.getElementById('complex-nesting-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Block with whitespace preservation -->
     <section data-test="block-whitespace" data-test-result="pending">
       <h2>Block Whitespace Handling</h2>
       <p>Tests that whitespace around blocks is handled correctly.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="block-whitespace"]');
+
+  customElements.define(
+    'block-whitespace-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.show = true;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="block-whitespace-result"&gt;A {+if ${this.show}}B{-if} C&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('block-whitespace-elem');
+  document.getElementById('block-whitespace-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('block-whitespace-result');
+    if (result?.textContent === 'A B C') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="block-whitespace-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="block-whitespace"]'
-          );
 
-          customElements.define(
-            'block-whitespace-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.show = true;
-                onNext();
-              }
-              render(Html) {
-                Html`<div id="block-whitespace-result">A {+if ${this.show}}B{-if} C</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="block-whitespace"] pre code').textContent;
 
-          const elem = document.createElement('block-whitespace-elem');
-          document.getElementById('block-whitespace-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('block-whitespace-result');
-            if (result?.textContent === 'A B C') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="block-whitespace-output"><block-whitespace-elem><div id="block-whitespace-result">A <!--<>-->B<!--</>--> C</div></block-whitespace-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="block-whitespace"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('block-whitespace', document.getElementById('block-whitespace-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

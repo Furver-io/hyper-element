@@ -64,37 +64,38 @@ customElements.define(
       Html`&lt;child-style-elem style=${{ color: 'red' }}&gt;&lt;/child-style-elem&gt;`;
     }
   }
-);</code></pre>
-      <parent-style-elem></parent-style-elem>
+);
+
+document.getElementById('child-styles-output').innerHTML = '&lt;parent-style-elem&gt;&lt;/parent-style-elem&gt;';
+
+requestAnimationFrame(() => {
+  setTimeout(() => {
+    const child = document.querySelector('child-style-elem');
+    const computedColor = child ? getComputedStyle(child).color : '';
+    const isRed = computedColor === 'rgb(255, 0, 0)';
+    const section = document.querySelector('[data-test="style-object-child"]');
+    section.dataset.testResult = isRed ? 'pass' : 'fail';
+  }, 100);
+});</code></pre>
+      <div id="child-styles-output"></div>
       <script type="module">
-        // Execute the exact snippet defined in the <pre><code> block
-        const code1 = document.querySelector('[data-test="style-object-child"] pre code').textContent;
-        eval(code1);
 
-        // Single-phase example: the rendered DOM is stable after the first
-        // synchronous render. We capture the rendered output as a static
-        // snapshot and assert against it in addition to the computed-style
-        // check.
-        const expectedSnapshot1 = '<parent-style-elem><child-style-elem style="color: red;"><span id="styled-content">I should be RED</span></child-style-elem></parent-style-elem>';
+        const code = document.querySelector('[data-test="style-object-child"] pre code').textContent;
 
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            const section = document.querySelector(
-              '[data-test="style-object-child"]'
-            );
-            const parent = document.querySelector('parent-style-elem');
-            const child = document.querySelector('child-style-elem');
-            const computedColor = child ? getComputedStyle(child).color : '';
-            // Red is rgb(255, 0, 0)
-            const isRed = computedColor === 'rgb(255, 0, 0)';
-            const snapshotOk = parent && parent.outerHTML === expectedSnapshot1;
-            if (!snapshotOk) {
-              console.error('Snapshot mismatch for style-object-child.\nExpected: ' + expectedSnapshot1 + '\nActual:   ' + (parent && parent.outerHTML));
-            }
-            section.dataset.testResult = (isRed && snapshotOk) ? 'pass' : 'fail';
-          }, 100);
-        });
-      </script>
+        eval(code);
+
+        const expected = '<div id="child-styles-output"><parent-style-elem><child-style-elem style="color: red;"><span id="styled-content">I should be RED</span></child-style-elem></parent-style-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="style-object-child"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('style-object-child', document.getElementById('child-styles-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <section data-test="style-object-with-callback" data-test-result="pending">
@@ -123,38 +124,40 @@ customElements.define(
       Html`&lt;child-style-fn-elem callback=${this.getMessage} style=${{ color: 'blue' }}&gt;&lt;/child-style-fn-elem&gt;`;
     }
   }
-);</code></pre>
-      <parent-style-fn-elem></parent-style-fn-elem>
+);
+
+document.getElementById('child-styles-fn-output').innerHTML = '&lt;parent-style-fn-elem&gt;&lt;/parent-style-fn-elem&gt;';
+
+requestAnimationFrame(() => {
+  setTimeout(() => {
+    const child = document.querySelector('child-style-fn-elem');
+    const content = document.querySelector('#styled-fn-content');
+    const computedColor = child ? getComputedStyle(child).color : '';
+    const isBlue = computedColor === 'rgb(0, 0, 255)';
+    const textOk = content && content.textContent === 'PASS';
+    const section = document.querySelector('[data-test="style-object-with-callback"]');
+    section.dataset.testResult = (isBlue && textOk) ? 'pass' : 'fail';
+  }, 100);
+});</code></pre>
+      <div id="child-styles-fn-output"></div>
       <script type="module">
-        // Execute the exact snippet defined in the <pre><code> block
-        const code2 = document.querySelector('[data-test="style-object-with-callback"] pre code').textContent;
-        eval(code2);
 
-        // Single-phase example. The callback attribute is rendered as a
-        // generated id of the form fn-<random> by hyper-element, so we
-        // canonicalize that segment when comparing the snapshot.
-        const expectedSnapshot2 = '<parent-style-fn-elem><child-style-fn-elem callback="fn-XXX" style="color: blue;"><span id="styled-fn-content">PASS</span></child-style-fn-elem></parent-style-fn-elem>';
+        const code = document.querySelector('[data-test="style-object-with-callback"] pre code').textContent;
 
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            const section = document.querySelector(
-              '[data-test="style-object-with-callback"]'
-            );
-            const parent = document.querySelector('parent-style-fn-elem');
-            const child = document.querySelector('child-style-fn-elem');
-            const content = document.querySelector('#styled-fn-content');
-            const computedColor = child ? getComputedStyle(child).color : '';
-            const isBlue = computedColor === 'rgb(0, 0, 255)';
-            const textOk = content && content.textContent === 'PASS';
-            const normalized = parent && parent.outerHTML.replace(/callback="fn-[^"]+"/, 'callback="fn-XXX"');
-            const snapshotOk = normalized === expectedSnapshot2;
-            if (!snapshotOk) {
-              console.error('Snapshot mismatch for style-object-with-callback.\nExpected: ' + expectedSnapshot2 + '\nActual:   ' + normalized);
-            }
-            section.dataset.testResult = (isBlue && textOk && snapshotOk) ? 'pass' : 'fail';
-          }, 100);
-        });
-      </script>
+        eval(code);
+
+        const expected = '<div id="child-styles-fn-output"><parent-style-fn-elem><child-style-fn-elem callback="fn-vhwdznktdzwvvjz" style="color: blue;"><span id="styled-fn-content">PASS</span></child-style-fn-elem></parent-style-fn-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="style-object-with-callback"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('style-object-with-callback', document.getElementById('child-styles-fn-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

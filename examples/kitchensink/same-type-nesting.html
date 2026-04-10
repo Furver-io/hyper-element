@@ -47,164 +47,137 @@
     <section data-test="depth-track-each" data-test-result="pending">
       <h2>1. Depth Tracking for Nested {+each}</h2>
       <p>The outer loop should process correctly. The depth tracking skips the inner {+each} when finding the outer's {-each}.</p>
+      <pre><code>customElements.define(
+  'depth-track-each',
+  class extends hyperElement {
+    render(Html) {
+      const outer = ['A', 'B'];
+      const inner = ['x'];
+      Html`&lt;div id="result-1"&gt;{+each ${outer}}&lt;span class="outer"&gt;{...}&lt;/span&gt;&lt;span class="nested"&gt;{+each ${inner}}{...}{-each}&lt;/span&gt;{-each}&lt;/div&gt;`;
+    }
+  }
+);
+
+const elem = document.createElement('depth-track-each');
+document.getElementById('output-1').appendChild(elem);</code></pre>
       <div id="output-1"></div>
       <script type="module">
-        customElements.define(
-          'depth-track-each',
-          class extends hyperElement {
-            render(Html) {
-              const outer = ['A', 'B'];
-              const inner = ['x']; // This will be stringified, not processed as block
-              // The key is that findMatchingClose must track depth to find the correct closing tag
-              Html`<div id="result-1">{+each ${outer}}<span class="outer">{...}</span><span class="nested">{+each ${inner}}{...}{-each}</span>{-each}</div>`;
-            }
-          }
-        );
 
-        const elem = document.createElement('depth-track-each');
-        document.getElementById('output-1').appendChild(elem);
+        const code = document.querySelector('[data-test="depth-track-each"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="output-1"><depth-track-each><div id="result-1"><!--<>--><span class="outer">A</span><span class="nested">{+each x}A{-each}</span><!--</>--><!--<>--><span class="outer">B</span><span class="nested">{+each x}B{-each}</span><!--</>--><!--◦--></div></depth-track-each></div>';
 
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="depth-track-each"]');
-          const result = document.getElementById('result-1');
-          const outers = result?.querySelectorAll('.outer') || [];
 
-          // The outer loop should work - we expect 2 outer spans with A and B
-          const hasTwoOuters = outers.length === 2;
-          const firstIsA = outers[0]?.textContent === 'A';
-          const secondIsB = outers[1]?.textContent === 'B';
+          window.assertSnapshot('depth-track-each', document.getElementById('output-1'), expected);
 
-          if (hasTwoOuters && firstIsA && secondIsB) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Depth track each test failed:', {
-              hasTwoOuters, firstIsA, secondIsB,
-              html: result?.innerHTML
-            });
-          }
         });
-      </script>
+       </script>
     </section>
 
     <!-- Test 2: Outer {+if} with nested {+if} -->
     <section data-test="depth-track-if" data-test-result="pending">
       <h2>2. Depth Tracking for Nested {+if}</h2>
       <p>The outer condition should process correctly with depth tracking.</p>
+      <pre><code>customElements.define(
+  'depth-track-if',
+  class extends hyperElement {
+    render(Html) {
+      const outer = true;
+      const inner = true;
+      Html`&lt;div id="result-2"&gt;{+if ${outer}}&lt;span class="outer"&gt;OUTER&lt;/span&gt;&lt;span class="nested"&gt;{+if ${inner}}INNER{-if}&lt;/span&gt;{-if}&lt;/div&gt;`;
+    }
+  }
+);
+
+const elem = document.createElement('depth-track-if');
+document.getElementById('output-2').appendChild(elem);</code></pre>
       <div id="output-2"></div>
       <script type="module">
-        customElements.define(
-          'depth-track-if',
-          class extends hyperElement {
-            render(Html) {
-              const outer = true;
-              const inner = true; // Will be stringified as 'true'
-              Html`<div id="result-2">{+if ${outer}}<span class="outer">OUTER</span><span class="nested">{+if ${inner}}INNER{-if}</span>{-if}</div>`;
-            }
-          }
-        );
 
-        const elem = document.createElement('depth-track-if');
-        document.getElementById('output-2').appendChild(elem);
+        const code = document.querySelector('[data-test="depth-track-if"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="output-2"><depth-track-if><div id="result-2"><!--<>--><span class="outer">OUTER</span><span class="nested">{+if true}INNER{-if}</span><!--</>--></div></depth-track-if></div>';
 
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="depth-track-if"]');
-          const result = document.getElementById('result-2');
-          const outer = result?.querySelector('.outer');
 
-          // The outer if should work
-          const hasOuter = outer?.textContent === 'OUTER';
+          window.assertSnapshot('depth-track-if', document.getElementById('output-2'), expected);
 
-          if (hasOuter) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Depth track if test failed:', { hasOuter, html: result?.innerHTML });
-          }
         });
-      </script>
+       </script>
     </section>
 
     <!-- Test 3: Outer {+unless} with nested {+unless} -->
     <section data-test="depth-track-unless" data-test-result="pending">
       <h2>3. Depth Tracking for Nested {+unless}</h2>
       <p>The outer condition should process correctly with depth tracking.</p>
+      <pre><code>customElements.define(
+  'depth-track-unless',
+  class extends hyperElement {
+    render(Html) {
+      const outer = false;
+      const inner = false;
+      Html`&lt;div id="result-3"&gt;{+unless ${outer}}&lt;span class="outer"&gt;OUTER&lt;/span&gt;&lt;span class="nested"&gt;{+unless ${inner}}INNER{-unless}&lt;/span&gt;{-unless}&lt;/div&gt;`;
+    }
+  }
+);
+
+const elem = document.createElement('depth-track-unless');
+document.getElementById('output-3').appendChild(elem);</code></pre>
       <div id="output-3"></div>
       <script type="module">
-        customElements.define(
-          'depth-track-unless',
-          class extends hyperElement {
-            render(Html) {
-              const outer = false;
-              const inner = false; // Will be stringified as 'false'
-              Html`<div id="result-3">{+unless ${outer}}<span class="outer">OUTER</span><span class="nested">{+unless ${inner}}INNER{-unless}</span>{-unless}</div>`;
-            }
-          }
-        );
 
-        const elem = document.createElement('depth-track-unless');
-        document.getElementById('output-3').appendChild(elem);
+        const code = document.querySelector('[data-test="depth-track-unless"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="output-3"><depth-track-unless><div id="result-3"><!--<>--><span class="outer">OUTER</span><span class="nested">{+unless false}INNER{-unless}</span><!--</>--></div></depth-track-unless></div>';
 
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="depth-track-unless"]');
-          const result = document.getElementById('result-3');
-          const outer = result?.querySelector('.outer');
 
-          // The outer unless should work (show content when false)
-          const hasOuter = outer?.textContent === 'OUTER';
+          window.assertSnapshot('depth-track-unless', document.getElementById('output-3'), expected);
 
-          if (hasOuter) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Depth track unless test failed:', { hasOuter, html: result?.innerHTML });
-          }
         });
-      </script>
+       </script>
     </section>
 
     <!-- Test 4: Three-level depth tracking -->
     <section data-test="depth-track-3-level" data-test-result="pending">
       <h2>4. Three-Level Depth Tracking</h2>
       <p>Outer loop works with two levels of nested blocks requiring depth > 2.</p>
+      <pre><code>customElements.define(
+  'depth-track-3-level',
+  class extends hyperElement {
+    render(Html) {
+      const a = ['X', 'Y'];
+      const b = ['ignored'];
+      const c = ['also-ignored'];
+      Html`&lt;div id="result-4"&gt;{+each ${a}}&lt;span class="outer"&gt;{...}&lt;/span&gt;{+each ${b}}{+each ${c}}deep{-each}{-each}{-each}&lt;/div&gt;`;
+    }
+  }
+);
+
+const elem = document.createElement('depth-track-3-level');
+document.getElementById('output-4').appendChild(elem);</code></pre>
       <div id="output-4"></div>
       <script type="module">
-        customElements.define(
-          'depth-track-3-level',
-          class extends hyperElement {
-            render(Html) {
-              const a = ['X', 'Y'];
-              const b = ['ignored'];
-              const c = ['also-ignored'];
-              Html`<div id="result-4">{+each ${a}}<span class="outer">{...}</span>{+each ${b}}{+each ${c}}deep{-each}{-each}{-each}</div>`;
-            }
-          }
-        );
 
-        const elem = document.createElement('depth-track-3-level');
-        document.getElementById('output-4').appendChild(elem);
+        const code = document.querySelector('[data-test="depth-track-3-level"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="output-4"><depth-track-3-level><div id="result-4"><!--<>--><span class="outer">X</span>{+each ignored}{+each also-ignored}deep{-each}{-each}<!--</>--><!--<>--><span class="outer">Y</span>{+each ignored}{+each also-ignored}deep{-each}{-each}<!--</>--><!--◦--></div></depth-track-3-level></div>';
 
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="depth-track-3-level"]');
-          const result = document.getElementById('result-4');
-          const outers = result?.querySelectorAll('.outer') || [];
 
-          // The outer loop should produce 2 items
-          const hasTwoOuters = outers.length === 2;
-          const firstIsX = outers[0]?.textContent === 'X';
-          const secondIsY = outers[1]?.textContent === 'Y';
+          window.assertSnapshot('depth-track-3-level', document.getElementById('output-4'), expected);
 
-          if (hasTwoOuters && firstIsX && secondIsY) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Depth track 3-level test failed:', {
-              hasTwoOuters, firstIsX, secondIsY,
-              html: result?.innerHTML
-            });
-          }
         });
-      </script>
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

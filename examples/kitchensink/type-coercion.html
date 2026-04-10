@@ -35,6 +35,16 @@
         padding: 0.1em 0.3em;
         border-radius: 3px;
       }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+        border-radius: 0;
+      }
     </style>
   </head>
   <body>
@@ -45,153 +55,217 @@
     <section data-test="type-integer" data-test-result="pending">
       <h2>Integer Parsing</h2>
       <p>Tests that <code>"42"</code> becomes <code>42</code> (number).</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-integer"]');
+
+  customElements.define(
+    'type-integer-elem',
+    class extends hyperElement {
+      static get observedAttributes() {
+        return ['count'];
+      }
+      render(Html) {
+        const val = this.attrs.count;
+        Html`&lt;div id="type-integer-result"&gt;count=${val} type=${typeof val}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-integer-elem');
+  elem.setAttribute('count', '42');
+  document.getElementById('type-integer-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-integer-result');
+    if (result?.textContent === 'count=42 type=number') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-integer-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="type-integer"]');
 
-          customElements.define(
-            'type-integer-elem',
-            class extends hyperElement {
-              static get observedAttributes() {
-                return ['count'];
-              }
-              render(Html) {
-                const val = this.attrs.count;
-                Html`<div id="type-integer-result">count=${val} type=${typeof val}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-integer"] pre code').textContent;
 
-          const elem = document.createElement('type-integer-elem');
-          elem.setAttribute('count', '42');
-          document.getElementById('type-integer-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-integer-result');
-            if (result?.textContent === 'count=42 type=number') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-integer-output"><type-integer-elem count="42"><div id="type-integer-result">count=42 type=number</div></type-integer-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-integer"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-integer', document.getElementById('type-integer-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Negative integer -->
     <section data-test="type-negative" data-test-result="pending">
       <h2>Negative Integer</h2>
       <p>Tests that <code>"-42"</code> becomes <code>-42</code> (number).</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-negative"]');
+
+  customElements.define(
+    'type-negative-elem',
+    class extends hyperElement {
+      static get observedAttributes() {
+        return ['value'];
+      }
+      render(Html) {
+        const val = this.attrs.value;
+        Html`&lt;div id="type-negative-result"&gt;value=${val} type=${typeof val}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-negative-elem');
+  elem.setAttribute('value', '-42');
+  document.getElementById('type-negative-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-negative-result');
+    if (result?.textContent === 'value=-42 type=number') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-negative-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="type-negative"]');
 
-          customElements.define(
-            'type-negative-elem',
-            class extends hyperElement {
-              static get observedAttributes() {
-                return ['value'];
-              }
-              render(Html) {
-                const val = this.attrs.value;
-                Html`<div id="type-negative-result">value=${val} type=${typeof val}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-negative"] pre code').textContent;
 
-          const elem = document.createElement('type-negative-elem');
-          elem.setAttribute('value', '-42');
-          document.getElementById('type-negative-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-negative-result');
-            if (result?.textContent === 'value=-42 type=number') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-negative-output"><type-negative-elem value="-42"><div id="type-negative-result">value=-42 type=number</div></type-negative-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-negative"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-negative', document.getElementById('type-negative-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Decimal number -->
     <section data-test="type-decimal" data-test-result="pending">
       <h2>Decimal Number</h2>
       <p>Tests that <code>"3.14"</code> becomes <code>3.14</code> (number).</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-decimal"]');
+
+  customElements.define(
+    'type-decimal-elem',
+    class extends hyperElement {
+      static get observedAttributes() {
+        return ['value'];
+      }
+      render(Html) {
+        const val = this.attrs.value;
+        Html`&lt;div id="type-decimal-result"&gt;value=${val} type=${typeof val}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-decimal-elem');
+  elem.setAttribute('value', '3.14');
+  document.getElementById('type-decimal-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-decimal-result');
+    if (result?.textContent === 'value=3.14 type=number') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-decimal-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="type-decimal"]');
 
-          customElements.define(
-            'type-decimal-elem',
-            class extends hyperElement {
-              static get observedAttributes() {
-                return ['value'];
-              }
-              render(Html) {
-                const val = this.attrs.value;
-                Html`<div id="type-decimal-result">value=${val} type=${typeof val}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-decimal"] pre code').textContent;
 
-          const elem = document.createElement('type-decimal-elem');
-          elem.setAttribute('value', '3.14');
-          document.getElementById('type-decimal-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-decimal-result');
-            if (result?.textContent === 'value=3.14 type=number') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-decimal-output"><type-decimal-elem value="3.14"><div id="type-decimal-result">value=3.14 type=number</div></type-decimal-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-decimal"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-decimal', document.getElementById('type-decimal-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Zero -->
     <section data-test="type-zero" data-test-result="pending">
       <h2>Zero Value</h2>
       <p>Tests that <code>"0"</code> becomes <code>0</code> (number, falsy).</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-zero"]');
+
+  customElements.define(
+    'type-zero-elem',
+    class extends hyperElement {
+      static get observedAttributes() {
+        return ['value'];
+      }
+      render(Html) {
+        const val = this.attrs.value;
+        const isFalsy = !val;
+        Html`&lt;div id="type-zero-result"&gt;value=${val} type=${typeof val} falsy=${isFalsy}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-zero-elem');
+  elem.setAttribute('value', '0');
+  document.getElementById('type-zero-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-zero-result');
+    if (result?.textContent === 'value=0 type=number falsy=true') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-zero-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="type-zero"]');
 
-          customElements.define(
-            'type-zero-elem',
-            class extends hyperElement {
-              static get observedAttributes() {
-                return ['value'];
-              }
-              render(Html) {
-                const val = this.attrs.value;
-                const isFalsy = !val;
-                Html`<div id="type-zero-result">value=${val} type=${typeof val} falsy=${isFalsy}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-zero"] pre code').textContent;
 
-          const elem = document.createElement('type-zero-elem');
-          elem.setAttribute('value', '0');
-          document.getElementById('type-zero-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-zero-result');
-            if (result?.textContent === 'value=0 type=number falsy=true') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-zero-output"><type-zero-elem value="0"><div id="type-zero-result">value=0 type=number falsy=true</div></type-zero-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-zero"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-zero', document.getElementById('type-zero-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Boolean true (via dataset) -->
@@ -201,37 +275,51 @@
         Tests that <code>data-active="true"</code> becomes
         <code>true</code> (boolean).
       </p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-bool-true"]');
+
+  customElements.define(
+    'type-bool-true-elem',
+    class extends hyperElement {
+      render(Html) {
+        const val = this.dataset.active;
+        Html`&lt;div id="type-bool-true-result"&gt;active=${String(val)} type=${typeof val}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-bool-true-elem');
+  elem.setAttribute('data-active', 'true');
+  document.getElementById('type-bool-true-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-bool-true-result');
+    if (result?.textContent === 'active=true type=boolean') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-bool-true-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="type-bool-true"]'
-          );
 
-          customElements.define(
-            'type-bool-true-elem',
-            class extends hyperElement {
-              render(Html) {
-                const val = this.dataset.active;
-                Html`<div id="type-bool-true-result">active=${String(val)} type=${typeof val}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-bool-true"] pre code').textContent;
 
-          const elem = document.createElement('type-bool-true-elem');
-          elem.setAttribute('data-active', 'true');
-          document.getElementById('type-bool-true-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-bool-true-result');
-            if (result?.textContent === 'active=true type=boolean') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-bool-true-output"><type-bool-true-elem data-active="true"><div id="type-bool-true-result">active=true type=boolean</div></type-bool-true-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-bool-true"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-bool-true', document.getElementById('type-bool-true-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Boolean false (via dataset) -->
@@ -241,270 +329,370 @@
         Tests that <code>data-active="false"</code> becomes
         <code>false</code> (boolean).
       </p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-bool-false"]');
+
+  customElements.define(
+    'type-bool-false-elem',
+    class extends hyperElement {
+      render(Html) {
+        const val = this.dataset.enabled;
+        Html`&lt;div id="type-bool-false-result"&gt;enabled=${String(val)} type=${typeof val}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-bool-false-elem');
+  elem.setAttribute('data-enabled', 'false');
+  document.getElementById('type-bool-false-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-bool-false-result');
+    if (result?.textContent === 'enabled=false type=boolean') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-bool-false-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="type-bool-false"]'
-          );
 
-          customElements.define(
-            'type-bool-false-elem',
-            class extends hyperElement {
-              render(Html) {
-                const val = this.dataset.enabled;
-                Html`<div id="type-bool-false-result">enabled=${String(val)} type=${typeof val}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-bool-false"] pre code').textContent;
 
-          const elem = document.createElement('type-bool-false-elem');
-          elem.setAttribute('data-enabled', 'false');
-          document.getElementById('type-bool-false-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-bool-false-result');
-            if (result?.textContent === 'enabled=false type=boolean') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-bool-false-output"><type-bool-false-elem data-enabled="false"><div id="type-bool-false-result">enabled=false type=boolean</div></type-bool-false-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-bool-false"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-bool-false', document.getElementById('type-bool-false-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: JSON Array (via dataset) -->
     <section data-test="type-json-array" data-test-result="pending">
       <h2>JSON Array (Dataset)</h2>
       <p>Tests that <code>data-items='[1,2,3]'</code> becomes an array.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-json-array"]');
+
+  customElements.define(
+    'type-json-array-elem',
+    class extends hyperElement {
+      render(Html) {
+        const val = this.dataset.items;
+        const isArray = Array.isArray(val);
+        Html`&lt;div id="type-json-array-result"&gt;isArray=${isArray} length=${val?.length} first=${val?.[0]}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-json-array-elem');
+  elem.setAttribute('data-items', '[1, 2, 3]');
+  document.getElementById('type-json-array-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-json-array-result');
+    if (result?.textContent === 'isArray=true length=3 first=1') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-json-array-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="type-json-array"]'
-          );
 
-          customElements.define(
-            'type-json-array-elem',
-            class extends hyperElement {
-              render(Html) {
-                const val = this.dataset.items;
-                const isArray = Array.isArray(val);
-                Html`<div id="type-json-array-result">isArray=${isArray} length=${val?.length} first=${val?.[0]}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-json-array"] pre code').textContent;
 
-          const elem = document.createElement('type-json-array-elem');
-          elem.setAttribute('data-items', '[1, 2, 3]');
-          document.getElementById('type-json-array-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-json-array-result');
-            if (result?.textContent === 'isArray=true length=3 first=1') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-json-array-output"><type-json-array-elem data-items="[1, 2, 3]"><div id="type-json-array-result">isArray=true length=3 first=1</div></type-json-array-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-json-array"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-json-array', document.getElementById('type-json-array-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: JSON Object (via dataset) -->
     <section data-test="type-json-object" data-test-result="pending">
       <h2>JSON Object (Dataset)</h2>
       <p>Tests that <code>data-config='{"a":1}'</code> becomes an object.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-json-object"]');
+
+  customElements.define(
+    'type-json-object-elem',
+    class extends hyperElement {
+      render(Html) {
+        const val = this.dataset.config;
+        const isObj =
+          val && typeof val === 'object' && !Array.isArray(val);
+        Html`&lt;div id="type-json-object-result"&gt;isObject=${isObj} a=${val?.a} b=${val?.b}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-json-object-elem');
+  elem.setAttribute('data-config', '{"a":1,"b":"test"}');
+  document.getElementById('type-json-object-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-json-object-result');
+    if (result?.textContent === 'isObject=true a=1 b=test') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-json-object-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="type-json-object"]'
-          );
 
-          customElements.define(
-            'type-json-object-elem',
-            class extends hyperElement {
-              render(Html) {
-                const val = this.dataset.config;
-                const isObj =
-                  val && typeof val === 'object' && !Array.isArray(val);
-                Html`<div id="type-json-object-result">isObject=${isObj} a=${val?.a} b=${val?.b}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-json-object"] pre code').textContent;
 
-          const elem = document.createElement('type-json-object-elem');
-          elem.setAttribute('data-config', '{"a":1,"b":"test"}');
-          document.getElementById('type-json-object-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-json-object-result');
-            if (result?.textContent === 'isObject=true a=1 b=test') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-json-object-output"><type-json-object-elem data-config="{&quot;a&quot;:1,&quot;b&quot;:&quot;test&quot;}"><div id="type-json-object-result">isObject=true a=1 b=test</div></type-json-object-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-json-object"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-json-object', document.getElementById('type-json-object-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: String stays string -->
     <section data-test="type-string" data-test-result="pending">
       <h2>Plain String</h2>
       <p>Tests that non-numeric strings remain strings.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-string"]');
+
+  customElements.define(
+    'type-string-elem',
+    class extends hyperElement {
+      static get observedAttributes() {
+        return ['name'];
+      }
+      render(Html) {
+        const val = this.attrs.name;
+        Html`&lt;div id="type-string-result"&gt;name=${val} type=${typeof val}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-string-elem');
+  elem.setAttribute('name', 'hello');
+  document.getElementById('type-string-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-string-result');
+    if (result?.textContent === 'name=hello type=string') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-string-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector('[data-test="type-string"]');
 
-          customElements.define(
-            'type-string-elem',
-            class extends hyperElement {
-              static get observedAttributes() {
-                return ['name'];
-              }
-              render(Html) {
-                const val = this.attrs.name;
-                Html`<div id="type-string-result">name=${val} type=${typeof val}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-string"] pre code').textContent;
 
-          const elem = document.createElement('type-string-elem');
-          elem.setAttribute('name', 'hello');
-          document.getElementById('type-string-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-string-result');
-            if (result?.textContent === 'name=hello type=string') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-string-output"><type-string-elem name="hello"><div id="type-string-result">name=hello type=string</div></type-string-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-string"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-string', document.getElementById('type-string-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Whitespace trimmed for number detection -->
     <section data-test="type-whitespace" data-test-result="pending">
       <h2>Whitespace Trimmed</h2>
       <p>Tests that <code>" 42 "</code> becomes <code>42</code> (number).</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-whitespace"]');
+
+  customElements.define(
+    'type-whitespace-elem',
+    class extends hyperElement {
+      static get observedAttributes() {
+        return ['value'];
+      }
+      render(Html) {
+        const val = this.attrs.value;
+        Html`&lt;div id="type-whitespace-result"&gt;value=${val} type=${typeof val}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-whitespace-elem');
+  elem.setAttribute('value', '  42  ');
+  document.getElementById('type-whitespace-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-whitespace-result');
+    if (result?.textContent === 'value=42 type=number') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-whitespace-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="type-whitespace"]'
-          );
 
-          customElements.define(
-            'type-whitespace-elem',
-            class extends hyperElement {
-              static get observedAttributes() {
-                return ['value'];
-              }
-              render(Html) {
-                const val = this.attrs.value;
-                Html`<div id="type-whitespace-result">value=${val} type=${typeof val}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-whitespace"] pre code').textContent;
 
-          const elem = document.createElement('type-whitespace-elem');
-          elem.setAttribute('value', '  42  ');
-          document.getElementById('type-whitespace-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-whitespace-result');
-            if (result?.textContent === 'value=42 type=number') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-whitespace-output"><type-whitespace-elem value="  42  "><div id="type-whitespace-result">value=42 type=number</div></type-whitespace-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-whitespace"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-whitespace', document.getElementById('type-whitespace-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: String that looks like number but isn't -->
     <section data-test="type-non-numeric" data-test-result="pending">
       <h2>Non-Numeric String</h2>
       <p>Tests that <code>"42px"</code> stays a string.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-non-numeric"]');
+
+  customElements.define(
+    'type-non-numeric-elem',
+    class extends hyperElement {
+      static get observedAttributes() {
+        return ['size'];
+      }
+      render(Html) {
+        const val = this.attrs.size;
+        Html`&lt;div id="type-non-numeric-result"&gt;size=${val} type=${typeof val}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-non-numeric-elem');
+  elem.setAttribute('size', '42px');
+  document.getElementById('type-non-numeric-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-non-numeric-result');
+    if (result?.textContent === 'size=42px type=string') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-non-numeric-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="type-non-numeric"]'
-          );
 
-          customElements.define(
-            'type-non-numeric-elem',
-            class extends hyperElement {
-              static get observedAttributes() {
-                return ['size'];
-              }
-              render(Html) {
-                const val = this.attrs.size;
-                Html`<div id="type-non-numeric-result">size=${val} type=${typeof val}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-non-numeric"] pre code').textContent;
 
-          const elem = document.createElement('type-non-numeric-elem');
-          elem.setAttribute('size', '42px');
-          document.getElementById('type-non-numeric-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-non-numeric-result');
-            if (result?.textContent === 'size=42px type=string') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-non-numeric-output"><type-non-numeric-elem size="42px"><div id="type-non-numeric-result">size=42px type=string</div></type-non-numeric-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-non-numeric"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-non-numeric', document.getElementById('type-non-numeric-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: template="" becomes true -->
     <section data-test="type-template-attr" data-test-result="pending">
       <h2>Template Attribute Empty</h2>
       <p>Tests that <code>template=""</code> becomes <code>true</code>.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-template-attr"]');
+
+  customElements.define(
+    'type-template-elem',
+    class extends hyperElement {
+      render(Html) {
+        const val = this.dataset.template;
+        Html`&lt;div id="type-template-result"&gt;template=${String(val)} type=${typeof val}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-template-elem');
+  elem.setAttribute('data-template', '');
+  document.getElementById('type-template-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-template-result');
+    // Empty string for template should be truthy (boolean true)
+    if (result?.textContent === 'template=true type=boolean') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-template-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="type-template-attr"]'
-          );
 
-          customElements.define(
-            'type-template-elem',
-            class extends hyperElement {
-              render(Html) {
-                const val = this.dataset.template;
-                Html`<div id="type-template-result">template=${String(val)} type=${typeof val}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-template-attr"] pre code').textContent;
 
-          const elem = document.createElement('type-template-elem');
-          elem.setAttribute('data-template', '');
-          document.getElementById('type-template-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-template-result');
-            // Empty string for template should be truthy (boolean true)
-            if (result?.textContent === 'template=true type=boolean') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-template-output"><type-template-elem data-template="true"><div id="type-template-result">template=true type=boolean</div></type-template-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-template-attr"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-template-attr', document.getElementById('type-template-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: CamelCase conversion -->
@@ -514,125 +702,163 @@
         Tests that <code>data-my-value</code> becomes
         <code>this.dataset.myValue</code>.
       </p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-camelcase"]');
+
+  customElements.define(
+    'type-camelcase-elem',
+    class extends hyperElement {
+      render(Html) {
+        const val = this.dataset.myValue;
+        Html`&lt;div id="type-camelcase-result"&gt;myValue=${val}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-camelcase-elem');
+  elem.setAttribute('data-my-value', 'works');
+  document.getElementById('type-camelcase-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-camelcase-result');
+    if (result?.textContent === 'myValue=works') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-camelcase-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="type-camelcase"]'
-          );
 
-          customElements.define(
-            'type-camelcase-elem',
-            class extends hyperElement {
-              render(Html) {
-                const val = this.dataset.myValue;
-                Html`<div id="type-camelcase-result">myValue=${val}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-camelcase"] pre code').textContent;
 
-          const elem = document.createElement('type-camelcase-elem');
-          elem.setAttribute('data-my-value', 'works');
-          document.getElementById('type-camelcase-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-camelcase-result');
-            if (result?.textContent === 'myValue=works') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-camelcase-output"><type-camelcase-elem data-my-value="works"><div id="type-camelcase-result">myValue=works</div></type-camelcase-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-camelcase"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-camelcase', document.getElementById('type-camelcase-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Valid nested JSON object -->
     <section data-test="type-invalid-json" data-test-result="pending">
       <h2>Nested JSON Object</h2>
       <p>Tests that nested JSON objects are parsed correctly.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-invalid-json"]');
+
+  customElements.define(
+    'type-invalid-json-elem',
+    class extends hyperElement {
+      render(Html) {
+        const val = this.dataset.nested;
+        Html`&lt;div id="type-invalid-json-result"&gt;inner=${val?.inner?.value} type=${typeof val}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-invalid-json-elem');
+  elem.setAttribute('data-nested', '{"inner":{"value":"deep"}}');
+  document.getElementById('type-invalid-json-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-invalid-json-result');
+    // Nested JSON should be parsed
+    if (result?.textContent === 'inner=deep type=object') {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-invalid-json-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="type-invalid-json"]'
-          );
 
-          customElements.define(
-            'type-invalid-json-elem',
-            class extends hyperElement {
-              render(Html) {
-                const val = this.dataset.nested;
-                Html`<div id="type-invalid-json-result">inner=${val?.inner?.value} type=${typeof val}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-invalid-json"] pre code').textContent;
 
-          const elem = document.createElement('type-invalid-json-elem');
-          elem.setAttribute('data-nested', '{"inner":{"value":"deep"}}');
-          document.getElementById('type-invalid-json-output').appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById('type-invalid-json-result');
-            // Nested JSON should be parsed
-            if (result?.textContent === 'inner=deep type=object') {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-invalid-json-output"><type-invalid-json-elem data-nested="{&quot;inner&quot;:{&quot;value&quot;:&quot;deep&quot;}}"><div id="type-invalid-json-result">inner=deep type=object</div></type-invalid-json-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-invalid-json"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-invalid-json', document.getElementById('type-invalid-json-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test: Dataset setter serializes objects -->
     <section data-test="type-dataset-setter" data-test-result="pending">
       <h2>Dataset Setter Serialization</h2>
       <p>Tests that setting dataset with object JSON-stringifies it.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="type-dataset-setter"]');
+
+  customElements.define(
+    'type-dataset-setter-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.dataset.config = { key: 'value' };
+        onNext();
+      }
+      render(Html) {
+        // Read it back - should be parsed object
+        const val = this.dataset.config;
+        Html`&lt;div id="type-dataset-setter-result"&gt;key=${val?.key} type=${typeof val}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('type-dataset-setter-elem');
+  document.getElementById('type-dataset-setter-output').appendChild(elem);
+
+  requestAnimationFrame(() => {
+    const result = document.getElementById('type-dataset-setter-result');
+    // Check that the DOM attribute was also set
+    const attrVal = elem.getAttribute('data-config');
+    if (
+      result?.textContent === 'key=value type=object' &&
+      attrVal === '{"key":"value"}'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  });
+})();</code></pre>
       <div id="type-dataset-setter-output"></div>
       <script type="module">
-        (function () {
-          const section = document.querySelector(
-            '[data-test="type-dataset-setter"]'
-          );
 
-          customElements.define(
-            'type-dataset-setter-elem',
-            class extends hyperElement {
-              setup(onNext) {
-                this.dataset.config = { key: 'value' };
-                onNext();
-              }
-              render(Html) {
-                // Read it back - should be parsed object
-                const val = this.dataset.config;
-                Html`<div id="type-dataset-setter-result">key=${val?.key} type=${typeof val}</div>`;
-              }
-            }
-          );
+        const code = document.querySelector('[data-test="type-dataset-setter"] pre code').textContent;
 
-          const elem = document.createElement('type-dataset-setter-elem');
-          document
-            .getElementById('type-dataset-setter-output')
-            .appendChild(elem);
+        eval(code);
 
-          requestAnimationFrame(() => {
-            const result = document.getElementById(
-              'type-dataset-setter-result'
-            );
-            // Check that the DOM attribute was also set
-            const attrVal = elem.getAttribute('data-config');
-            if (
-              result?.textContent === 'key=value type=object' &&
-              attrVal === '{"key":"value"}'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          });
-        })();
-      </script>
+        const expected = '<div id="type-dataset-setter-output"><type-dataset-setter-elem data-config="{&quot;key&quot;:&quot;value&quot;}"><div id="type-dataset-setter-result">key=value type=object</div></type-dataset-setter-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="type-dataset-setter"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('type-dataset-setter', document.getElementById('type-dataset-setter-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

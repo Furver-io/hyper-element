@@ -53,102 +53,110 @@
         Click events captured before component registration are replayed after
         hydration.
       </p>
+      <pre><code>var ssrBtn1 = document.getElementById('ssr-btn-1');
+ssrBtn1.click();
+ssrBtn1.click();
+setTimeout(function () {
+  customElements.define(
+    'ssr-counter',
+    class extends hyperElement {
+      setup(onNext) {
+        this.count = 0;
+        return onNext(function () { return { count: this.count }; }.bind(this));
+      }
+      handleClick() {
+        this.count++;
+        this.element.render();
+      }
+      render(Html, store) {
+        Html`&lt;button onclick=${function () { this.handleClick(); }.bind(this)}&gt;Count: ${store?.count ?? 0}&lt;/button&gt;`;
+      }
+    }
+  );
+  setTimeout(function () {
+    var counter = document.querySelector('ssr-counter');
+    var section = document.querySelector('[data-test="ssr-basic-click"]');
+    section.dataset.testResult = counter.textContent.includes('Count: 2') ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-counter>
         <button id="ssr-btn-1">Count: 0</button>
       </ssr-counter>
       <script type="module">
-        // Simulate user clicking BEFORE component is defined
-        const ssrBtn1 = document.getElementById('ssr-btn-1');
-        ssrBtn1.click();
-        ssrBtn1.click();
 
-        // Define component AFTER clicks
+        const code = document.querySelector('[data-test="ssr-basic-click"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-counter><button>Count: 2</button></ssr-counter>';
+
         setTimeout(() => {
-          customElements.define(
-            'ssr-counter',
-            class extends hyperElement {
-              setup(onNext) {
-                this.count = 0;
-                return onNext(() => ({ count: this.count }));
-              }
 
-              handleClick() {
-                this.count++;
-                this.element.render();
-              }
+          const sec = document.querySelector('[data-test="ssr-basic-click"]');
 
-              render(Html, store) {
-                Html`<button onclick=${() => this.handleClick()}>Count: ${store?.count ?? 0}</button>`;
-              }
-            }
-          );
+          if (sec.dataset.testResult === 'fail') return;
 
-          // Verify: count should be 2 after replay
-          setTimeout(() => {
-            const counter = document.querySelector('ssr-counter');
-            const section = document.querySelector(
-              '[data-test="ssr-basic-click"]'
-            );
-            if (counter.textContent.includes('Count: 2')) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        }, 50);
-      </script>
+          window.assertSnapshot('ssr-basic-click', document.querySelector('ssr-counter'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 2: Input Event Replay -->
     <section data-test="ssr-input-replay" data-test-result="pending">
       <h2>Input Event Replay</h2>
       <p>Input events are replayed, restoring user input after hydration.</p>
+      <pre><code>var input1 = document.getElementById('ssr-input-1');
+input1.value = 'Hello World';
+input1.dispatchEvent(new Event('input', { bubbles: true }));
+setTimeout(function () {
+  customElements.define(
+    'ssr-input',
+    class extends hyperElement {
+      setup(onNext) {
+        this.text = '';
+        return onNext(function () { return { text: this.text }; }.bind(this));
+      }
+      handleInput(e) {
+        this.text = e.target.value;
+        this.element.render();
+      }
+      render(Html, store) {
+        Html`
+        &lt;input type="text" oninput=${function (e) { this.handleInput(e); }.bind(this)} value=${store?.text ?? ''}&gt;
+        &lt;span&gt;Echo: ${store?.text ?? ''}&lt;/span&gt;
+      `;
+      }
+    }
+  );
+  setTimeout(function () {
+    var echo = document.querySelector('ssr-input');
+    var section = document.querySelector('[data-test="ssr-input-replay"]');
+    section.dataset.testResult = echo.textContent.includes('Echo: Hello World') ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-input>
         <input type="text" id="ssr-input-1" value="" aria-label="test input" />
         <span id="ssr-echo-1"></span>
       </ssr-input>
       <script type="module">
-        // Simulate typing before hydration
-        const input1 = document.getElementById('ssr-input-1');
-        input1.value = 'Hello World';
-        input1.dispatchEvent(new Event('input', { bubbles: true }));
+
+        const code = document.querySelector('[data-test="ssr-input-replay"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-input><!--<>--><input type="text" value="Hello World">\n        <span>Echo: Hello World</span>\n      <!--</>--></ssr-input>';
 
         setTimeout(() => {
-          customElements.define(
-            'ssr-input',
-            class extends hyperElement {
-              setup(onNext) {
-                this.text = '';
-                return onNext(() => ({ text: this.text }));
-              }
 
-              handleInput(e) {
-                this.text = e.target.value;
-                this.element.render();
-              }
+          const sec = document.querySelector('[data-test="ssr-input-replay"]');
 
-              render(Html, store) {
-                Html`
-                <input type="text" oninput=${(e) => this.handleInput(e)} value=${store?.text ?? ''}>
-                <span>Echo: ${store?.text ?? ''}</span>
-              `;
-              }
-            }
-          );
+          if (sec.dataset.testResult === 'fail') return;
 
-          setTimeout(() => {
-            const echo = document.querySelector('ssr-input');
-            const section = document.querySelector(
-              '[data-test="ssr-input-replay"]'
-            );
-            if (echo.textContent.includes('Echo: Hello World')) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        }, 100);
-      </script>
+          window.assertSnapshot('ssr-input-replay', document.querySelector('ssr-input'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 3: onBeforeHydrate Filter (Class-based) -->
@@ -158,136 +166,152 @@
         The onBeforeHydrate hook can filter events before replay. In this test,
         we filter to only replay the first event.
       </p>
+      <pre><code>var filterBtn1 = document.getElementById('ssr-filter-btn-1');
+filterBtn1.click();
+filterBtn1.click();
+filterBtn1.click();
+setTimeout(function () {
+  customElements.define(
+    'ssr-filter-class',
+    class extends hyperElement {
+      setup(onNext) {
+        this.clicks = 0;
+        return onNext(function () { return { clicks: this.clicks }; }.bind(this));
+      }
+      onBeforeHydrate(events) {
+        return events.slice(0, 1);
+      }
+      handleClick() {
+        this.clicks++;
+        this.element.render();
+      }
+      render(Html, store) {
+        Html`&lt;button onclick=${function () { this.handleClick(); }.bind(this)}&gt;Clicks: ${store?.clicks ?? 0}&lt;/button&gt;`;
+      }
+    }
+  );
+  setTimeout(function () {
+    var elem = document.querySelector('ssr-filter-class');
+    var section = document.querySelector('[data-test="ssr-before-hydrate-class"]');
+    section.dataset.testResult = elem.textContent.includes('Clicks: 1') ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-filter-class>
         <button id="ssr-filter-btn-1">Clicks: 0</button>
       </ssr-filter-class>
       <script type="module">
-        // Click 3 times
-        const filterBtn1 = document.getElementById('ssr-filter-btn-1');
-        filterBtn1.click();
-        filterBtn1.click();
-        filterBtn1.click();
+
+        const code = document.querySelector('[data-test="ssr-before-hydrate-class"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-filter-class><button>Clicks: 1</button></ssr-filter-class>';
 
         setTimeout(() => {
-          customElements.define(
-            'ssr-filter-class',
-            class extends hyperElement {
-              setup(onNext) {
-                this.clicks = 0;
-                return onNext(() => ({ clicks: this.clicks }));
-              }
 
-              onBeforeHydrate(events) {
-                // Filter to only replay first event
-                return events.slice(0, 1);
-              }
+          const sec = document.querySelector('[data-test="ssr-before-hydrate-class"]');
 
-              handleClick() {
-                this.clicks++;
-                this.element.render();
-              }
+          if (sec.dataset.testResult === 'fail') return;
 
-              render(Html, store) {
-                Html`<button onclick=${() => this.handleClick()}>Clicks: ${store?.clicks ?? 0}</button>`;
-              }
-            }
-          );
+          window.assertSnapshot('ssr-before-hydrate-class', document.querySelector('ssr-filter-class'), expected);
 
-          setTimeout(() => {
-            const elem = document.querySelector('ssr-filter-class');
-            const section = document.querySelector(
-              '[data-test="ssr-before-hydrate-class"]'
-            );
-            // Should only count 1 click due to filter
-            if (elem.textContent.includes('Clicks: 1')) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        }, 150);
-      </script>
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 4: onAfterHydrate Callback (Class-based) -->
     <section data-test="ssr-after-hydrate-class" data-test-result="pending">
       <h2>onAfterHydrate Callback (Class)</h2>
       <p>The onAfterHydrate hook is called after event replay completes.</p>
+      <pre><code>document.getElementById('ssr-after-btn-1').click();
+setTimeout(function () {
+  var afterHydrateCalled = false;
+  customElements.define(
+    'ssr-after-class',
+    class extends hyperElement {
+      onAfterHydrate() {
+        afterHydrateCalled = true;
+      }
+      render(Html) {
+        Html`&lt;button&gt;Button&lt;/button&gt;`;
+      }
+    }
+  );
+  setTimeout(function () {
+    var section = document.querySelector('[data-test="ssr-after-hydrate-class"]');
+    section.dataset.testResult = afterHydrateCalled ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-after-class>
         <button id="ssr-after-btn-1">Click</button>
       </ssr-after-class>
       <script type="module">
-        document.getElementById('ssr-after-btn-1').click();
+
+        const code = document.querySelector('[data-test="ssr-after-hydrate-class"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-after-class><button>Button</button></ssr-after-class>';
 
         setTimeout(() => {
-          let afterHydrateCalled = false;
 
-          customElements.define(
-            'ssr-after-class',
-            class extends hyperElement {
-              onAfterHydrate() {
-                afterHydrateCalled = true;
-              }
+          const sec = document.querySelector('[data-test="ssr-after-hydrate-class"]');
 
-              render(Html) {
-                Html`<button>Button</button>`;
-              }
-            }
-          );
+          if (sec.dataset.testResult === 'fail') return;
 
-          setTimeout(() => {
-            const section = document.querySelector(
-              '[data-test="ssr-after-hydrate-class"]'
-            );
-            if (afterHydrateCalled) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        }, 200);
-      </script>
+          window.assertSnapshot('ssr-after-hydrate-class', document.querySelector('ssr-after-class'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 5: Functional API SSR Hydration -->
     <section data-test="ssr-functional-api" data-test-result="pending">
       <h2>Functional API SSR Hydration</h2>
       <p>SSR hydration also works with the functional component API.</p>
+      <pre><code>document.getElementById('ssr-func-btn').click();
+document.getElementById('ssr-func-btn').click();
+setTimeout(function () {
+  hyperElement('ssr-func-counter', {
+    setup: function (ctx, onNext) {
+      ctx.count = 0;
+      return onNext(function () { return { count: ctx.count }; });
+    },
+    handleClick: function (ctx) {
+      ctx.count++;
+      ctx.element.render();
+    },
+    render: function (Html, ctx, store) {
+      return Html`&lt;button onclick=${function () { ctx.handleClick(); }}&gt;Count: ${store?.count || 0}&lt;/button&gt;`;
+    },
+  });
+  setTimeout(function () {
+    var elem = document.querySelector('ssr-func-counter');
+    var section = document.querySelector('[data-test="ssr-functional-api"]');
+    section.dataset.testResult = elem.textContent.includes('Count: 2') ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-func-counter>
         <button id="ssr-func-btn">Count: 0</button>
       </ssr-func-counter>
       <script type="module">
-        // Click before definition
-        document.getElementById('ssr-func-btn').click();
-        document.getElementById('ssr-func-btn').click();
+
+        const code = document.querySelector('[data-test="ssr-functional-api"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-func-counter><button>Count: 2</button></ssr-func-counter>';
 
         setTimeout(() => {
-          hyperElement('ssr-func-counter', {
-            setup: (ctx, onNext) => {
-              ctx.count = 0;
-              return onNext(() => ({ count: ctx.count }));
-            },
-            handleClick: (ctx) => {
-              ctx.count++;
-              ctx.element.render();
-            },
-            render: (Html, ctx, store) =>
-              Html`<button onclick=${() => ctx.handleClick()}>Count: ${store?.count || 0}</button>`,
-          });
 
-          setTimeout(() => {
-            const elem = document.querySelector('ssr-func-counter');
-            const section = document.querySelector(
-              '[data-test="ssr-functional-api"]'
-            );
-            if (elem.textContent.includes('Count: 2')) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        }, 250);
-      </script>
+          const sec = document.querySelector('[data-test="ssr-functional-api"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('ssr-functional-api', document.querySelector('ssr-func-counter'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 6: Functional API with Lifecycle Hooks -->
@@ -296,108 +320,117 @@
       <p>
         onBeforeHydrate and onAfterHydrate work in functional components too.
       </p>
+      <pre><code>document.getElementById('ssr-func-hooks-btn').click();
+document.getElementById('ssr-func-hooks-btn').click();
+document.getElementById('ssr-func-hooks-btn').click();
+setTimeout(function () {
+  var filteredCount = 0;
+  var afterCalled = false;
+  hyperElement('ssr-func-hooks', {
+    setup: function (ctx) {
+      ctx.clicks = 0;
+    },
+    onBeforeHydrate: function (ctx, events) {
+      filteredCount = events.length;
+      return events.slice(0, 2);
+    },
+    onAfterHydrate: function (ctx) {
+      afterCalled = true;
+    },
+    handleClick: function (ctx) {
+      ctx.clicks++;
+      ctx.element.render();
+    },
+    render: function (Html, ctx) {
+      return Html`&lt;button onclick=${function () { ctx.handleClick(); }}&gt;Clicks: ${ctx.clicks}&lt;/button&gt;`;
+    },
+  });
+  setTimeout(function () {
+    var elem = document.querySelector('ssr-func-hooks');
+    var section = document.querySelector('[data-test="ssr-functional-hooks"]');
+    section.dataset.testResult =
+      (elem.textContent.includes('Clicks: 2') &amp;&amp; filteredCount === 3 &amp;&amp; afterCalled)
+        ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-func-hooks>
         <button id="ssr-func-hooks-btn">Click</button>
       </ssr-func-hooks>
       <script type="module">
-        document.getElementById('ssr-func-hooks-btn').click();
-        document.getElementById('ssr-func-hooks-btn').click();
-        document.getElementById('ssr-func-hooks-btn').click();
+
+        const code = document.querySelector('[data-test="ssr-functional-hooks"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-func-hooks><button>Clicks: 2</button></ssr-func-hooks>';
 
         setTimeout(() => {
-          let filteredCount = 0;
-          let afterCalled = false;
 
-          hyperElement('ssr-func-hooks', {
-            setup: (ctx) => {
-              ctx.clicks = 0;
-            },
-            onBeforeHydrate: (ctx, events) => {
-              // Only replay 2 events
-              filteredCount = events.length;
-              return events.slice(0, 2);
-            },
-            onAfterHydrate: (ctx) => {
-              afterCalled = true;
-            },
-            handleClick: (ctx) => {
-              ctx.clicks++;
-              ctx.element.render();
-            },
-            render: (Html, ctx) =>
-              Html`<button onclick=${() => ctx.handleClick()}>Clicks: ${ctx.clicks}</button>`,
-          });
+          const sec = document.querySelector('[data-test="ssr-functional-hooks"]');
 
-          setTimeout(() => {
-            const elem = document.querySelector('ssr-func-hooks');
-            const section = document.querySelector(
-              '[data-test="ssr-functional-hooks"]'
-            );
-            // Should have 2 clicks (filtered from 3) and afterHydrate called
-            if (
-              elem.textContent.includes('Clicks: 2') &&
-              filteredCount === 3 &&
-              afterCalled
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        }, 300);
-      </script>
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('ssr-functional-hooks', document.querySelector('ssr-func-hooks'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 7: Checkbox State Restoration -->
     <section data-test="ssr-checkbox-state" data-test-result="pending">
       <h2>Checkbox State Restoration</h2>
       <p>Checkbox checked state is captured and restored after hydration.</p>
+      <pre><code>var checkbox1 = document.getElementById('ssr-checkbox-1');
+checkbox1.checked = true;
+checkbox1.dispatchEvent(new Event('change', { bubbles: true }));
+setTimeout(function () {
+  customElements.define(
+    'ssr-checkbox',
+    class extends hyperElement {
+      setup(onNext) {
+        this.isChecked = false;
+        return onNext(function () { return { isChecked: this.isChecked }; }.bind(this));
+      }
+      handleChange(e) {
+        this.isChecked = e.target.checked;
+        this.element.render();
+      }
+      render(Html, store) {
+        Html`
+        &lt;input type="checkbox" onchange=${function (e) { this.handleChange(e); }.bind(this)} ?checked=${store?.isChecked ?? false}&gt;
+        &lt;label&gt;Checked: ${store?.isChecked ? 'yes' : 'no'}&lt;/label&gt;
+      `;
+      }
+    }
+  );
+  setTimeout(function () {
+    var elem = document.querySelector('ssr-checkbox');
+    var section = document.querySelector('[data-test="ssr-checkbox-state"]');
+    section.dataset.testResult = elem.textContent.includes('Checked: yes') ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-checkbox>
         <input type="checkbox" id="ssr-checkbox-1" aria-label="test checkbox" />
         <label>Check me</label>
       </ssr-checkbox>
       <script type="module">
-        // Check the box before hydration
-        const checkbox1 = document.getElementById('ssr-checkbox-1');
-        checkbox1.checked = true;
-        checkbox1.dispatchEvent(new Event('change', { bubbles: true }));
+
+        const code = document.querySelector('[data-test="ssr-checkbox-state"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-checkbox><!--<>--><input type="checkbox" checked="">\n        <label>Checked: yes</label>\n      <!--</>--></ssr-checkbox>';
 
         setTimeout(() => {
-          customElements.define(
-            'ssr-checkbox',
-            class extends hyperElement {
-              setup(onNext) {
-                this.isChecked = false;
-                return onNext(() => ({ isChecked: this.isChecked }));
-              }
 
-              handleChange(e) {
-                this.isChecked = e.target.checked;
-                this.element.render();
-              }
+          const sec = document.querySelector('[data-test="ssr-checkbox-state"]');
 
-              render(Html, store) {
-                Html`
-                <input type="checkbox" onchange=${(e) => this.handleChange(e)} ?checked=${store?.isChecked ?? false}>
-                <label>Checked: ${store?.isChecked ? 'yes' : 'no'}</label>
-              `;
-              }
-            }
-          );
+          if (sec.dataset.testResult === 'fail') return;
 
-          setTimeout(() => {
-            const elem = document.querySelector('ssr-checkbox');
-            const section = document.querySelector(
-              '[data-test="ssr-checkbox-state"]'
-            );
-            if (elem.textContent.includes('Checked: yes')) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        }, 350);
-      </script>
+          window.assertSnapshot('ssr-checkbox-state', document.querySelector('ssr-checkbox'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 8: No Events - Still Calls Hooks -->
@@ -407,108 +440,145 @@
         Even with no buffered events, onBeforeHydrate and onAfterHydrate are
         still called.
       </p>
+      <pre><code>setTimeout(function () {
+  var beforeCalled = false;
+  var afterCalled = false;
+  customElements.define(
+    'ssr-no-events',
+    class extends hyperElement {
+      onBeforeHydrate(events) {
+        beforeCalled = true;
+        return events;
+      }
+      onAfterHydrate() {
+        afterCalled = true;
+      }
+      render(Html) {
+        Html`&lt;div&gt;Rendered&lt;/div&gt;`;
+      }
+    }
+  );
+  setTimeout(function () {
+    var section = document.querySelector('[data-test="ssr-no-events"]');
+    section.dataset.testResult = (beforeCalled &amp;&amp; afterCalled) ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-no-events>
         <div>No interaction</div>
       </ssr-no-events>
       <script type="module">
-        // No events dispatched
+
+        const code = document.querySelector('[data-test="ssr-no-events"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-no-events><div>Rendered</div></ssr-no-events>';
 
         setTimeout(() => {
-          let beforeCalled = false;
-          let afterCalled = false;
 
-          customElements.define(
-            'ssr-no-events',
-            class extends hyperElement {
-              onBeforeHydrate(events) {
-                beforeCalled = true;
-                return events;
-              }
+          const sec = document.querySelector('[data-test="ssr-no-events"]');
 
-              onAfterHydrate() {
-                afterCalled = true;
-              }
+          if (sec.dataset.testResult === 'fail') return;
 
-              render(Html) {
-                Html`<div>Rendered</div>`;
-              }
-            }
-          );
+          window.assertSnapshot('ssr-no-events', document.querySelector('ssr-no-events'), expected);
 
-          setTimeout(() => {
-            const section = document.querySelector(
-              '[data-test="ssr-no-events"]'
-            );
-            if (beforeCalled && afterCalled) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        }, 400);
-      </script>
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 9: Keyboard Event Replay -->
     <section data-test="ssr-keyboard-replay" data-test-result="pending">
       <h2>Keyboard Event Replay</h2>
       <p>Keyboard events are captured and replayed with key details preserved.</p>
+      <pre><code>var keyInput = document.getElementById('ssr-keyboard-input');
+var keyEvent = new KeyboardEvent('keydown', {
+  bubbles: true,
+  key: 'Enter',
+  code: 'Enter',
+});
+keyInput.dispatchEvent(keyEvent);
+setTimeout(function () {
+  var capturedKey = '';
+  customElements.define(
+    'ssr-keyboard',
+    class extends hyperElement {
+      handleKeydown(e) {
+        capturedKey = e.key;
+        this.element.render();
+      }
+      render(Html) {
+        Html`
+        &lt;input type="text" onkeydown=${function (e) { this.handleKeydown(e); }.bind(this)}&gt;
+        &lt;span&gt;Last key: ${capturedKey}&lt;/span&gt;
+      `;
+      }
+    }
+  );
+  setTimeout(function () {
+    var elem = document.querySelector('ssr-keyboard');
+    var section = document.querySelector('[data-test="ssr-keyboard-replay"]');
+    section.dataset.testResult =
+      (elem.textContent.includes('Last key: Enter') || capturedKey === 'Enter')
+        ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-keyboard>
         <input type="text" id="ssr-keyboard-input" aria-label="keyboard test input" />
         <span id="ssr-keyboard-result"></span>
       </ssr-keyboard>
       <script type="module">
-        // Simulate keydown before hydration
-        const keyInput = document.getElementById('ssr-keyboard-input');
-        const keyEvent = new KeyboardEvent('keydown', {
-          bubbles: true,
-          key: 'Enter',
-          code: 'Enter',
-        });
-        keyInput.dispatchEvent(keyEvent);
+
+        const code = document.querySelector('[data-test="ssr-keyboard-replay"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-keyboard><!--<>--><input type="text">\n        <span>Last key: Enter</span>\n      <!--</>--></ssr-keyboard>';
 
         setTimeout(() => {
-          let capturedKey = '';
 
-          customElements.define(
-            'ssr-keyboard',
-            class extends hyperElement {
-              handleKeydown(e) {
-                capturedKey = e.key;
-                this.element.render();
-              }
+          const sec = document.querySelector('[data-test="ssr-keyboard-replay"]');
 
-              render(Html) {
-                Html`
-                <input type="text" onkeydown=${(e) => this.handleKeydown(e)}>
-                <span>Last key: ${capturedKey}</span>
-              `;
-              }
-            }
-          );
+          if (sec.dataset.testResult === 'fail') return;
 
-          setTimeout(() => {
-            const elem = document.querySelector('ssr-keyboard');
-            const section = document.querySelector(
-              '[data-test="ssr-keyboard-replay"]'
-            );
-            if (
-              elem.textContent.includes('Last key: Enter') ||
-              capturedKey === 'Enter'
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        }, 450);
-      </script>
+          window.assertSnapshot('ssr-keyboard-replay', document.querySelector('ssr-keyboard'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 10: Mouse Event Replay -->
     <section data-test="ssr-mouse-replay" data-test-result="pending">
       <h2>Mouse Event Replay</h2>
       <p>Mouse events preserve clientX/clientY coordinates.</p>
+      <pre><code>var mouseTarget = document.getElementById('ssr-mouse-target');
+var mouseEvent = new MouseEvent('click', {
+  bubbles: true,
+  clientX: 42,
+  clientY: 24,
+});
+mouseTarget.dispatchEvent(mouseEvent);
+setTimeout(function () {
+  var coords = { x: 0, y: 0 };
+  customElements.define(
+    'ssr-mouse',
+    class extends hyperElement {
+      handleClick(e) {
+        coords = { x: e.clientX, y: e.clientY };
+        this.element.render();
+      }
+      render(Html) {
+        Html`
+        &lt;div style="width: 100px; height: 100px; background: #eee" onclick=${function (e) { this.handleClick(e); }.bind(this)}&gt;Click target&lt;/div&gt;
+        &lt;span&gt;Coords: ${coords.x}, ${coords.y}&lt;/span&gt;
+      `;
+      }
+    }
+  );
+  setTimeout(function () {
+    var section = document.querySelector('[data-test="ssr-mouse-replay"]');
+    section.dataset.testResult = (coords.x === 42 &amp;&amp; coords.y === 24) ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-mouse>
         <div
           id="ssr-mouse-target"
@@ -519,159 +589,121 @@
         <span id="ssr-mouse-result"></span>
       </ssr-mouse>
       <script type="module">
-        // Simulate mousedown at specific coordinates
-        const mouseTarget = document.getElementById('ssr-mouse-target');
-        const mouseEvent = new MouseEvent('click', {
-          bubbles: true,
-          clientX: 42,
-          clientY: 24,
-        });
-        mouseTarget.dispatchEvent(mouseEvent);
+
+        const code = document.querySelector('[data-test="ssr-mouse-replay"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-mouse><!--<>--><div style="width: 100px; height: 100px; background: #eee">Click target</div>\n        <span>Coords: 42, 24</span>\n      <!--</>--></ssr-mouse>';
 
         setTimeout(() => {
-          let coords = { x: 0, y: 0 };
 
-          customElements.define(
-            'ssr-mouse',
-            class extends hyperElement {
-              handleClick(e) {
-                coords = { x: e.clientX, y: e.clientY };
-                this.element.render();
-              }
+          const sec = document.querySelector('[data-test="ssr-mouse-replay"]');
 
-              render(Html) {
-                Html`
-                <div style="width: 100px; height: 100px; background: #eee" onclick=${(e) => this.handleClick(e)}>Click target</div>
-                <span>Coords: ${coords.x}, ${coords.y}</span>
-              `;
-              }
-            }
-          );
+          if (sec.dataset.testResult === 'fail') return;
 
-          setTimeout(() => {
-            const elem = document.querySelector('ssr-mouse');
-            const section = document.querySelector(
-              '[data-test="ssr-mouse-replay"]'
-            );
-            if (coords.x === 42 && coords.y === 24) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
+          window.assertSnapshot('ssr-mouse-replay', document.querySelector('ssr-mouse'), expected);
+
         }, 500);
-      </script>
+       </script>
     </section>
 
     <!-- Test 11: Multiple Event Types -->
     <section data-test="ssr-multi-events" data-test-result="pending">
       <h2>Multiple Event Types</h2>
       <p>Different event types on the same element are all captured.</p>
+      <pre><code>var multiInput = document.getElementById('ssr-multi-input');
+multiInput.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+multiInput.value = 'test';
+multiInput.dispatchEvent(new Event('input', { bubbles: true }));
+multiInput.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+setTimeout(function () {
+  var events = [];
+  customElements.define(
+    'ssr-multi-events',
+    class extends hyperElement {
+      setup(onNext) {
+        this.log = [];
+        return onNext(function () { return { log: this.log }; }.bind(this));
+      }
+      handleFocus() {
+        this.log.push('focus');
+        events.push('focus');
+      }
+      handleInput(e) {
+        this.log.push('input:' + e.target.value);
+        events.push('input');
+      }
+      handleBlur() {
+        this.log.push('blur');
+        events.push('blur');
+      }
+      render(Html, store) {
+        Html`
+        &lt;input type="text"
+          onfocus=${function () { this.handleFocus(); }.bind(this)}
+          oninput=${function (e) { this.handleInput(e); }.bind(this)}
+          onblur=${function () { this.handleBlur(); }.bind(this)}&gt;
+        &lt;span&gt;Events: ${(store?.log || []).join(', ')}&lt;/span&gt;
+      `;
+      }
+    }
+  );
+  setTimeout(function () {
+    var section = document.querySelector('[data-test="ssr-multi-events"]');
+    section.dataset.testResult =
+      (events.includes('focus') &amp;&amp; events.includes('input') &amp;&amp; events.includes('blur'))
+        ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-multi-events>
         <input type="text" id="ssr-multi-input" value="" aria-label="multi-event test input" />
         <span id="ssr-multi-log"></span>
       </ssr-multi-events>
       <script type="module">
-        const multiInput = document.getElementById('ssr-multi-input');
-        // Focus event
-        multiInput.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
-        // Input event
-        multiInput.value = 'test';
-        multiInput.dispatchEvent(new Event('input', { bubbles: true }));
-        // Blur event
-        multiInput.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+
+        const code = document.querySelector('[data-test="ssr-multi-events"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-multi-events><!--<>--><input type="text">\n        <span>Events: </span>\n      <!--</>--></ssr-multi-events>';
 
         setTimeout(() => {
-          const events = [];
 
-          customElements.define(
-            'ssr-multi-events',
-            class extends hyperElement {
-              setup(onNext) {
-                this.log = [];
-                return onNext(() => ({ log: this.log }));
-              }
+          const sec = document.querySelector('[data-test="ssr-multi-events"]');
 
-              handleFocus() {
-                this.log.push('focus');
-                events.push('focus');
-              }
+          if (sec.dataset.testResult === 'fail') return;
 
-              handleInput(e) {
-                this.log.push(`input:${e.target.value}`);
-                events.push('input');
-              }
+          window.assertSnapshot('ssr-multi-events', document.querySelector('ssr-multi-events'), expected);
 
-              handleBlur() {
-                this.log.push('blur');
-                events.push('blur');
-              }
-
-              render(Html, store) {
-                Html`
-                <input type="text"
-                  onfocus=${() => this.handleFocus()}
-                  oninput=${(e) => this.handleInput(e)}
-                  onblur=${() => this.handleBlur()}>
-                <span>Events: ${(store?.log || []).join(', ')}</span>
-              `;
-              }
-            }
-          );
-
-          setTimeout(() => {
-            const section = document.querySelector(
-              '[data-test="ssr-multi-events"]'
-            );
-            // Should have captured all three events
-            if (
-              events.includes('focus') &&
-              events.includes('input') &&
-              events.includes('blur')
-            ) {
-              section.dataset.testResult = 'pass';
-            } else {
-              section.dataset.testResult = 'fail';
-            }
-          }, 100);
-        }, 550);
-      </script>
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 12: SSR Dev Mode Indicator -->
     <section data-test="ssr-dev-mode" data-test-result="pending">
       <h2>SSR Dev Mode Indicator</h2>
       <p>Tests configureSSR with devMode option to show/hide indicator.</p>
+      <pre><code>(function () {
+  var section = document.querySelector('[data-test="ssr-dev-mode"]');
+  if (typeof hyperElement !== 'undefined' &amp;&amp; hyperElement.configureSSR) {
+    hyperElement.configureSSR({ devMode: true });
+    setTimeout(function () {
+      var indicator = document.getElementById('hyper-element-ssr-indicator');
+      var indicatorShown = indicator !== null;
+      hyperElement.configureSSR({ devMode: false });
+      setTimeout(function () {
+        var indicatorHidden = document.getElementById('hyper-element-ssr-indicator') === null;
+        section.dataset.testResult = (indicatorShown &amp;&amp; indicatorHidden) ? 'pass' : 'fail';
+      }, 50);
+    }, 50);
+  } else {
+    section.dataset.testResult = 'pass';
+  }
+})();</code></pre>
       <script type="module">
-        setTimeout(() => {
-          const section = document.querySelector('[data-test="ssr-dev-mode"]');
-
-          // Enable dev mode to show indicator
-          if (typeof hyperElement !== 'undefined' && hyperElement.configureSSR) {
-            hyperElement.configureSSR({ devMode: true });
-
-            setTimeout(() => {
-              const indicator = document.getElementById(
-                'hyper-element-ssr-indicator'
-              );
-              const indicatorShown = indicator !== null;
-
-              // Disable dev mode to hide indicator
-              hyperElement.configureSSR({ devMode: false });
-
-              setTimeout(() => {
-                const indicatorHidden =
-                  document.getElementById('hyper-element-ssr-indicator') ===
-                  null;
-                const pass = indicatorShown && indicatorHidden;
-                section.dataset.testResult = pass ? 'pass' : 'fail';
-              }, 50);
-            }, 50);
-          } else {
-            // configureSSR not available, skip test
-            section.dataset.testResult = 'pass';
-          }
-        }, 600);
+        const code = document.querySelector('[data-test="ssr-dev-mode"] pre code').textContent;
+        eval(code);
       </script>
     </section>
 
@@ -679,21 +711,18 @@
     <section data-test="ssr-configure-events" data-test-result="pending">
       <h2>configureSSR with Events Option</h2>
       <p>Tests configuring SSR with custom events list.</p>
+      <pre><code>(function () {
+  var section = document.querySelector('[data-test="ssr-configure-events"]');
+  if (typeof hyperElement !== 'undefined' &amp;&amp; hyperElement.configureSSR) {
+    hyperElement.configureSSR({ events: ['click', 'input', 'change'] });
+    section.dataset.testResult = 'pass';
+  } else {
+    section.dataset.testResult = 'pass';
+  }
+})();</code></pre>
       <script type="module">
-        setTimeout(() => {
-          const section = document.querySelector(
-            '[data-test="ssr-configure-events"]'
-          );
-
-          if (typeof hyperElement !== 'undefined' && hyperElement.configureSSR) {
-            // Configure with custom events
-            hyperElement.configureSSR({ events: ['click', 'input', 'change'] });
-            section.dataset.testResult = 'pass';
-          } else {
-            // configureSSR not available, skip test
-            section.dataset.testResult = 'pass';
-          }
-        }, 650);
+        const code = document.querySelector('[data-test="ssr-configure-events"] pre code').textContent;
+        eval(code);
       </script>
     </section>
 
@@ -701,6 +730,46 @@
     <section data-test="ssr-touch-replay" data-test-result="pending">
       <h2>Touch Event Replay</h2>
       <p>Tests touch events are captured and replayed with touch details.</p>
+      <pre><code>var touchTarget = document.getElementById('ssr-touch-target');
+try {
+  var touch = new Touch({
+    identifier: 1,
+    target: touchTarget,
+    clientX: 50,
+    clientY: 60,
+    pageX: 50,
+    pageY: 60,
+  });
+  var touchEvent = new TouchEvent('touchstart', {
+    bubbles: true,
+    cancelable: true,
+    touches: [touch],
+    targetTouches: [touch],
+    changedTouches: [touch],
+  });
+  touchTarget.dispatchEvent(touchEvent);
+} catch (e) {
+  console.log('Touch event creation not supported:', e.message);
+}
+setTimeout(function () {
+  var touchCaptured = false;
+  customElements.define(
+    'ssr-touch-test',
+    class extends hyperElement {
+      handleTouch(e) {
+        touchCaptured = true;
+      }
+      render(Html) {
+        Html`&lt;div style="width: 100px; height: 100px; background: #eee" @touchstart=${function (e) { this.handleTouch(e); }.bind(this)}&gt;Touch target&lt;/div&gt;`;
+      }
+    }
+  );
+  setTimeout(function () {
+    var section = document.querySelector('[data-test="ssr-touch-replay"]');
+    var elem = document.querySelector('ssr-touch-test');
+    section.dataset.testResult = elem ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-touch-test>
         <div
           id="ssr-touch-target"
@@ -710,57 +779,23 @@
         </div>
       </ssr-touch-test>
       <script type="module">
-        // Try to dispatch touch event before hydration
-        const touchTarget = document.getElementById('ssr-touch-target');
-        try {
-          // Create touch list for the event
-          const touch = new Touch({
-            identifier: 1,
-            target: touchTarget,
-            clientX: 50,
-            clientY: 60,
-            pageX: 50,
-            pageY: 60,
-          });
-          const touchEvent = new TouchEvent('touchstart', {
-            bubbles: true,
-            cancelable: true,
-            touches: [touch],
-            targetTouches: [touch],
-            changedTouches: [touch],
-          });
-          touchTarget.dispatchEvent(touchEvent);
-        } catch (e) {
-          // Touch events may not be supported in all browsers
-          console.log('Touch event creation not supported:', e.message);
-        }
+
+        const code = document.querySelector('[data-test="ssr-touch-replay"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-touch-test><div style="width: 100px; height: 100px; background: #eee">Touch target</div></ssr-touch-test>';
 
         setTimeout(() => {
-          let touchCaptured = false;
 
-          customElements.define(
-            'ssr-touch-test',
-            class extends hyperElement {
-              handleTouch(e) {
-                touchCaptured = true;
-              }
+          const sec = document.querySelector('[data-test="ssr-touch-replay"]');
 
-              render(Html) {
-                Html`<div style="width: 100px; height: 100px; background: #eee" @touchstart=${(e) => this.handleTouch(e)}>Touch target</div>`;
-              }
-            }
-          );
+          if (sec.dataset.testResult === 'fail') return;
 
-          setTimeout(() => {
-            const section = document.querySelector(
-              '[data-test="ssr-touch-replay"]'
-            );
-            // Touch events may not replay in all environments, so pass if component rendered
-            const elem = document.querySelector('ssr-touch-test');
-            section.dataset.testResult = elem ? 'pass' : 'fail';
-          }, 100);
-        }, 700);
-      </script>
+          window.assertSnapshot('ssr-touch-replay', document.querySelector('ssr-touch-test'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 15: Scroll State Capture and Restore -->
@@ -770,6 +805,32 @@
         Tests that scroll positions are captured and restored after hydration.
         Uses focus event to trigger captureScrollState (scroll not in default events).
       </p>
+      <pre><code>var scrollContainer = document.getElementById('ssr-scroll-container');
+if (scrollContainer) {
+  scrollContainer.scrollTop = 50;
+  scrollContainer.scrollLeft = 30;
+  scrollContainer.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+}
+setTimeout(function () {
+  customElements.define(
+    'ssr-scroll-test',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;div id="ssr-scroll-container" style="width: 200px; height: 100px; overflow: auto;" tabindex="0"&gt;
+  &lt;div style="width: 400px; height: 300px; background: linear-gradient(135deg, #eee, #ccc);"&gt;
+    Scrollable content here.
+  &lt;/div&gt;
+&lt;/div&gt;`;
+      }
+    }
+  );
+  setTimeout(function () {
+    var section = document.querySelector('[data-test="ssr-scroll-state"]');
+    var container = document.getElementById('ssr-scroll-container');
+    var pass = container !== null;
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-scroll-test>
         <div
           id="ssr-scroll-container"
@@ -788,48 +849,23 @@
         </div>
       </ssr-scroll-test>
       <script type="module">
-        // Set scroll position then dispatch FOCUS event to trigger captureScrollState
-        // (scroll is NOT in DEFAULT_EVENTS, but focus IS and also triggers scroll capture)
-        const scrollContainer = document.getElementById('ssr-scroll-container');
-        if (scrollContainer) {
-          scrollContainer.scrollTop = 50;
-          scrollContainer.scrollLeft = 30;
-          // Focus event triggers captureScrollState which captures scroll positions
-          scrollContainer.dispatchEvent(
-            new FocusEvent('focus', { bubbles: true })
-          );
-        }
+
+        const code = document.querySelector('[data-test="ssr-scroll-state"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-scroll-test><div id="ssr-scroll-container" style="width: 200px; height: 100px; overflow: auto;" tabindex="0">\n  <div style="width: 400px; height: 300px; background: linear-gradient(135deg, #eee, #ccc);">\n    Scrollable content here.\n  </div>\n</div></ssr-scroll-test>';
 
         setTimeout(() => {
-          customElements.define(
-            'ssr-scroll-test',
-            class extends hyperElement {
-              render(Html) {
-                // Keep same DOM structure so resolvePath can find the element
-                Html`<div id="ssr-scroll-container" style="width: 200px; height: 100px; overflow: auto;" tabindex="0">
-                  <div style="width: 400px; height: 300px; background: linear-gradient(135deg, #eee, #ccc);">
-                    Scrollable content here.
-                  </div>
-                </div>`;
-              }
-            }
-          );
 
-          setTimeout(() => {
-            const section = document.querySelector(
-              '[data-test="ssr-scroll-state"]'
-            );
-            const container = document.getElementById('ssr-scroll-container');
-            // Check if scroll positions were restored by restoreElementState
-            const scrollRestored =
-              container &&
-              (container.scrollTop === 50 || container.scrollLeft === 30);
-            // At minimum, element should render; scroll restore is best-effort
-            const pass = container !== null;
-            section.dataset.testResult = pass ? 'pass' : 'fail';
-          }, 100);
-        }, 750);
-      </script>
+          const sec = document.querySelector('[data-test="ssr-scroll-state"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('ssr-scroll-state', document.querySelector('ssr-scroll-test'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 16: Checked State Restoration via restoreElementState -->
@@ -839,69 +875,66 @@
         Tests that checkbox checked state is restored via restoreElementState
         when events are filtered in onBeforeHydrate.
       </p>
+      <pre><code>var restoreCheckbox = document.getElementById('ssr-restore-checkbox');
+var restoreRadio = document.getElementById('ssr-restore-radio');
+if (restoreCheckbox) {
+  restoreCheckbox.checked = true;
+  restoreCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+}
+if (restoreRadio) {
+  restoreRadio.checked = true;
+  restoreRadio.dispatchEvent(new Event('click', { bubbles: true }));
+}
+setTimeout(function () {
+  var restoredViaState = false;
+  customElements.define(
+    'ssr-checked-restore',
+    class extends hyperElement {
+      onBeforeHydrate(events) {
+        return [];
+      }
+      onAfterHydrate() {
+        var checkbox = this.element.querySelector('input[type="checkbox"]');
+        var radio = this.element.querySelector('input[type="radio"]');
+        restoredViaState = checkbox?.checked || radio?.checked;
+      }
+      render(Html) {
+        Html`&lt;input type="checkbox" aria-label="test checkbox"&gt;
+&lt;input type="radio" name="ssr-radio" value="a" aria-label="test radio"&gt;
+&lt;label&gt;Check me&lt;/label&gt;`;
+      }
+    }
+  );
+  setTimeout(function () {
+    var section = document.querySelector('[data-test="ssr-checked-restore"]');
+    var elem = document.querySelector('ssr-checked-restore');
+    var pass = elem !== null;
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-checked-restore>
         <input type="checkbox" id="ssr-restore-checkbox" aria-label="restore test checkbox" />
         <input type="radio" name="ssr-radio" id="ssr-restore-radio" value="a" aria-label="restore test radio" />
         <label>Check me</label>
       </ssr-checked-restore>
       <script type="module">
-        // Check the checkbox before hydration
-        const restoreCheckbox = document.getElementById('ssr-restore-checkbox');
-        const restoreRadio = document.getElementById('ssr-restore-radio');
-        if (restoreCheckbox) {
-          restoreCheckbox.checked = true;
-          // Dispatch change event to capture checked state
-          restoreCheckbox.dispatchEvent(
-            new Event('change', { bubbles: true })
-          );
-        }
-        if (restoreRadio) {
-          restoreRadio.checked = true;
-          // Click event also captures checked state
-          restoreRadio.dispatchEvent(new Event('click', { bubbles: true }));
-        }
+
+        const code = document.querySelector('[data-test="ssr-checked-restore"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-checked-restore><!--<>--><input type="checkbox" aria-label="test checkbox">\n<input type="radio" name="ssr-radio" value="a" aria-label="test radio">\n<label>Check me</label><!--</>--></ssr-checked-restore>';
 
         setTimeout(() => {
-          let restoredViaState = false;
 
-          customElements.define(
-            'ssr-checked-restore',
-            class extends hyperElement {
-              onBeforeHydrate(events) {
-                // Filter out ALL events so restoreElementState is the only mechanism
-                return [];
-              }
+          const sec = document.querySelector('[data-test="ssr-checked-restore"]');
 
-              onAfterHydrate() {
-                // Check if checkbox was restored
-                const checkbox = this.element.querySelector(
-                  'input[type="checkbox"]'
-                );
-                const radio = this.element.querySelector('input[type="radio"]');
-                restoredViaState = checkbox?.checked || radio?.checked;
-              }
+          if (sec.dataset.testResult === 'fail') return;
 
-              render(Html) {
-                // Keep same DOM structure for resolvePath
-                Html`<input type="checkbox" aria-label="test checkbox">
-                <input type="radio" name="ssr-radio" value="a" aria-label="test radio">
-                <label>Check me</label>`;
-              }
-            }
-          );
+          window.assertSnapshot('ssr-checked-restore', document.querySelector('ssr-checked-restore'), expected);
 
-          setTimeout(() => {
-            const section = document.querySelector(
-              '[data-test="ssr-checked-restore"]'
-            );
-            const elem = document.querySelector('ssr-checked-restore');
-            const checkbox = elem?.querySelector('input[type="checkbox"]');
-            // Either restored via restoreElementState OR render has correct initial state
-            const pass = elem !== null;
-            section.dataset.testResult = pass ? 'pass' : 'fail';
-          }, 100);
-        }, 800);
-      </script>
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 17: Path Resolution Failure Warning -->
@@ -911,47 +944,58 @@
         Tests that when DOM structure changes during hydration, path resolution
         fails gracefully with a warning (no crash).
       </p>
+      <pre><code>var pathFailBtn = document.getElementById('ssr-path-fail-btn');
+if (pathFailBtn) pathFailBtn.click();
+setTimeout(function () {
+  var warningLogged = false;
+  var originalWarn = console.warn;
+  console.warn = function () {
+    var args = Array.from(arguments);
+    if (args[0] &amp;&amp; typeof args[0].includes === 'function' &amp;&amp; args[0].includes('[hyper-element SSR]')) {
+      warningLogged = true;
+    }
+    originalWarn.apply(console, args);
+  };
+  customElements.define(
+    'ssr-path-fail',
+    class extends hyperElement {
+      render(Html) {
+        Html`&lt;div id="different-structure"&gt;
+  &lt;span&gt;No button here&lt;/span&gt;
+&lt;/div&gt;`;
+      }
+    }
+  );
+  setTimeout(function () {
+    console.warn = originalWarn;
+    var section = document.querySelector('[data-test="ssr-path-failure"]');
+    var elem = document.querySelector('ssr-path-fail');
+    section.dataset.testResult = elem ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-path-fail>
         <div id="original-structure">
           <button id="ssr-path-fail-btn">Click</button>
         </div>
       </ssr-path-fail>
       <script type="module">
-        // Click button before hydration
-        const pathFailBtn = document.getElementById('ssr-path-fail-btn');
-        pathFailBtn?.click();
+
+        const code = document.querySelector('[data-test="ssr-path-failure"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-path-fail><div id="different-structure">\n  <span>No button here</span>\n</div></ssr-path-fail>';
 
         setTimeout(() => {
-          let warningLogged = false;
-          const originalWarn = console.warn;
-          console.warn = function (...args) {
-            if (args[0]?.includes?.('[hyper-element SSR]')) {
-              warningLogged = true;
-            }
-            originalWarn.apply(console, args);
-          };
 
-          customElements.define(
-            'ssr-path-fail',
-            class extends hyperElement {
-              render(Html) {
-                // Render different structure - path to button won't resolve
-                Html`<div id="different-structure">
-                  <span>No button here</span>
-                </div>`;
-              }
-            }
-          );
+          const sec = document.querySelector('[data-test="ssr-path-failure"]');
 
-          setTimeout(() => {
-            console.warn = originalWarn;
-            const section = document.querySelector('[data-test="ssr-path-failure"]');
-            const elem = document.querySelector('ssr-path-fail');
-            // Pass if element rendered (warning is logged but doesn't crash)
-            section.dataset.testResult = elem ? 'pass' : 'fail';
-          }, 100);
-        }, 850);
-      </script>
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('ssr-path-failure', document.querySelector('ssr-path-fail'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 18: onBeforeHydrate Invalid Return -->
@@ -960,44 +1004,56 @@
       <p>
         Tests that returning a non-array from onBeforeHydrate triggers a warning.
       </p>
+      <pre><code>var invalidBtn = document.getElementById('ssr-invalid-btn');
+if (invalidBtn) invalidBtn.click();
+setTimeout(function () {
+  var warningLogged = false;
+  var originalWarn = console.warn;
+  console.warn = function () {
+    var args = Array.from(arguments);
+    if (args[0] &amp;&amp; typeof args[0].includes === 'function' &amp;&amp; args[0].includes('onBeforeHydrate must return an array')) {
+      warningLogged = true;
+    }
+    originalWarn.apply(console, args);
+  };
+  customElements.define(
+    'ssr-invalid-return',
+    class extends hyperElement {
+      onBeforeHydrate(events) {
+        return 'invalid';
+      }
+      render(Html) {
+        Html`&lt;button&gt;Button&lt;/button&gt;`;
+      }
+    }
+  );
+  setTimeout(function () {
+    console.warn = originalWarn;
+    var section = document.querySelector('[data-test="ssr-before-invalid"]');
+    section.dataset.testResult = warningLogged ? 'pass' : 'fail';
+  }, 100);
+}, 50);</code></pre>
       <ssr-invalid-return>
         <button id="ssr-invalid-btn">Click</button>
       </ssr-invalid-return>
       <script type="module">
-        document.getElementById('ssr-invalid-btn')?.click();
+
+        const code = document.querySelector('[data-test="ssr-before-invalid"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<ssr-invalid-return><button>Button</button></ssr-invalid-return>';
 
         setTimeout(() => {
-          let warningLogged = false;
-          const originalWarn = console.warn;
-          console.warn = function (...args) {
-            if (args[0]?.includes?.('onBeforeHydrate must return an array')) {
-              warningLogged = true;
-            }
-            originalWarn.apply(console, args);
-          };
 
-          customElements.define(
-            'ssr-invalid-return',
-            class extends hyperElement {
-              onBeforeHydrate(events) {
-                // Return invalid value (not array, not undefined)
-                return 'invalid';
-              }
+          const sec = document.querySelector('[data-test="ssr-before-invalid"]');
 
-              render(Html) {
-                Html`<button>Button</button>`;
-              }
-            }
-          );
+          if (sec.dataset.testResult === 'fail') return;
 
-          setTimeout(() => {
-            console.warn = originalWarn;
-            const section = document.querySelector('[data-test="ssr-before-invalid"]');
-            // Pass if warning was logged
-            section.dataset.testResult = warningLogged ? 'pass' : 'fail';
-          }, 100);
-        }, 900);
-      </script>
+          window.assertSnapshot('ssr-before-invalid', document.querySelector('ssr-invalid-return'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 19: Functional API Non-Function Properties -->
@@ -1006,26 +1062,36 @@
       <p>
         Tests that non-function properties in functional definition are skipped.
       </p>
+      <pre><code>hyperElement('ssr-non-fn-elem', {
+  someValue: 42,
+  someObject: { nested: 'value' },
+  render: function (Html, ctx) { return Html`&lt;div&gt;Value: ${ctx.someValue ?? 'undefined'}&lt;/div&gt;`; },
+});
+var elem = document.createElement('ssr-non-fn-elem');
+document.getElementById('ssr-non-fn-output').appendChild(elem);
+setTimeout(function () {
+  var section = document.querySelector('[data-test="ssr-func-non-fn-props"]');
+  section.dataset.testResult = elem.textContent.includes('undefined') ? 'pass' : 'fail';
+}, 100);</code></pre>
       <div id="ssr-non-fn-output"></div>
       <script type="module">
+
+        const code = document.querySelector('[data-test="ssr-func-non-fn-props"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="ssr-non-fn-output"><ssr-non-fn-elem><div>Value: undefined</div></ssr-non-fn-elem></div>';
+
         setTimeout(() => {
-          // Define component with mixed properties (some not functions)
-          hyperElement('ssr-non-fn-elem', {
-            someValue: 42, // Not a function - should be skipped
-            someObject: { nested: 'value' }, // Not a function - should be skipped
-            render: (Html, ctx) => Html`<div>Value: ${ctx.someValue ?? 'undefined'}</div>`,
-          });
 
-          const elem = document.createElement('ssr-non-fn-elem');
-          document.getElementById('ssr-non-fn-output').appendChild(elem);
+          const sec = document.querySelector('[data-test="ssr-func-non-fn-props"]');
 
-          setTimeout(() => {
-            const section = document.querySelector('[data-test="ssr-func-non-fn-props"]');
-            // Should render without error (non-fn props skipped)
-            section.dataset.testResult = elem.textContent.includes('undefined') ? 'pass' : 'fail';
-          }, 100);
-        }, 950);
-      </script>
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('ssr-func-non-fn-props', document.getElementById('ssr-non-fn-output'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

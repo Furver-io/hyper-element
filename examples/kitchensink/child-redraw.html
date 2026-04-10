@@ -75,54 +75,57 @@ class ParentElem extends hyperElement {
 }
 
 customElements.define('child-elem', ChildElem);
-customElements.define('parent-elem', ParentElem);</code></pre>
+customElements.define('parent-elem', ParentElem);
+
+const parent = document.createElement('parent-elem');
+document.getElementById('redraw-container').appendChild(parent);
+
+const expectedPhase1 = '&lt;parent-elem&gt;&lt;child-elem name="value-0"&gt;&lt;span id="child-display"&gt;Name: value-0&lt;/span&gt;&lt;/child-elem&gt;&lt;/parent-elem&gt;';
+const expectedPhaseFinal = '&lt;parent-elem&gt;&lt;child-elem name="value-3"&gt;&lt;span id="child-display"&gt;Name: value-3&lt;/span&gt;&lt;/child-elem&gt;&lt;/parent-elem&gt;';
+
+let phase1Passed = false;
+let p1Actual = '';
+
+requestAnimationFrame(() => {
+  p1Actual = parent.outerHTML;
+  phase1Passed = p1Actual === expectedPhase1;
+});
+
+const observer = new MutationObserver(() => {
+  if (parent.outerHTML === expectedPhaseFinal) {
+    observer.disconnect();
+    const section = document.querySelector('[data-test="child-redraw-on-parent-update"]');
+    if (!phase1Passed) {
+      console.error('Snapshot mismatch at Phase 1.\nExpected: ' + expectedPhase1 + '\nActual: ' + p1Actual);
+      section.dataset.testResult = 'fail';
+    } else {
+      section.dataset.testResult = 'pass';
+    }
+  }
+});
+
+observer.observe(parent, { childList: true, subtree: true, attributes: true });
+
+setTimeout(() => {
+  const section = document.querySelector('[data-test="child-redraw-on-parent-update"]');
+  if (section.dataset.testResult !== 'pass') {
+    console.error('Timeout waiting for final snapshot.\nExpected: ' + expectedPhaseFinal + '\nActual: ' + parent.outerHTML);
+    section.dataset.testResult = 'fail';
+  }
+}, 1500);</code></pre>
       <div id="redraw-container"></div>
       <div id="redraw-log"></div>
       <script type="module">
-        const code = document.querySelector('[data-test="child-redraw-on-parent-update"] code').textContent;
+        const code = document.querySelector('[data-test="child-redraw-on-parent-update"] pre code').textContent;
         eval(code);
-
-        const parent = document.createElement('parent-elem');
-        document.getElementById('redraw-container').appendChild(parent);
-
-        const expectedPhase1 = '<parent-elem><child-elem name="value-0"><span id="child-display">Name: value-0</span></child-elem></parent-elem>';
-        const expectedPhaseFinal = '<parent-elem><child-elem name="value-3"><span id="child-display">Name: value-3</span></child-elem></parent-elem>';
-        
-        let phase1Passed = false;
-        let p1Actual = "";
-        
-        requestAnimationFrame(() => {
-          p1Actual = parent.outerHTML;
-          phase1Passed = p1Actual === expectedPhase1;
-        });
-
-        // Wait to hit the final milestone snapshot dynamically to ensure test stability
-        const observer = new MutationObserver(() => {
-          if (parent.outerHTML === expectedPhaseFinal) {
-            observer.disconnect();
-            
-            const section = document.querySelector('[data-test="child-redraw-on-parent-update"]');
-            if (!phase1Passed) {
-              console.error("Snapshot mismatch at Phase 1.\\nExpected: " + expectedPhase1 + "\\nActual: " + p1Actual);
-              section.dataset.testResult = 'fail';
-            } else {
-              section.dataset.testResult = 'pass';
-            }
-          }
-        });
-        
-        observer.observe(parent, { childList: true, subtree: true, attributes: true });
-
-        // Fallback timeout to fail test if Phase Final is never reached
-        setTimeout(() => {
-          const section = document.querySelector(
-            '[data-test="child-redraw-on-parent-update"]'
-          );
-          if (section.dataset.testResult !== 'pass') {
-            console.error("Timeout waiting for final snapshot.\\nExpected: " + expectedPhaseFinal + "\\nActual: " + parent.outerHTML);
-            section.dataset.testResult = 'fail';
-          }
-        }, 1500);
+        const expected = '<div id="redraw-container"><parent-elem><child-elem name="value-3"><span id="child-display">Name: value-3</span></child-elem></parent-elem></div>';
+        const poll = setInterval(() => {
+          const sec = document.querySelector('[data-test="child-redraw-on-parent-update"]');
+          if (sec.dataset.testResult === 'pending') return;
+          clearInterval(poll);
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot('child-redraw-on-parent-update', document.getElementById('redraw-container'), expected);
+        }, 50);
       </script>
     </section>
 

@@ -58,20 +58,11 @@ attrsElem.setAttribute('greeting', 'Hello World');
 document.getElementById('attrs-output').appendChild(attrsElem);</code></pre>
       <div id="attrs-output"></div>
       <script type="module">
-        const code = document.querySelector('[data-test="attrs-element"] code').textContent;
+        const code = document.querySelector('[data-test="attrs-element"] pre code').textContent;
         eval(code);
-
+        const expected = '<div id="attrs-output"><attrs-element greeting="Hello World"><!--<>-->Greeting: Hello World<!--</>--></attrs-element></div>';
         requestAnimationFrame(() => {
-          const section = document.querySelector('[data-test="attrs-element"]');
-          const elem = document.querySelector('attrs-element');
-          const expected = '<attrs-element greeting="Hello World"><!--<>-->Greeting: Hello World<!--</>--></attrs-element>';
-          if (elem && elem.outerHTML === expected) {
-            section.dataset.testResult = 'pass';
-          } else {
-            section.dataset.testResult = 'fail';
-            console.error('Expected HTML:', expected);
-            console.error('Actual HTML:', elem ? elem.outerHTML : null);
-          }
+          window.assertSnapshot('attrs-element', document.getElementById('attrs-output'), expected);
         });
       </script>
     </section>

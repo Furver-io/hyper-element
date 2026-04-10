@@ -50,23 +50,16 @@
       <p>Full definition object with automatic registration.</p>
       <pre><code>hyperElement('func-counter', {
   render: (Html, ctx) => Html`Count: ${ctx.attrs.count || 0}`
-});</code></pre>
+});
+
+document.getElementById('output-1').innerHTML = '&lt;func-counter count="42"&gt;&lt;/func-counter&gt;';</code></pre>
       <div id="output-1"></div>
       <script type="module">
-        const section = document.querySelector(
-          '[data-test="definition-with-tag"]'
-        );
-        const code = section.querySelector('code').textContent;
+        const code = document.querySelector('[data-test="definition-with-tag"] pre code').textContent;
         eval(code);
-
-        const elem1 = document.createElement('func-counter');
-        elem1.setAttribute('count', '42');
-        document.getElementById('output-1').appendChild(elem1);
-
-        // Single-phase render. Snapshot pins the rendered count.
-        const expected1 = '<func-counter count="42"><!--<>-->Count: 42<!--</>--></func-counter>';
+        const expected = '<div id="output-1"><func-counter count="42"><!--<>-->Count: 42<!--</>--></func-counter></div>';
         requestAnimationFrame(() => {
-          window.assertSnapshot('definition-with-tag', elem1, expected1);
+          window.assertSnapshot('definition-with-tag', document.getElementById('output-1'), expected);
         });
       </script>
     </section>
@@ -77,23 +70,16 @@
       <p>Just a render function with automatic registration.</p>
       <pre><code>hyperElement('func-hello', (Html, ctx) =>
   Html`Hello, ${ctx.attrs.name || 'World'}!`
-);</code></pre>
+);
+
+document.getElementById('output-2').innerHTML = '&lt;func-hello name="Functional"&gt;&lt;/func-hello&gt;';</code></pre>
       <div id="output-2"></div>
       <script type="module">
-        const section = document.querySelector(
-          '[data-test="shorthand-with-tag"]'
-        );
-        const code = section.querySelector('code').textContent;
+        const code = document.querySelector('[data-test="shorthand-with-tag"] pre code').textContent;
         eval(code);
-
-        const elem2 = document.createElement('func-hello');
-        elem2.setAttribute('name', 'Functional');
-        document.getElementById('output-2').appendChild(elem2);
-
-        // Single-phase render via shorthand-with-tag form.
-        const expected2 = '<func-hello name="Functional"><!--<>-->Hello, Functional!<!--</>--></func-hello>';
+        const expected = '<div id="output-2"><func-hello name="Functional"><!--<>-->Hello, Functional!<!--</>--></func-hello></div>';
         requestAnimationFrame(() => {
-          window.assertSnapshot('shorthand-with-tag', elem2, expected2);
+          window.assertSnapshot('shorthand-with-tag', document.getElementById('output-2'), expected);
         });
       </script>
     </section>
@@ -105,23 +91,16 @@
       <pre><code>const ManualElem = hyperElement({
   render: (Html, ctx) => Html`Manual: ${ctx.attrs.value}`
 });
-customElements.define('func-manual', ManualElem);</code></pre>
+customElements.define('func-manual', ManualElem);
+
+document.getElementById('output-3').innerHTML = '&lt;func-manual value="works"&gt;&lt;/func-manual&gt;';</code></pre>
       <div id="output-3"></div>
       <script type="module">
-        const section = document.querySelector(
-          '[data-test="definition-no-tag"]'
-        );
-        const code = section.querySelector('code').textContent;
+        const code = document.querySelector('[data-test="definition-no-tag"] pre code').textContent;
         eval(code);
-
-        const elem3 = document.createElement('func-manual');
-        elem3.setAttribute('value', 'works');
-        document.getElementById('output-3').appendChild(elem3);
-
-        // Single-phase render — manual customElements.define path.
-        const expected3 = '<func-manual value="works"><!--<>-->Manual: works<!--</>--></func-manual>';
+        const expected = '<div id="output-3"><func-manual value="works"><!--<>-->Manual: works<!--</>--></func-manual></div>';
         requestAnimationFrame(() => {
-          window.assertSnapshot('definition-no-tag', elem3, expected3);
+          window.assertSnapshot('definition-no-tag', document.getElementById('output-3'), expected);
         });
       </script>
     </section>
@@ -133,23 +112,16 @@ customElements.define('func-manual', ManualElem);</code></pre>
       <pre><code>const SimpleElem = hyperElement((Html, ctx) =>
   Html`Simple: ${ctx.attrs.msg}`
 );
-customElements.define('func-simple', SimpleElem);</code></pre>
+customElements.define('func-simple', SimpleElem);
+
+document.getElementById('output-4').innerHTML = '&lt;func-simple msg="shorthand"&gt;&lt;/func-simple&gt;';</code></pre>
       <div id="output-4"></div>
       <script type="module">
-        const section = document.querySelector(
-          '[data-test="shorthand-no-tag"]'
-        );
-        const code = section.querySelector('code').textContent;
+        const code = document.querySelector('[data-test="shorthand-no-tag"] pre code').textContent;
         eval(code);
-
-        const elem4 = document.createElement('func-simple');
-        elem4.setAttribute('msg', 'shorthand');
-        document.getElementById('output-4').appendChild(elem4);
-
-        // Single-phase render — shorthand-no-tag manual register form.
-        const expected4 = '<func-simple msg="shorthand"><!--<>-->Simple: shorthand<!--</>--></func-simple>';
+        const expected = '<div id="output-4"><func-simple msg="shorthand"><!--<>-->Simple: shorthand<!--</>--></func-simple></div>';
         requestAnimationFrame(() => {
-          window.assertSnapshot('shorthand-no-tag', elem4, expected4);
+          window.assertSnapshot('shorthand-no-tag', document.getElementById('output-4'), expected);
         });
       </script>
     </section>
@@ -166,44 +138,43 @@ customElements.define('func-simple', SimpleElem);</code></pre>
     return () => clearInterval(interval);
   },
   render: (Html, ctx, store) => Html`Timer: ${store?.count || 0}`
-});</code></pre>
+});
+
+var elem5 = document.createElement('func-timer');
+document.getElementById('output-5').appendChild(elem5);
+
+var expectedInitial5 = '&lt;func-timer&gt;&lt;!--&lt;&gt;--&gt;Timer: 0&lt;!--&lt;/&gt;--&gt;&lt;/func-timer&gt;';
+var expectedTick3 = '&lt;func-timer&gt;&lt;!--&lt;&gt;--&gt;Timer: 3&lt;!--&lt;/&gt;--&gt;&lt;/func-timer&gt;';
+var initial5 = elem5.outerHTML;
+
+setTimeout(function () {
+  var initialOk = initial5 === expectedInitial5;
+  var tickOk = elem5.outerHTML === expectedTick3;
+  if (!initialOk) console.error('Phase Initial mismatch (setup-teardown)\nExpected: ' + expectedInitial5 + '\nActual:   ' + initial5);
+  if (!tickOk) console.error('Phase Tick3 mismatch (setup-teardown)\nExpected: ' + expectedTick3 + '\nActual:   ' + elem5.outerHTML);
+  var section = document.querySelector('[data-test="setup-teardown"]');
+  section.dataset.testResult = (initialOk &amp;&amp; tickOk) ? 'pass' : 'fail';
+  elem5.remove();
+}, 350);</code></pre>
       <div id="output-5"></div>
       <script type="module">
-        const section = document.querySelector(
-          '[data-test="setup-teardown"]'
-        );
-        const code = section.querySelector('code').textContent;
+
+        const code = document.querySelector('[data-test="setup-teardown"] pre code').textContent;
+
         eval(code);
 
-        const elem5 = document.createElement('func-timer');
-        document.getElementById('output-5').appendChild(elem5);
-
-        // Multi-phase example. The interval ticks every 100ms.
-        //   Phase Initial — first synchronous render with count=0.
-        //   Phase Tick3   — after at least 3 ticks (~350ms) the timer has
-        //                   advanced past 2; we capture and assert the
-        //                   tick-3 frame as the meaningful "later" snapshot.
-        const expectedInitial5 = '<func-timer><!--<>-->Timer: 0<!--</>--></func-timer>';
-        const expectedTick3 = '<func-timer><!--<>-->Timer: 3<!--</>--></func-timer>';
-
-        // Capture initial frame synchronously after append (before the first
-        // 100ms interval fires).
-        const initial5 = elem5.outerHTML;
+        const expected = '<div id="output-5"></div>';
 
         setTimeout(() => {
-          const initialOk = initial5 === expectedInitial5;
-          const tickOk = elem5.outerHTML === expectedTick3;
-          if (!initialOk) {
-            console.error('Phase Initial mismatch (setup-teardown)\nExpected: ' + expectedInitial5 + '\nActual:   ' + initial5);
-          }
-          if (!tickOk) {
-            console.error('Phase Tick3 mismatch (setup-teardown)\nExpected: ' + expectedTick3 + '\nActual:   ' + elem5.outerHTML);
-          }
-          section.dataset.testResult = (initialOk && tickOk) ? 'pass' : 'fail';
-          // Remove to test teardown (cleanup interval)
-          elem5.remove();
-        }, 350);
-      </script>
+
+          const sec = document.querySelector('[data-test="setup-teardown"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('setup-teardown', document.getElementById('output-5'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 6: With methods and events -->
@@ -222,44 +193,47 @@ customElements.define('func-simple', SimpleElem);</code></pre>
   handleClick: (ctx, event) => ctx.increment(),
   render: (Html, ctx, store) =>
     Html`&lt;button onclick=${(e) => ctx.handleClick(e)}&gt;Clicks: ${store?.clicks || 0}&lt;/button&gt;`
-});</code></pre>
+});
+
+var elem6 = document.createElement('func-clicker');
+document.getElementById('output-6').appendChild(elem6);
+
+var expectedInitial6 = '&lt;func-clicker&gt;&lt;button&gt;Clicks: 0&lt;/button&gt;&lt;/func-clicker&gt;';
+var expectedAfter2 = '&lt;func-clicker&gt;&lt;button&gt;Clicks: 2&lt;/button&gt;&lt;/func-clicker&gt;';
+var initial6 = elem6.outerHTML;
+
+setTimeout(function () {
+  var btn = elem6.querySelector('button');
+  btn.click();
+  btn.click();
+  setTimeout(function () {
+    var initialOk = initial6 === expectedInitial6;
+    var afterOk = elem6.outerHTML === expectedAfter2;
+    if (!initialOk) console.error('Phase Initial mismatch (methods-events)\nExpected: ' + expectedInitial6 + '\nActual:   ' + initial6);
+    if (!afterOk) console.error('Phase After2 mismatch (methods-events)\nExpected: ' + expectedAfter2 + '\nActual:   ' + elem6.outerHTML);
+    var section = document.querySelector('[data-test="methods-events"]');
+    section.dataset.testResult = (initialOk &amp;&amp; afterOk) ? 'pass' : 'fail';
+  }, 50);
+}, 50);</code></pre>
       <div id="output-6"></div>
       <script type="module">
-        const section = document.querySelector(
-          '[data-test="methods-events"]'
-        );
-        const code = section.querySelector('code').textContent;
+
+        const code = document.querySelector('[data-test="methods-events"] pre code').textContent;
+
         eval(code);
 
-        const elem6 = document.createElement('func-clicker');
-        document.getElementById('output-6').appendChild(elem6);
-
-        // Multi-phase example.
-        //   Phase Initial — clicks=0
-        //   Phase After2  — after two synthetic clicks dispatched below
-        const expectedInitial6 = '<func-clicker><button>Clicks: 0</button></func-clicker>';
-        const expectedAfter2 = '<func-clicker><button>Clicks: 2</button></func-clicker>';
-
-        const initial6 = elem6.outerHTML;
+        const expected = '<div id="output-6"><func-clicker><button>Clicks: 2</button></func-clicker></div>';
 
         setTimeout(() => {
-          const btn = elem6.querySelector('button');
-          btn.click();
-          btn.click();
 
-          setTimeout(() => {
-            const initialOk = initial6 === expectedInitial6;
-            const afterOk = elem6.outerHTML === expectedAfter2;
-            if (!initialOk) {
-              console.error('Phase Initial mismatch (methods-events)\nExpected: ' + expectedInitial6 + '\nActual:   ' + initial6);
-            }
-            if (!afterOk) {
-              console.error('Phase After2 mismatch (methods-events)\nExpected: ' + expectedAfter2 + '\nActual:   ' + elem6.outerHTML);
-            }
-            section.dataset.testResult = (initialOk && afterOk) ? 'pass' : 'fail';
-          }, 50);
-        }, 50);
-      </script>
+          const sec = document.querySelector('[data-test="methods-events"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('methods-events', document.getElementById('output-6'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 7: Class-based backward compatibility -->
@@ -271,21 +245,16 @@ customElements.define('func-simple', SimpleElem);</code></pre>
     Html`Classic: ${this.attrs.msg}`;
   }
 }
-customElements.define('func-classic', ClassicElement);</code></pre>
+customElements.define('func-classic', ClassicElement);
+
+document.getElementById('output-7').innerHTML = '&lt;func-classic msg="still works"&gt;&lt;/func-classic&gt;';</code></pre>
       <div id="output-7"></div>
       <script type="module">
-        const section = document.querySelector('[data-test="class-compat"]');
-        const code = section.querySelector('code').textContent;
+        const code = document.querySelector('[data-test="class-compat"] pre code').textContent;
         eval(code);
-
-        const elem7 = document.createElement('func-classic');
-        elem7.setAttribute('msg', 'still works');
-        document.getElementById('output-7').appendChild(elem7);
-
-        // Single-phase render — class-based backward-compat path.
-        const expected7 = '<func-classic msg="still works"><!--<>-->Classic: still works<!--</>--></func-classic>';
+        const expected = '<div id="output-7"><func-classic msg="still works"><!--<>-->Classic: still works<!--</>--></func-classic></div>';
         requestAnimationFrame(() => {
-          window.assertSnapshot('class-compat', elem7, expected7);
+          window.assertSnapshot('class-compat', document.getElementById('output-7'), expected);
         });
       </script>
     </section>
@@ -296,94 +265,101 @@ customElements.define('func-classic', ClassicElement);</code></pre>
       <p>All attributes are reactive - no observedAttributes needed!</p>
       <pre><code>hyperElement('func-reactive', {
   render: (Html, ctx) => Html`Value: ${ctx.attrs.value}`
+});
+
+var elem8 = document.createElement('func-reactive');
+elem8.setAttribute('value', 'initial');
+document.getElementById('output-8').appendChild(elem8);
+
+var expectedInitial8 = '&lt;func-reactive value="initial"&gt;&lt;!--&lt;&gt;--&gt;Value: initial&lt;!--&lt;/&gt;--&gt;&lt;/func-reactive&gt;';
+var expectedUpdated8 = '&lt;func-reactive value="updated"&gt;&lt;!--&lt;&gt;--&gt;Value: updated&lt;!--&lt;/&gt;--&gt;&lt;/func-reactive&gt;';
+var initial8 = elem8.outerHTML;
+
+requestAnimationFrame(function () {
+  elem8.setAttribute('value', 'updated');
+  setTimeout(function () {
+    var initialOk = initial8 === expectedInitial8;
+    var updatedOk = elem8.outerHTML === expectedUpdated8;
+    if (!initialOk) console.error('Phase Initial mismatch (observed-attrs)\nExpected: ' + expectedInitial8 + '\nActual:   ' + initial8);
+    if (!updatedOk) console.error('Phase Updated mismatch (observed-attrs)\nExpected: ' + expectedUpdated8 + '\nActual:   ' + elem8.outerHTML);
+    var section = document.querySelector('[data-test="observed-attrs"]');
+    section.dataset.testResult = (initialOk &amp;&amp; updatedOk) ? 'pass' : 'fail';
+  }, 0);
 });</code></pre>
       <div id="output-8"></div>
       <script type="module">
-        const section = document.querySelector(
-          '[data-test="observed-attrs"]'
-        );
-        const code = section.querySelector('code').textContent;
+
+        const code = document.querySelector('[data-test="observed-attrs"] pre code').textContent;
+
         eval(code);
 
-        const elem8 = document.createElement('func-reactive');
-        elem8.setAttribute('value', 'initial');
-        document.getElementById('output-8').appendChild(elem8);
+        const expected = '<div id="output-8"><func-reactive value="updated"><!--<>-->Value: updated<!--</>--></func-reactive></div>';
 
-        // Multi-phase example.
-        //   Phase Initial — value="initial" rendered synchronously
-        //   Phase Updated — after setAttribute, MutationObserver re-renders
-        const expectedInitial8 = '<func-reactive value="initial"><!--<>-->Value: initial<!--</>--></func-reactive>';
-        const expectedUpdated8 = '<func-reactive value="updated"><!--<>-->Value: updated<!--</>--></func-reactive>';
+        setTimeout(() => {
 
-        const initial8 = elem8.outerHTML;
+          const sec = document.querySelector('[data-test="observed-attrs"]');
 
-        requestAnimationFrame(() => {
-          elem8.setAttribute('value', 'updated');
-          // Use setTimeout to ensure MutationObserver microtask completes
-          setTimeout(() => {
-            const initialOk = initial8 === expectedInitial8;
-            const updatedOk = elem8.outerHTML === expectedUpdated8;
-            if (!initialOk) {
-              console.error('Phase Initial mismatch (observed-attrs)\nExpected: ' + expectedInitial8 + '\nActual:   ' + initial8);
-            }
-            if (!updatedOk) {
-              console.error('Phase Updated mismatch (observed-attrs)\nExpected: ' + expectedUpdated8 + '\nActual:   ' + elem8.outerHTML);
-            }
-            section.dataset.testResult = (initialOk && updatedOk) ? 'pass' : 'fail';
-          }, 0);
-        });
-      </script>
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('observed-attrs', document.getElementById('output-8'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <!-- Test 9: Setup cleanup verification -->
     <section data-test="setup-cleanup-verify" data-test-result="pending">
       <h2>9. Setup Cleanup Verification</h2>
       <p>Verifies the teardown function returned from setup() is called on disconnect.</p>
-      <pre><code>hyperElement('func-cleanup-test', {
+      <pre><code>window.cleanupTestCalled = false;
+
+hyperElement('func-cleanup-test', {
   setup: (ctx, onNext) => {
     onNext();
     return () => { window.cleanupTestCalled = true; };
   },
   render: (Html, ctx) => Html`Cleanup Test`
+});
+
+var elem9 = document.createElement('func-cleanup-test');
+document.getElementById('output-9').appendChild(elem9);
+
+var expectedMounted9 = '&lt;func-cleanup-test&gt;Cleanup Test&lt;/func-cleanup-test&gt;';
+var expectedRemovedContainer9 = '&lt;div id="output-9"&gt;&lt;/div&gt;';
+var mounted9 = elem9.outerHTML;
+
+requestAnimationFrame(function () {
+  elem9.remove();
+  requestAnimationFrame(function () {
+    var container = document.getElementById('output-9');
+    var mountedOk = mounted9 === expectedMounted9;
+    var removedOk = container.outerHTML === expectedRemovedContainer9;
+    var cleanupOk = window.cleanupTestCalled === true;
+    if (!mountedOk) console.error('Phase Mounted mismatch (setup-cleanup-verify)\nExpected: ' + expectedMounted9 + '\nActual:   ' + mounted9);
+    if (!removedOk) console.error('Phase Removed mismatch (setup-cleanup-verify)\nExpected: ' + expectedRemovedContainer9 + '\nActual:   ' + container.outerHTML);
+    var section = document.querySelector('[data-test="setup-cleanup-verify"]');
+    section.dataset.testResult = (mountedOk &amp;&amp; removedOk &amp;&amp; cleanupOk) ? 'pass' : 'fail';
+  });
 });</code></pre>
       <div id="output-9"></div>
       <script type="module">
-        window.cleanupTestCalled = false;
 
-        const section = document.querySelector(
-          '[data-test="setup-cleanup-verify"]'
-        );
-        const code = section.querySelector('code').textContent;
+        const code = document.querySelector('[data-test="setup-cleanup-verify"] pre code').textContent;
+
         eval(code);
 
-        const elem9 = document.createElement('func-cleanup-test');
-        document.getElementById('output-9').appendChild(elem9);
+        const expected = '<div id="output-9"></div>';
 
-        // Multi-phase example.
-        //   Phase Mounted   — element rendered into output-9
-        //   Phase Removed   — element removed; container is empty
-        const expectedMounted9 = '<func-cleanup-test>Cleanup Test</func-cleanup-test>';
-        const expectedRemovedContainer9 = '<div id="output-9"></div>';
+        setTimeout(() => {
 
-        const mounted9 = elem9.outerHTML;
+          const sec = document.querySelector('[data-test="setup-cleanup-verify"]');
 
-        requestAnimationFrame(() => {
-          elem9.remove();
-          requestAnimationFrame(() => {
-            const container = document.getElementById('output-9');
-            const mountedOk = mounted9 === expectedMounted9;
-            const removedOk = container.outerHTML === expectedRemovedContainer9;
-            const cleanupOk = window.cleanupTestCalled === true;
-            if (!mountedOk) {
-              console.error('Phase Mounted mismatch (setup-cleanup-verify)\nExpected: ' + expectedMounted9 + '\nActual:   ' + mounted9);
-            }
-            if (!removedOk) {
-              console.error('Phase Removed mismatch (setup-cleanup-verify)\nExpected: ' + expectedRemovedContainer9 + '\nActual:   ' + container.outerHTML);
-            }
-            section.dataset.testResult = (mountedOk && removedOk && cleanupOk) ? 'pass' : 'fail';
-          });
-        });
-      </script>
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('setup-cleanup-verify', document.getElementById('output-9'), expected);
+
+        }, 500);
+       </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>
