@@ -103,47 +103,37 @@ async function generateCoverageReport() {
   const ignoredLinesByFile = new Map();
   const sourceLinesByFile = new Map();
 
-  // Process each source file
+  // Process each source file. Each browser execution of the file lands
+  // as a separate entry in v8-coverage.json; we merge them into one
+  // FileCoverage via istanbul-lib-coverage's location-aware `.merge()`,
+  // which correctly handles the case where different runs visit
+  // different code paths and v8-to-istanbul therefore assigns different
+  // statement/branch ids per entry. (A naive id-keyed sum drops branches
+  // that show up in later entries but not in entry 0.)
   for (const [filePath, entries] of coverageByFile) {
     const source = readFileSync(filePath, 'utf8');
     sourceLinesByFile.set(filePath, source.split('\n'));
     ignoredLinesByFile.set(filePath, parseIgnoreRanges(source));
 
-    // Convert first entry
-    const converter = v8toIstanbul(filePath, 0, { source });
-    await converter.load();
-    converter.applyCoverage(entries[0].functions);
-    const istanbulData = converter.toIstanbul();
-    const merged = Object.values(istanbulData)[0];
-
-    if (!merged) continue;
-
-    // Merge remaining entries
-    for (let i = 1; i < entries.length; i++) {
+    let mergedFc = null;
+    for (const entry of entries) {
       const conv = v8toIstanbul(filePath, 0, { source });
       await conv.load();
-      conv.applyCoverage(entries[i].functions);
-      const cov = Object.values(conv.toIstanbul())[0];
-
-      if (!cov) continue;
-
-      // Sum counts
-      for (const [id, count] of Object.entries(cov.s)) {
-        if (merged.s[id] !== undefined) merged.s[id] += count;
-      }
-      for (const [id, count] of Object.entries(cov.f)) {
-        if (merged.f[id] !== undefined) merged.f[id] += count;
-      }
-      for (const [id, counts] of Object.entries(cov.b)) {
-        if (merged.b[id]) {
-          for (let j = 0; j < counts.length; j++) {
-            if (merged.b[id][j] !== undefined) merged.b[id][j] += counts[j];
-          }
-        }
+      conv.applyCoverage(entry.functions);
+      const data = Object.values(conv.toIstanbul())[0];
+      if (!data) continue;
+      const fc = libCoverage.createFileCoverage(data);
+      if (!mergedFc) {
+        mergedFc = fc;
+      } else {
+        // FileCoverage.merge() unions statementMap/branchMap/fnMap by
+        // source location and sums hit counts across the union — the
+        // critical property our naive prior implementation lacked.
+        mergedFc.merge(fc);
       }
     }
 
-    coverageMap.addFileCoverage(merged);
+    if (mergedFc) coverageMap.addFileCoverage(mergedFc);
   }
 
   // Write Istanbul format coverage
