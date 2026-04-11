@@ -753,7 +753,11 @@ hyperElement('validated-input', {
       ctx.element.dispatchEvent(
         new CustomEvent('validated', {
           bubbles: true,
-          detail: { value: state.value, error: state.error, valid: !state.error },
+          detail: {
+            value: state.value,
+            error: state.error,
+            valid: !state.error,
+          },
         })
       );
     };
@@ -1369,7 +1373,11 @@ const todoStore = {
   dispatch(action) {
     switch (action.type) {
       case 'ADD_TODO':
-        this.state.todos.push({ id: Date.now(), text: action.text, done: false });
+        this.state.todos.push({
+          id: Date.now(),
+          text: action.text,
+          done: false,
+        });
         break;
       case 'TOGGLE_TODO':
         const todo = this.state.todos.find((t) => t.id === action.id);
