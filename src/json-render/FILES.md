@@ -7,7 +7,7 @@
 Public API entry point. Exports `renderSpec()`, `registerComponent()`,
 `validateSpec()`, `listComponentTypes()`, `getCatalog()`, and the
 built-in component list. Delegates to `registry.js` for the shared
-component registry and auto-registers the `<jr-ui>` element on import.
+component registry and auto-registers the `<json-render>` element on import.
 
 ### `renderer.js`
 
@@ -52,10 +52,12 @@ Aligned with the json-render.dev catalog/schema patterns.
 
 ### `element.js`
 
-The `<jr-ui>` custom element definition, created via hyper-element's
-functional API (`createFunctionalElement`). Reads `data-spec` JSON,
-handles loading/error states, and delegates to `renderSpecTree()`.
-Auto-registers when imported.
+The `<json-render>` custom element definition, created via hyper-element's
+functional API (`createFunctionalElement`). Reads its body text content
+(`ctx.wrappedContent`) as a JSON spec, handles loading/error states, and
+delegates to `renderSpecTree()`. Re-renders automatically when the body
+text changes (via hyper-element's MutationObserver). Auto-registers when
+imported.
 
 ### `validator.js`
 

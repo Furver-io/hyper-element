@@ -42,13 +42,13 @@
     <h1>JSON Render Basic</h1>
     <p>
       Demonstrates the simplest use of the json-render module: rendering a JSON spec
-      declaratively using the <code>&lt;jr-ui&gt;</code> custom element without writing JS.
+      declaratively using the <code>&lt;json-render&gt;</code> custom element without writing JS.
     </p>
 
     <section data-test="json-render-declarative" data-test-result="pending">
       <h2>Declarative JSON Rendering</h2>
-      <p>Render a spec simply by attaching a JSON payload to the <code>data-spec</code> attribute.</p>
-      <pre><code>&lt;jr-ui id="target-jr-ui" data-spec='{"root":"msg","elements":{"msg":{"type":"Text","props":{"content":"Rendered from pure JSON spec!"}}}}'&gt;&lt;/jr-ui&gt;</code></pre>
+      <p>Render a spec by placing the JSON payload as the body text content of the element — no attribute, no escaping.</p>
+      <pre><code>&lt;json-render id="target-json-render"&gt;{"root":"msg","elements":{"msg":{"type":"Text","props":{"content":"Rendered from pure JSON spec!"}}}}&lt;/json-render&gt;</code></pre>
       <div id="basic-output"></div>
       <script type="module">
         // Single source of truth: the snippet is HTML, so we read its raw text
@@ -56,14 +56,14 @@
         // no second copy of the JSON spec or markup elsewhere.
         const html = document.querySelector('[data-test="json-render-declarative"] pre code').textContent;
         document.getElementById('basic-output').innerHTML = html;
-        const elem = document.getElementById('target-jr-ui');
+        const elem = document.getElementById('target-json-render');
 
-        // Single-phase render. The jr-ui custom element parses data-spec and
-        // expands it through one extra animation frame because the inner
-        // wire-rendered shadow needs a tick to settle. The expected snapshot
-        // pins the resolved DOM after that settle, including the data-spec
-        // attribute escaped exactly as the browser serializes it.
-        const expected = '<jr-ui id="target-jr-ui" data-spec="{&quot;root&quot;:&quot;msg&quot;,&quot;elements&quot;:{&quot;msg&quot;:{&quot;type&quot;:&quot;Text&quot;,&quot;props&quot;:{&quot;content&quot;:&quot;Rendered from pure JSON spec!&quot;}}}}"><div class="jr-ui-root"><div class="jr-text">Rendered from pure JSON spec!</div></div></jr-ui>';
+        // Single-phase render. The <json-render> custom element parses its
+        // body text as JSON during connectedCallback, then replaces the body
+        // with the rendered jr-root container. The expected snapshot pins
+        // the final DOM — the original JSON has been consumed and no longer
+        // appears inside the element.
+        const expected = '<json-render id="target-json-render"><div class="jr-root"><div class="jr-text">Rendered from pure JSON spec!</div></div></json-render>';
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             window.assertSnapshot('json-render-declarative', elem, expected);

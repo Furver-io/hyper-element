@@ -358,6 +358,16 @@
 }
 
 /* ── Loading shimmer ───────────────────────────────────── */
+/*
+ * Applied by <json-render> while its body spec is empty (streaming
+ * from an LLM hasn't arrived yet). The class lives in the component
+ * namespace (jr-*, same family as .jr-card / .jr-btn) rather than
+ * a per-element namespace so every component built by json-render
+ * can reuse the same visual vocabulary. Historically spelled
+ * .jr-ui-shimmer alongside the old <jr-ui> element; renamed when
+ * the element was renamed to <json-render> to drop the redundant
+ * "-ui" segment while keeping the jr- component prefix.
+ */
 @keyframes jr-pulse {
   0%,
   100% {
@@ -368,11 +378,17 @@
   }
 }
 
-.jr-ui-shimmer .jr-card {
+.jr-shimmer .jr-card {
   animation: jr-pulse 1.5s ease-in-out infinite;
 }
 
 /* ── Container ─────────────────────────────────────────── */
-.jr-ui-root {
+/*
+ * Wrapper div emitted by renderSpecTree() around every rendered
+ * spec. Provides a single stable CSS hook for host-level styling
+ * (full-width fills by default; override via .jr-root { ... } in
+ * consumer stylesheets). Same rename history as .jr-shimmer above.
+ */
+.jr-root {
   width: 100%;
 }

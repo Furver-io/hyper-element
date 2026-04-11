@@ -37,7 +37,7 @@ Module entry point. Wraps `hyperElement` class in a Proxy to support dual-purpos
 
 ### `json-render/`
 
-Spec-driven UI rendering module. Turns flat JSON specs (`{ root, elements }`) into live DOM trees using hyper-element's tagged template rendering. Contains renderer, 12 built-in components, extensible registry, spec validator, `<jr-ui>` custom element, and default CSS. See `json-render/README.md` for full documentation.
+Spec-driven UI rendering module. Turns flat JSON specs (`{ root, elements }`) into live DOM trees using hyper-element's tagged template rendering. Contains renderer, 12 built-in components, extensible registry, spec validator, `<json-render>` custom element (reads its body as JSON), and default CSS. See `json-render/README.md` for full documentation.
 
 ### `package.json`
 

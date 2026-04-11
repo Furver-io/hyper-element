@@ -7,15 +7,15 @@
  * hyper-element's efficient tagged template rendering.
  *
  * Usage:
- *   // Auto-registers <jr-ui> custom element
+ *   // Auto-registers <json-render> custom element
  *   import 'hyper-element/json-render';
  *
  *   // Or use the API directly
  *   import { renderSpec, registerComponent, validateSpec } from 'hyper-element/json-render';
  *
- * The <jr-ui> element is registered as a side-effect of importing
- * this module. It reads a `data-spec` attribute containing a JSON
- * string and renders the spec to the DOM.
+ * The <json-render> element is registered as a side-effect of importing
+ * this module. It reads its body text content as a JSON spec and
+ * renders that spec to the DOM — no data-spec attribute, no escaping.
  *
  * @module hyper-element/json-render
  */
@@ -110,7 +110,7 @@ export function registerComponent(type, renderFnOrEntry) {
  *
  * @example
  * hyperElement('my-view', (Html, ctx) => {
- *   const spec = JSON.parse(ctx.attrs['data-spec']);
+ *   const spec = JSON.parse(ctx.wrappedContent);
  *   return renderSpec(Html, spec, ctx.element);
  * });
  */
@@ -142,7 +142,8 @@ export function listComponentTypes() {
 }
 
 // Export the shared registry interface for internal use by element.js.
-// This ensures <jr-ui> sees custom-registered components, not just built-ins.
+// This ensures <json-render> sees custom-registered components, not
+// just built-ins.
 export { registryInterface };
 
 // Re-export for consumers who need standalone access
@@ -151,8 +152,8 @@ export { validateSpec } from './validator.js';
 export { BUILT_IN_COMPONENTS } from './components.js';
 export { getCatalog } from './catalog.js';
 
-// Auto-register the <jr-ui> custom element as a side effect.
-// This import triggers the element definition so consumers
-// can just `import 'hyper-element/json-render'` and start
-// using <jr-ui data-spec='...'> in their HTML.
+// Auto-register the <json-render> custom element as a side effect.
+// This import triggers the element definition so consumers can just
+// `import 'hyper-element/json-render'` and start placing JSON specs
+// inside a <json-render>...</json-render> tag in their HTML.
 import './element.js';

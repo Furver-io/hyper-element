@@ -10,6 +10,16 @@
  *   index.js   --> registry.js --> components.js
  *   element.js --> registry.js --> components.js
  *
+ * Historical note: before this split, the <json-render> element
+ * (then <jr-ui>) constructed its own local registry populated only
+ * from BUILT_IN_COMPONENTS. That made custom components registered
+ * via registerComponent() invisible to the declarative element path
+ * — they worked with programmatic renderSpec() but not inside
+ * <json-render> in HTML. Moving the single mutable registry here
+ * and routing both call sites through `registryInterface` fixed
+ * that split and made the declarative and programmatic paths
+ * observe the same catalog at all times.
+ *
  * @module hyper-element/json-render/registry
  */
 

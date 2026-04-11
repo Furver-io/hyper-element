@@ -52,7 +52,7 @@ Index of every file in this directory and its specific responsibility.
 | `ssr-dev-indicator-head.html` | SSR dev-mode indicator visibility | B, C |
 | `ssr-e2e.html` | Full SSR hydration flow (6 phases) | B, D |
 | `ssr-hydration.html` | SSR hydration edge cases | B, C |
-| `json-render-basic.html` | Declarative `<jr-ui>` rendering from JSON spec | A |
+| `json-render-basic.html` | Declarative `<json-render>` rendering from JSON spec | A |
 | `json-render-coverage.html` | JSON render coverage edges | A |
 | `json-render-custom.html` | Programmatic `renderSpec` + `registerComponent` | A |
 

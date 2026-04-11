@@ -72,7 +72,7 @@ document.getElementById('custom-output').innerHTML = '&lt;json-custom-wrapper&gt
         // custom component renderer. The render takes a couple of frames to
         // settle (registerComponent + renderSpec round trip), so poll until
         // the snapshot matches with a generous deadline.
-        const expected = '<json-custom-wrapper><div class="jr-ui-root"><h3 class="custom-heading">Hello World</h3></div></json-custom-wrapper>';
+        const expected = '<json-custom-wrapper><div class="jr-root"><h3 class="custom-heading">Hello World</h3></div></json-custom-wrapper>';
         const deadline = Date.now() + 1500;
         (function awaitRender() {
           if (elem.outerHTML === expected) {
@@ -88,57 +88,57 @@ document.getElementById('custom-output').innerHTML = '&lt;json-custom-wrapper&gt
       </script>
     </section>
 
-    <section data-test="json-render-custom-jr-ui" data-test-result="pending">
-      <h2>Custom Component via &lt;jr-ui&gt;</h2>
+    <section data-test="json-render-custom-element" data-test-result="pending">
+      <h2>Custom Component via &lt;json-render&gt;</h2>
       <p>
         Registers a custom component with <code>registerComponent()</code> and
-        renders it through the <code>&lt;jr-ui&gt;</code> custom element (not the
-        programmatic <code>renderSpec</code> API). This verifies that custom-registered
-        types are visible to the declarative element path.
+        renders it through the <code>&lt;json-render&gt;</code> custom element
+        (not the programmatic <code>renderSpec</code> API). This verifies that
+        custom-registered types are visible to the declarative element path.
       </p>
       <pre><code>registerComponent('CustomBanner', (Html, def, key) => {
   const msg = def.props?.message ?? 'default';
   return Html.wire(def, ':' + key)`&lt;div class="custom-banner"&gt;${msg}&lt;/div&gt;`;
 });
 
-const elem = document.createElement('jr-ui');
-elem.dataset.spec = JSON.stringify({
+const elem = document.createElement('json-render');
+elem.textContent = JSON.stringify({
   root: 'b0',
-  elements: { 'b0': { type: 'CustomBanner', props: { message: 'Hello from jr-ui!' } } }
+  elements: { 'b0': { type: 'CustomBanner', props: { message: 'Hello from json-render!' } } }
 });
-document.getElementById('jr-ui-custom-output').appendChild(elem);</code></pre>
-      <div id="jr-ui-custom-output"></div>
+document.getElementById('json-render-custom-output').appendChild(elem);</code></pre>
+      <div id="json-render-custom-output"></div>
       <script type="module">
         // Single source of truth: the displayed snippet IS the program.
-        // It registers a custom component and mounts it via <jr-ui>.
-        const code = document.querySelector('[data-test="json-render-custom-jr-ui"] pre code').textContent;
+        // It registers a custom component and mounts it via <json-render>.
+        const code = document.querySelector('[data-test="json-render-custom-element"] pre code').textContent;
         let checkCount = 0;
         function awaitReady() {
           if (typeof window.registerComponent !== 'function') {
             if (checkCount++ < 40) { setTimeout(awaitReady, 50); return; }
-            document.querySelector('[data-test="json-render-custom-jr-ui"]').dataset.testResult = 'fail';
+            document.querySelector('[data-test="json-render-custom-element"]').dataset.testResult = 'fail';
             return;
           }
           eval(code);
-          const elem = document.getElementById('jr-ui-custom-output').firstChild;
+          const elem = document.getElementById('json-render-custom-output').firstChild;
 
-          // Poll until the <jr-ui> element renders the custom component.
-          // The expected snapshot pins the resolved DOM: <jr-ui> wraps the
-          // custom component output inside a jr-ui-root container div.
-          const expected = '<div class="jr-ui-root"><div class="custom-banner">Hello from jr-ui!</div></div>';
+          // Poll until the <json-render> element renders the custom component.
+          // The expected snapshot pins the resolved DOM: <json-render> wraps
+          // the custom component output inside a jr-root container div.
+          const expected = '<div class="jr-root"><div class="custom-banner">Hello from json-render!</div></div>';
           const deadline = Date.now() + 1500;
           (function awaitRender() {
             if (elem.innerHTML === expected) {
-              window.assertSnapshot('json-render-custom-jr-ui', function() { return elem.outerHTML; }, elem.outerHTML);
+              window.assertSnapshot('json-render-custom-element', function() { return elem.outerHTML; }, elem.outerHTML);
               return;
             }
             if (Date.now() > deadline) {
               // Deadline reached — assert anyway to surface the mismatch
-              const section = document.querySelector('[data-test="json-render-custom-jr-ui"]');
+              const section = document.querySelector('[data-test="json-render-custom-element"]');
               if (elem.innerHTML === expected) {
                 section.dataset.testResult = 'pass';
               } else {
-                console.error('json-render-custom-jr-ui mismatch\nExpected innerHTML: ' + expected + '\nActual innerHTML:   ' + elem.innerHTML);
+                console.error('json-render-custom-element mismatch\nExpected innerHTML: ' + expected + '\nActual innerHTML:   ' + elem.innerHTML);
                 section.dataset.testResult = 'fail';
               }
               return;

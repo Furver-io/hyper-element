@@ -5,7 +5,7 @@
  * renders each node by looking up its type in the component registry.
  * Uses Html.wire() for efficient keyed DOM reuse across re-renders.
  *
- * This is the engine that powers both the <jr-ui> custom element
+ * This is the engine that powers both the <json-render> custom element
  * and the standalone renderSpec() API. It's framework-internal —
  * consumers use the higher-level exports from index.js.
  *
@@ -83,7 +83,7 @@ export function renderNode(Html, key, elements, hostEl, registry) {
  * @param {Object} spec - json-render spec: { root: string, elements: Object }
  * @param {HTMLElement} hostEl - The host element for event bubbling
  * @param {Object} registry - Component registry with .get(type) method
- * @returns {Node} Rendered DOM tree wrapped in a jr-ui-root container
+ * @returns {Node} Rendered DOM tree wrapped in a jr-root container
  * @throws {Error} If spec.root is not found in spec.elements
  */
 export function renderSpecTree(Html, spec, hostEl, registry) {
@@ -95,7 +95,14 @@ export function renderSpecTree(Html, spec, hostEl, registry) {
   }
 
   // Build the tree starting from the root element.
-  // The result is wrapped in a container div for consistent
-  // DOM structure and CSS targeting.
-  return Html`<div class="jr-ui-root">${renderNode(Html, spec.root, spec.elements, hostEl, registry)}</div>`;
+  //
+  // The result is wrapped in a container div for consistent DOM
+  // structure and CSS targeting. The wrapper uses `.jr-root` (not
+  // `.json-render-root`) because it lives in the shared component
+  // namespace alongside `.jr-card`, `.jr-btn`, etc. — the same family
+  // of classes a consumer can override in json-render.css. The wrapper
+  // is emitted by this function (not <json-render>) so programmatic
+  // `renderSpec()` callers get the same wrapper shape as declarative
+  // <json-render> usage.
+  return Html`<div class="jr-root">${renderNode(Html, spec.root, spec.elements, hostEl, registry)}</div>`;
 }

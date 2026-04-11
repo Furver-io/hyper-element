@@ -230,14 +230,20 @@ that produce structured UI via the `render_ui` tool.
 ### Quick Start
 
 ```js
-// Auto-registers <jr-ui> custom element
+// Auto-registers <json-render> custom element
 import 'hyper-element/json-render';
 ```
 
 ```html
 <link rel="stylesheet" href="hyper-element/src/json-render/json-render.css">
-<jr-ui data-spec='{"root":"msg","elements":{"msg":{"type":"Text","props":{"content":"Hello!"}}}}'></jr-ui>
+<json-render>
+{"root":"msg","elements":{"msg":{"type":"Text","props":{"content":"Hello!"}}}}
+</json-render>
 ```
+
+The JSON spec goes between the tags as body text — no attribute, no
+quote escaping. Assign `element.textContent = JSON.stringify(spec)` to
+update at runtime.
 
 ### API
 
@@ -246,7 +252,7 @@ import { renderSpec, registerComponent, validateSpec } from 'hyper-element';
 
 // Render a spec inside a hyper-element component
 hyperElement('my-view', (Html, ctx) => {
-  const spec = JSON.parse(ctx.attrs['data-spec']);
+  const spec = JSON.parse(ctx.wrappedContent);
   return renderSpec(Html, spec, ctx.element);
 });
 
@@ -281,7 +287,7 @@ const { valid, errors } = validateSpec(spec);
 Interactive components dispatch `jr-action` CustomEvent:
 
 ```js
-document.querySelector('jr-ui').addEventListener('jr-action', (e) => {
+document.querySelector('json-render').addEventListener('jr-action', (e) => {
   console.log(e.detail.action);  // "approve"
   console.log(e.detail.params);  // { id: "123" }
 });

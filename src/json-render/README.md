@@ -23,14 +23,32 @@ module renders those specs into real DOM components with:
 <!-- Import the CSS -->
 <link rel="stylesheet" href="hyper-element/src/json-render/json-render.css">
 
-<!-- Import registers <jr-ui> automatically -->
+<!-- Import registers <json-render> automatically -->
 <script type="module">
   import 'hyper-element/json-render';
 </script>
 
-<!-- Use it -->
-<jr-ui data-spec='{"root":"msg","elements":{"msg":{"type":"Text","props":{"content":"Hello from json-render!"}}}}'></jr-ui>
+<!-- Use it: place the JSON spec as body content -->
+<json-render>
+{"root":"msg","elements":{"msg":{"type":"Text","props":{"content":"Hello from json-render!"}}}}
+</json-render>
 ```
+
+The spec lives between the tags as ordinary text — no attribute, no quote
+escaping. JSON structure characters (`{` `}` `[` `]` `:` `,` `"`) are all
+HTML-safe, so the spec survives HTML parsing untouched. The only characters
+to watch for are literal `<` or `>` inside string values: encode them as
+`\u003c` / `\u003e` JSON escapes to stay HTML-safe. `&` is always safe
+because `element.textContent` resolves `&amp;` back to `&`.
+
+Updating the spec after mount is a plain text-content assignment:
+
+```js
+document.querySelector('json-render').textContent = JSON.stringify(nextSpec);
+```
+
+hyper-element's `MutationObserver` sees the childList change and re-renders
+automatically.
 
 ## API
 
@@ -39,7 +57,7 @@ import { renderSpec, registerComponent, validateSpec } from 'hyper-element/json-
 
 // Render a spec programmatically inside a hyper-element component
 hyperElement('my-view', (Html, ctx) => {
-  const spec = JSON.parse(ctx.attrs['data-spec']);
+  const spec = JSON.parse(ctx.wrappedContent);
   return renderSpec(Html, spec, ctx.element);
 });
 
@@ -111,7 +129,7 @@ const tool = catalog.toolDefinition({
 
 Only components registered with a `catalog` metadata object appear in the
 output. Legacy function-only `registerComponent(type, fn)` registrations
-render correctly via `<jr-ui>` and `renderSpec()` but are intentionally
+render correctly via `<json-render>` and `renderSpec()` but are intentionally
 invisible to the LLM — surfacing them would give the LLM types whose props
 have no schema.
 
@@ -122,10 +140,10 @@ Mutations cannot reach the live registry.
 ## Events
 
 Interactive components dispatch `jr-action` CustomEvents that bubble
-up from the `<jr-ui>` host element:
+up from the `<json-render>` host element:
 
 ```js
-document.querySelector('jr-ui').addEventListener('jr-action', (e) => {
+document.querySelector('json-render').addEventListener('jr-action', (e) => {
   console.log(e.detail.action);  // "approve"
   console.log(e.detail.params);  // { id: "123" }
 });

@@ -100,9 +100,9 @@ window.validateSpec({
     </section>
 
     <section data-test="element-parse-error" data-test-result="pending">
-      <h2>jr-ui Parse Error</h2>
-      <p>Tests un-parseable JSON injected directly into the component's <code>data-spec</code> attribute.</p>
-      <pre><code>&lt;jr-ui data-spec="{ unclosed_json"&gt;&lt;/jr-ui&gt;</code></pre>
+      <h2>json-render Parse Error</h2>
+      <p>Tests un-parseable JSON placed as body content of the element.</p>
+      <pre><code>&lt;json-render&gt;{ unclosed_json&lt;/json-render&gt;</code></pre>
       <div id="element-parse-output"></div>
       <script type="module">
         // Single source of truth: snippet is HTML; inject it verbatim.
@@ -110,11 +110,12 @@ window.validateSpec({
         document.getElementById('element-parse-output').innerHTML = html;
         const elem = document.getElementById('element-parse-output').firstChild;
 
-        // Single-phase render. The jr-ui parser surfaces a JSON error inside
-        // the component, and the snapshot pins the resolved DOM with that
-        // user-visible error message. Use a poll so the assertion is timing
-        // stable across runs.
-        const expected = '<jr-ui data-spec="{ unclosed_json"><div class="jr-alert error">❌ Render error: Expected property name or \'}\' in JSON at position 2 (line 1 column 3)</div></jr-ui>';
+        // Single-phase render. The <json-render> parser surfaces a JSON error
+        // inside the component, and the snapshot pins the resolved DOM with
+        // that user-visible error message. The original invalid JSON body is
+        // consumed and replaced by the rendered error alert. Use a poll so
+        // the assertion is timing stable across runs.
+        const expected = '<json-render><div class="jr-alert error">❌ Render error: Expected property name or \'}\' in JSON at position 2 (line 1 column 3)</div></json-render>';
         const deadline = Date.now() + 1500;
         (function awaitErr() {
           if (elem.outerHTML === expected) {
@@ -131,9 +132,9 @@ window.validateSpec({
     </section>
 
     <section data-test="element-invalid-spec" data-test-result="pending">
-      <h2>jr-ui Invalid Spec</h2>
+      <h2>json-render Invalid Spec</h2>
       <p>Tests logically complete JSON that fundamentally misses required internal root schemas.</p>
-      <pre><code>&lt;jr-ui data-spec='{"missing": "root"}'&gt;&lt;/jr-ui&gt;</code></pre>
+      <pre><code>&lt;json-render&gt;{"missing": "root"}&lt;/json-render&gt;</code></pre>
       <div id="element-invalid-output"></div>
       <script type="module">
         // Single source of truth: snippet is HTML; inject it verbatim.
@@ -142,8 +143,10 @@ window.validateSpec({
         const elemInvalid = document.getElementById('element-invalid-output').firstChild;
 
         // Single-phase render. The validator emits an inline warning that
-        // becomes the entire body of the jr-ui component.
-        const expected = '<jr-ui data-spec="{&quot;missing&quot;: &quot;root&quot;}"><div class="jr-alert warning">⚠️ Invalid spec: missing root or elements</div></jr-ui>';
+        // becomes the entire body of the <json-render> component — the body
+        // JSON is parsed, found to be missing `root`/`elements`, and
+        // replaced by the warning alert.
+        const expected = '<json-render><div class="jr-alert warning">⚠️ Invalid spec: missing root or elements</div></json-render>';
         const deadline = Date.now() + 1500;
         (function awaitErr() {
           if (elemInvalid.outerHTML === expected) {
@@ -184,14 +187,14 @@ window.validateSpec({
   }
 };
 
-const elem = document.createElement('jr-ui');
-elem.dataset.spec = JSON.stringify(specActions);
+const elem = document.createElement('json-render');
+elem.textContent = JSON.stringify(specActions);
 document.getElementById('interactive-output').appendChild(elem);</code></pre>
       <div id="interactive-output"></div>
       <script type="module">
         // Single source of truth: read the snippet (which builds the spec and
-        // mounts the jr-ui element) and execute it. The test then drives the
-        // mounted element with synthetic events.
+        // mounts the <json-render> element) and execute it. The test then
+        // drives the mounted element with synthetic events.
         const code = document.querySelector('[data-test="interactive-actions"] pre code').textContent;
         eval(code);
         const elem = document.getElementById('interactive-output').firstChild;
@@ -208,14 +211,16 @@ document.getElementById('interactive-output').appendChild(elem);</code></pre>
         //   Phase Driven  — after dispatching click/change/keydown the
         //                   internal element state is updated (checkbox is
         //                   checked, text input has 'hello').
-        //   We pin BOTH phases.
-        const expectedMounted = '<jr-ui data-spec="{&quot;root&quot;:&quot;main&quot;,&quot;elements&quot;:{&quot;main&quot;:{&quot;type&quot;:&quot;Column&quot;,&quot;children&quot;:[&quot;btn&quot;,&quot;checks&quot;,&quot;text&quot;]},&quot;btn&quot;:{&quot;type&quot;:&quot;Button&quot;,&quot;props&quot;:{&quot;label&quot;:&quot;Click Me&quot;,&quot;variant&quot;:&quot;primary&quot;},&quot;on&quot;:{&quot;press&quot;:{&quot;action&quot;:&quot;TestClick&quot;}}},&quot;checks&quot;:{&quot;type&quot;:&quot;Checklist&quot;,&quot;props&quot;:{&quot;items&quot;:[{&quot;label&quot;:&quot;Item 1&quot;,&quot;checked&quot;:false}]},&quot;on&quot;:{&quot;change&quot;:{&quot;action&quot;:&quot;TestCheck&quot;}}},&quot;text&quot;:{&quot;type&quot;:&quot;TextField&quot;,&quot;props&quot;:{&quot;label&quot;:&quot;Input&quot;,&quot;placeholder&quot;:&quot;Enter to submit&quot;},&quot;on&quot;:{&quot;submit&quot;:{&quot;action&quot;:&quot;TestInput&quot;}}}}}">';
+        //   We pin BOTH phases. The mounted outerHTML has no data-spec
+        //   attribute — the body JSON is consumed and replaced by the
+        //   rendered jr-root wrapper.
+        const expectedMountedPrefix = '<json-render><div class="jr-root">';
 
         setTimeout(() => {
           const mountedHTML = elem.outerHTML;
-          const mountedOk = mountedHTML.startsWith(expectedMounted) && mountedHTML.includes('Click Me');
+          const mountedOk = mountedHTML.startsWith(expectedMountedPrefix) && mountedHTML.includes('Click Me');
           if (!mountedOk) {
-            console.error('Phase Mounted mismatch (interactive-actions)\nExpected prefix: ' + expectedMounted + '\nActual: ' + mountedHTML);
+            console.error('Phase Mounted mismatch (interactive-actions)\nExpected prefix: ' + expectedMountedPrefix + '\nActual: ' + mountedHTML);
           }
 
           const root = elem.shadowRoot || elem;
@@ -245,13 +250,7 @@ document.getElementById('interactive-output').appendChild(elem);</code></pre>
     <section data-test="render-missing-fallbacks" data-test-result="pending">
       <h2>Render Missing Fallbacks</h2>
       <p>Tests robust renderer protections against completely missing branch paths and unknown components safely outputting default components.</p>
-      <pre><code>&lt;jr-ui data-spec='{
-  "root": "a",
-  "elements": {
-    "a": { "type": "Row", "children": ["b", "c"] },
-    "c": { "type": "UnknownComponent123" }
-  }
-}'&gt;&lt;/jr-ui&gt;</code></pre>
+      <pre><code>&lt;json-render&gt;{"root":"a","elements":{"a":{"type":"Row","children":["b","c"]},"c":{"type":"UnknownComponent123"}}}&lt;/json-render&gt;</code></pre>
       <div id="fallbacks-output"></div>
       <script type="module">
         // Single source of truth: snippet is HTML; inject it verbatim.
@@ -323,21 +322,21 @@ for (const type of types) {
       <p>
         When a spec sets <code>root</code> to a key that does not exist in
         <code>elements</code>, the core renderer (<code>renderSpecTree</code>)
-        throws. The <code>&lt;jr-ui&gt;</code> component catches the throw and
-        renders an inline error alert. This exercises the throw branch in
-        <code>src/json-render/renderer.js</code> lines 84-86.
+        throws. The <code>&lt;json-render&gt;</code> component catches the
+        throw and renders an inline error alert. This exercises the throw
+        branch in <code>src/json-render/renderer.js</code>.
       </p>
-      <pre><code>&lt;jr-ui id="missing-root-target" data-spec='{"root":"ghost","elements":{"real":{"type":"Text","props":{"content":"present but unreachable"}}}}'&gt;&lt;/jr-ui&gt;</code></pre>
+      <pre><code>&lt;json-render id="missing-root-target"&gt;{"root":"ghost","elements":{"real":{"type":"Text","props":{"content":"present but unreachable"}}}}&lt;/json-render&gt;</code></pre>
       <div id="missing-root-output"></div>
       <script type="module">
         // Single source of truth: read snippet HTML, inject verbatim, poll for
         // the resolved error alert. The renderer throws synchronously inside
-        // the jr-ui render method; the catch path returns an error alert
-        // template; the snapshot pins that resolved DOM.
+        // the <json-render> render method; the catch path returns an error
+        // alert template; the snapshot pins that resolved DOM.
         const html = document.querySelector('[data-test="renderspec-missing-root"] pre code').textContent;
         document.getElementById('missing-root-output').innerHTML = html;
         const elem = document.getElementById('missing-root-target');
-        const expected = '<jr-ui id="missing-root-target" data-spec="{&quot;root&quot;:&quot;ghost&quot;,&quot;elements&quot;:{&quot;real&quot;:{&quot;type&quot;:&quot;Text&quot;,&quot;props&quot;:{&quot;content&quot;:&quot;present but unreachable&quot;}}}}"><div class="jr-alert error">❌ Render error: Spec error: root "ghost" not found in elements</div></jr-ui>';
+        const expected = '<json-render id="missing-root-target"><div class="jr-alert error">❌ Render error: Spec error: root "ghost" not found in elements</div></json-render>';
         const deadline = Date.now() + 1500;
         (function awaitErr() {
           if (elem.outerHTML === expected) {
@@ -416,21 +415,22 @@ section.dataset.testResult =
       </script>
     </section>
 
-    <section data-test="jr-ui-shimmer-loading" data-test-result="pending">
-      <h2>jr-ui shimmer placeholder for empty data-spec</h2>
+    <section data-test="json-render-shimmer-loading" data-test-result="pending">
+      <h2>&lt;json-render&gt; shimmer placeholder for empty body</h2>
       <p>
-        When <code>&lt;jr-ui&gt;</code> is mounted with an empty
-        <code>data-spec</code> (or none at all), it shows a shimmer
-        placeholder so the streaming-spec workflow can render before the
-        full payload arrives. This exercises lines 71-76 of
+        When <code>&lt;json-render&gt;</code> is mounted with an empty body
+        (no JSON content), it shows a shimmer placeholder so the
+        streaming-spec workflow can render before the full payload arrives.
+        This exercises the empty-spec branch in
         <code>src/json-render/element.js</code>.
       </p>
-      <pre><code>&lt;jr-ui id="shimmer-target" data-spec="{}"&gt;&lt;/jr-ui&gt;</code></pre>
+      <pre><code>&lt;json-render id="shimmer-target"&gt;&lt;/json-render&gt;</code></pre>
       <div id="shimmer-output"></div>
       <script type="module">
-        // Single source of truth: snippet is HTML; inject verbatim. The shimmer
-        // markup is generated by jr-ui itself when the spec is empty.
-        const html = document.querySelector('[data-test="jr-ui-shimmer-loading"] pre code').textContent;
+        // Single source of truth: snippet is HTML; inject verbatim. The
+        // shimmer markup is generated by <json-render> itself when the body
+        // is empty (no JSON content at all).
+        const html = document.querySelector('[data-test="json-render-shimmer-loading"] pre code').textContent;
         document.getElementById('shimmer-output').innerHTML = html;
         const elem = document.getElementById('shimmer-target');
         // The shimmer template literal in element.js spans multiple lines.
@@ -444,15 +444,15 @@ section.dataset.testResult =
         // content (e.g. "Loading UI...") is left untouched because it never
         // sits between two tag delimiters.
         const collapseTagWhitespace = (s) => s.replace(/>\s+</g, '><');
-        const expected = '<jr-ui id="shimmer-target" data-spec="{}"><div class="jr-ui-shimmer" data-loading="true"><div class="jr-card" style="opacity:0.4;animation:pulse 1.5s ease-in-out infinite"><div class="jr-text muted">Loading UI...</div></div></div></jr-ui>';
+        const expected = '<json-render id="shimmer-target"><div class="jr-shimmer" data-loading="true"><div class="jr-card" style="opacity:0.4;animation:pulse 1.5s ease-in-out infinite"><div class="jr-text muted">Loading UI...</div></div></div></json-render>';
         const deadline = Date.now() + 1500;
         (function awaitShimmer() {
           if (collapseTagWhitespace(elem.outerHTML) === expected) {
-            window.assertSnapshot('jr-ui-shimmer-loading', elem, expected, collapseTagWhitespace);
+            window.assertSnapshot('json-render-shimmer-loading', elem, expected, collapseTagWhitespace);
             return;
           }
           if (Date.now() > deadline) {
-            window.assertSnapshot('jr-ui-shimmer-loading', elem, expected, collapseTagWhitespace);
+            window.assertSnapshot('json-render-shimmer-loading', elem, expected, collapseTagWhitespace);
             return;
           }
           setTimeout(awaitShimmer, 25);
