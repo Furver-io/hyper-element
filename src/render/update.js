@@ -94,18 +94,14 @@ const attribute = (name) => (node, value) => {
  * @param {string|symbol} name - Property name
  * @returns {Function} Property update function
  */
-const direct = (name) => (node, value) => {
-  node[name] = value;
-};
+const direct = (name) => (node, value) => (node[name] = value);
 
 /**
  * Toggles a boolean attribute.
  * @param {string} name - Attribute name
  * @returns {Function} Toggle update function
  */
-const toggle = (name) => (node, value) => {
-  node.toggleAttribute(name, !!value);
-};
+const toggle = (name) => (node, value) => node.toggleAttribute(name, !!value);
 
 /**
  * Updates data-* attributes.
@@ -161,8 +157,7 @@ const attributeTemplate =
  * @param {string} prop - JS camelCase or already-kebab CSS property
  * @returns {string} kebab-case CSS property
  */
-const cssKebab = (prop) =>
-  prop.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase());
+const cssKebab = (prop) => prop.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase());
 
 /**
  * Updates style attribute - handles both strings and objects.
