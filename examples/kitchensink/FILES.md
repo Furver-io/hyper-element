@@ -53,6 +53,8 @@ Index of every file in this directory and its specific responsibility.
 | `ssr-e2e.html` | Full SSR hydration flow (6 phases) | B, D |
 | `ssr-hydration.html` | SSR hydration edge cases | B, C |
 | `json-render-basic.html` | Declarative `<json-render>` rendering from JSON spec | A |
+| `json-render-bridge.html` | `jrType`/`jrCatalog` bridge: `hyperElement(...)` definitions auto-register as json-render components | A, B, C |
+| `json-render-catalog.html` | `getCatalog()` API: `.prompt()` and `.toolDefinition()` for LLM schema generation | A, B |
 | `json-render-coverage.html` | JSON render coverage edges | A |
 | `json-render-custom.html` | Programmatic `renderSpec` + `registerComponent` | A |
 

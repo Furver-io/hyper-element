@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JSON Render Bridge - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <link rel="stylesheet" href="../../src/json-render/json-render.css" />
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+        max-width: 70rem;
+        margin: 0 auto;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 0.5rem;
+        overflow-x: auto;
+        font-size: 0.85em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JSON Render Component Bridge</h1>
+    <p>
+      Verifies the <code>jrType</code> + <code>jrCatalog</code> bridge —
+      a <code>hyperElement(...)</code> declaration that auto-registers the
+      custom element into the json-render component registry. Each section
+      maps to one acceptance criterion from TASK-04.
+    </p>
+
+    <!--
+      Section ordering matters here:
+        AC #1   registers a Card override and the spec rendering test
+                depends on Card being bridged.
+        AC #7,8 verify the catalog reflects the AC #1 override.
+        AC #9   intentionally collides two registrations on a unique
+                jrType ("AC9Type"); it must run AFTER any test that
+                relies on AC9Type being absent.
+        AC #10,11,12 do not depend on jr-render state; they exercise
+                paths around the bridge from other angles.
+
+      A single orchestrator script at the bottom of the page drives all
+      sections sequentially so the registration ordering is deterministic
+      regardless of how Playwright streams the page.
+    -->
+
+    <section data-test="bridge-override-builtin" data-test-result="pending">
+      <h2>AC #1 — Override built-in via jrType</h2>
+      <p>
+        <code>hyperElement('ac1-card', { jrType: 'Card', jrCatalog, render })</code>
+        — a spec with <code>type: 'Card'</code> must render the bridged
+        <code>&lt;ac1-card&gt;</code>, NOT the built-in <code>.jr-card</code>.
+      </p>
+      <div id="bridge-ac1-mount"></div>
+    </section>
+
+    <section data-test="bridge-mixed-spec" data-test-result="pending">
+      <h2>AC #2 — Mixed spec (overridden Card + built-in Button + custom ProductCard)</h2>
+      <p>
+        Renders a spec containing the AC #1 overridden Card as the root,
+        a built-in Button child, and a custom-only <code>ProductCard</code>
+        child. Every node must resolve to the correct renderer.
+      </p>
+      <div id="bridge-ac2-mount"></div>
+    </section>
+
+    <section data-test="bridge-jr-action-bubbles" data-test-result="pending">
+      <h2>AC #3 — jr-action events bubble from bridged components</h2>
+      <p>
+        A bridged custom element dispatches a <code>jr-action</code> event
+        from its own click handler. The listener attached to the
+        <code>&lt;json-render&gt;</code> host must observe it.
+      </p>
+      <div id="bridge-ac3-mount"></div>
+    </section>
+
+    <section data-test="bridge-data-jr-props" data-test-result="pending">
+      <h2>AC #4 — data-jr-props attribute carries serialised props</h2>
+      <p>
+        After render, <code>getAttribute('data-jr-props')</code> on the
+        bridged element equals <code>JSON.stringify(def.props)</code>.
+      </p>
+      <div id="bridge-ac4-mount"></div>
+    </section>
+
+    <section data-test="bridge-data-jr-children" data-test-result="pending">
+      <h2>AC #5 — Children appear as light-DOM AND data-jr-children</h2>
+      <p>
+        At connect time the bridged element has its rendered kids as
+        light-DOM children (captured via setup() before render() runs)
+        AND <code>data-jr-children</code> equals
+        <code>JSON.stringify(def.children)</code>.
+      </p>
+      <div id="bridge-ac5-mount"></div>
+    </section>
+
+    <section data-test="bridge-data-jr-on" data-test-result="pending">
+      <h2>AC #6 — data-jr-on attribute carries serialised events</h2>
+      <p>
+        After render, <code>getAttribute('data-jr-on')</code> on the
+        bridged element equals <code>JSON.stringify(def.on)</code>.
+      </p>
+      <div id="bridge-ac6-mount"></div>
+    </section>
+
+    <section data-test="bridge-catalog-reflects" data-test-result="pending">
+      <h2>AC #7 — getCatalog() reflects custom catalog metadata</h2>
+      <p>
+        After AC #1's override, <code>getCatalog().types.get('Card')</code>
+        equals the custom catalog object — proving the LLM-facing schema
+        sees the overridden component, not the built-in.
+      </p>
+    </section>
+
+    <section data-test="bridge-prompt-contains-description" data-test-result="pending">
+      <h2>AC #8 — prompt() includes the custom component description and props</h2>
+      <p>
+        <code>getCatalog().prompt()</code> contains the AC #1 custom
+        description and at least one custom prop name.
+      </p>
+    </section>
+
+    <section data-test="bridge-jrtype-without-tag-throws" data-test-result="pending">
+      <h2>AC #10b — jrType without a tag name throws a diagnostic error</h2>
+      <p>
+        <code>hyperElement({ jrType: 'Foo', render })</code> (tagless form)
+        must throw, since the bridge needs <code>document.createElement(tag)</code>
+        to instantiate the bridged element. The error message must name
+        the offending jrType and point at the correct call form.
+      </p>
+    </section>
+
+    <section data-test="bridge-no-jrtype-unaffected" data-test-result="pending">
+      <h2>AC #10 — Component without jrType is unaffected</h2>
+      <p>
+        <code>hyperElement('ac10-plain', { render })</code> registers a
+        normal custom element. It must NOT appear in
+        <code>listComponentTypes()</code> nor in <code>getCatalog()</code>.
+      </p>
+    </section>
+
+    <section data-test="bridge-jrtype-without-catalog" data-test-result="pending">
+      <h2>AC #11 — jrType without jrCatalog (legacy mode)</h2>
+      <p>
+        <code>hyperElement('ac11-log', { jrType: 'Ac11LogType', render })</code>
+        — registry contains the render fn so the spec renders, but
+        <code>getCatalog().types</code> does NOT contain the type
+        (no metadata = invisible to LLM).
+      </p>
+      <div id="bridge-ac11-mount"></div>
+    </section>
+
+    <section data-test="bridge-shimmer-still-works" data-test-result="pending">
+      <h2>AC #12 — Partial-spec shimmer still works with bridged components</h2>
+      <p>
+        Empty <code>&lt;json-render&gt;&lt;/json-render&gt;</code> still
+        renders the loading shimmer placeholder even after several bridge
+        registrations have mutated the registry.
+      </p>
+      <div id="bridge-ac12-mount"></div>
+    </section>
+
+    <section data-test="bridge-last-write-wins-warn" data-test-result="pending">
+      <h2>AC #9 — Last-write-wins with console.warn</h2>
+      <p>
+        Two <code>hyperElement</code> definitions with the same
+        <code>jrType: 'Ac9Type'</code> — the second wins and a
+        <code>console.warn</code> fires. Spec rendering produces the
+        SECOND tag's element. Runs LAST so the collision does not
+        contaminate earlier sections.
+      </p>
+      <div id="bridge-ac9-mount"></div>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+
+    <script type="module">
+      // ─────────────────────────────────────────────────────────────────
+      // Bridge test orchestrator.
+      //
+      // Drives all 12 acceptance-criterion sections in strict order. Tag
+      // names and jrType identifiers are unique per section so each test
+      // is hermetic — except AC #1's Card override (which AC #2/7/8 then
+      // verify) and AC #9's intentional collision (which is the LAST
+      // section to run).
+      //
+      // Each section uses its own #bridge-acN-mount div to host its
+      // <json-render> element so DOM queries are scoped and there's no
+      // cross contamination. Tests poll for render completion when the
+      // spec depends on async <json-render> microtask + MutationObserver
+      // flush.
+      // ─────────────────────────────────────────────────────────────────
+
+      // Wait for the test loader to expose hyperElement (the factory),
+      // getCatalog, registerComponent, and listComponentTypes. Source
+      // mode injects the import via document.write so globals appear
+      // after a microtask; bundle mode loads the UMD synchronously.
+      function waitForReady(timeoutMs) {
+        return new Promise((resolve, reject) => {
+          const deadline = Date.now() + timeoutMs;
+          (function poll() {
+            if (
+              typeof window.hyperElement === 'function' &&
+              typeof window.getCatalog === 'function' &&
+              typeof window.registerComponent === 'function' &&
+              typeof window.listComponentTypes === 'function'
+            ) {
+              resolve();
+              return;
+            }
+            if (Date.now() > deadline) {
+              reject(new Error('hyper-element globals never became available'));
+              return;
+            }
+            setTimeout(poll, 25);
+          })();
+        });
+      }
+
+      function setResult(name, result, reason) {
+        const section = document.querySelector('[data-test="' + name + '"]');
+        if (!section) return;
+        section.dataset.testResult = result;
+        if (result === 'fail' && reason) {
+          console.error('[' + name + '] ' + reason);
+        }
+      }
+
+      function runSection(name, fn) {
+        try {
+          const ret = fn();
+          if (ret && typeof ret.then === 'function') {
+            return ret.then(
+              () => {
+                const sec = document.querySelector('[data-test="' + name + '"]');
+                if (sec && sec.dataset.testResult === 'pending') {
+                  sec.dataset.testResult = 'pass';
+                }
+              },
+              (err) => setResult(name, 'fail', (err && err.stack) || String(err))
+            );
+          }
+          const sec = document.querySelector('[data-test="' + name + '"]');
+          if (sec && sec.dataset.testResult === 'pending') {
+            sec.dataset.testResult = 'pass';
+          }
+        } catch (err) {
+          setResult(name, 'fail', (err && err.stack) || String(err));
+        }
+      }
+
+      // Helper: poll for a condition with a deadline. Returns Promise.
+      function waitFor(predicate, timeoutMs, label) {
+        return new Promise((resolve, reject) => {
+          const deadline = Date.now() + timeoutMs;
+          (function tick() {
+            try {
+              const v = predicate();
+              if (v) {
+                resolve(v);
+                return;
+              }
+            } catch (_) {
+              /* keep polling */
+            }
+            if (Date.now() > deadline) {
+              reject(new Error('waitFor timeout: ' + (label || 'predicate never true')));
+              return;
+            }
+            setTimeout(tick, 15);
+          })();
+        });
+      }
+
+      // Helper: build a <json-render> with a JSON spec and append to a
+      // host. Returns the <json-render> element so the test can poll
+      // its descendants. Sets textContent to the serialized spec before
+      // appending so connectedCallback reads the JSON from ctx.wrappedContent.
+      function mountSpec(hostId, spec) {
+        const host = document.getElementById(hostId);
+        const elem = document.createElement('json-render');
+        elem.textContent = JSON.stringify(spec);
+        host.appendChild(elem);
+        return elem;
+      }
+
+      // ── Test sections ───────────────────────────────────────────────
+
+      // AC #1 — Override built-in Card via jrType. The first definition
+      // exercises the built-in-override warn path inside registerComponent
+      // (it logs but does not throw); subsequent ACs depend on Card now
+      // pointing at the bridged element.
+      function ac1_overrideBuiltin() {
+        // Suppress and capture the expected built-in-override warning so
+        // it doesn't pollute the test runner output.
+        const origWarn = console.warn;
+        const warns = [];
+        console.warn = function () {
+          warns.push(Array.prototype.join.call(arguments, ' '));
+        };
+        try {
+          window.hyperElement('ac1-card', {
+            jrType: 'Card',
+            jrCatalog: {
+              description: 'AC1 branded card override',
+              props: {
+                title: { type: 'string', required: true },
+                tone: { type: 'string', enum: ['warm', 'cool'] },
+              },
+              slots: ['default'],
+              actions: {},
+            },
+            render: (Html, ctx) => {
+              const props = ctx.dataset.jrProps || {};
+              return Html`<div class="ac1-card-body" data-tone=${props.tone || ''}>${props.title || ''}</div>`;
+            },
+          });
+        } finally {
+          console.warn = origWarn;
+        }
+        // The built-in-override warn must have fired (defensive: confirms
+        // the registerComponent path was actually exercised).
+        const overrideWarn = warns.find(function (m) {
+          return m.indexOf('overriding built-in component "Card"') !== -1;
+        });
+        if (!overrideWarn) {
+          throw new Error('expected built-in-override warn for Card');
+        }
+
+        // Mount a spec that uses Card as root.
+        const elem = mountSpec('bridge-ac1-mount', {
+          root: 'c0',
+          elements: {
+            c0: {
+              type: 'Card',
+              props: { title: 'Hi from AC1', tone: 'warm' },
+            },
+          },
+        });
+
+        return waitFor(
+          function () {
+            return elem.querySelector('ac1-card');
+          },
+          1500,
+          'ac1-card never appeared'
+        ).then(function (custom) {
+          // Built-in .jr-card must NOT be present.
+          if (elem.querySelector('.jr-card')) {
+            throw new Error('built-in .jr-card unexpectedly rendered alongside override');
+          }
+          // The custom element must render its own template (the .ac1-card-body div).
+          return waitFor(
+            function () {
+              return custom.querySelector('.ac1-card-body');
+            },
+            1500,
+            'ac1-card-body never appeared'
+          ).then(function (body) {
+            if (body.textContent !== 'Hi from AC1') {
+              throw new Error('ac1-card-body text mismatch: ' + JSON.stringify(body.textContent));
+            }
+            if (body.getAttribute('data-tone') !== 'warm') {
+              throw new Error('ac1-card-body data-tone mismatch: ' + body.getAttribute('data-tone'));
+            }
+          });
+        });
+      }
+
+      // AC #2 — Mixed spec: overridden Card + built-in Button + custom
+      // ProductCard rendered as SIBLINGS under a built-in Row. The
+      // bridged Card's render() wipes its own innerHTML, so structuring
+      // the three as parent/child of Card would discard the kids; the
+      // Row built-in is the right "neutral" parent because it just
+      // interpolates ${kids} into a div without overwriting them.
+      function ac2_mixedSpec() {
+        // Register ProductCard via the bridge — fresh custom type.
+        window.hyperElement('ac2-product-card', {
+          jrType: 'AC2ProductCard',
+          jrCatalog: {
+            description: 'AC2 product card',
+            props: {
+              name: { type: 'string', required: true },
+              price: { type: 'number', required: true },
+            },
+            slots: [],
+            actions: {},
+          },
+          render: (Html, ctx) => {
+            const p = ctx.dataset.jrProps || {};
+            return Html`<article class="ac2-product"><h3>${p.name || ''}</h3><span class="price">${'$' + (p.price || 0)}</span></article>`;
+          },
+        });
+
+        const elem = mountSpec('bridge-ac2-mount', {
+          root: 'row',
+          elements: {
+            row: {
+              type: 'Row',
+              props: { gap: 8 },
+              children: ['card', 'btn', 'product'],
+            },
+            card: {
+              type: 'Card',
+              props: { title: 'AC2 mixed', tone: 'cool' },
+            },
+            btn: {
+              type: 'Button',
+              props: { label: 'Built-in Button', variant: 'primary' },
+              on: { press: { action: 'noop' } },
+            },
+            product: {
+              type: 'AC2ProductCard',
+              props: { name: 'Widget', price: 42 },
+            },
+          },
+        });
+
+        return waitFor(
+          function () {
+            // All three siblings must be present inside the Row wrapper
+            // and each must have completed its own render lifecycle.
+            const row = elem.querySelector('.jr-row');
+            return (
+              row &&
+              row.querySelector('ac1-card .ac1-card-body') &&
+              row.querySelector('button.jr-btn') &&
+              row.querySelector('ac2-product-card .ac2-product')
+            );
+          },
+          2500,
+          'mixed-spec render incomplete'
+        ).then(function () {
+          const row = elem.querySelector('.jr-row');
+          // Verify the bridged Card consumed its props (AC1 override
+          // produces .ac1-card-body with the title text and tone attr).
+          const cardBody = row.querySelector('ac1-card .ac1-card-body');
+          if (cardBody.textContent !== 'AC2 mixed') {
+            throw new Error('overridden Card body text mismatch: ' + cardBody.textContent);
+          }
+          if (cardBody.getAttribute('data-tone') !== 'cool') {
+            throw new Error('overridden Card body tone mismatch');
+          }
+          // Built-in Button rendered correctly.
+          const btn = row.querySelector('button.jr-btn');
+          if (btn.textContent !== 'Built-in Button') {
+            throw new Error('built-in Button label mismatch: ' + btn.textContent);
+          }
+          // Custom ProductCard rendered correctly with parsed props.
+          const product = row.querySelector('ac2-product-card .ac2-product');
+          if (product.querySelector('h3').textContent !== 'Widget') {
+            throw new Error('ProductCard name mismatch');
+          }
+          if (product.querySelector('.price').textContent !== '$42') {
+            throw new Error('ProductCard price mismatch');
+          }
+        });
+      }
+
+      // AC #3 — jr-action events bubble from bridged components.
+      // The bridged element wires its own onclick that dispatches a
+      // jr-action CustomEvent (the same shape the built-ins emit). The
+      // listener on the parent <json-render> must observe the bubbled event.
+      function ac3_jrActionBubbles() {
+        window.hyperElement('ac3-clicker', {
+          jrType: 'AC3Clicker',
+          jrCatalog: {
+            description: 'AC3 clicker',
+            props: {},
+            slots: [],
+            actions: {
+              tap: {
+                description: 'Fired on click',
+                params: { id: { type: 'string' } },
+              },
+            },
+          },
+          render: (Html, ctx) => {
+            const onPayload = ctx.dataset.jrOn || {};
+            const tap = onPayload.tap || {};
+            return Html`<button class="ac3-btn" onclick=${function () {
+              ctx.element.dispatchEvent(
+                new CustomEvent('jr-action', {
+                  bubbles: true,
+                  composed: true,
+                  detail: { action: tap.action || 'tap', params: tap.params || {} },
+                })
+              );
+            }}>tap me</button>`;
+          },
+        });
+
+        const elem = mountSpec('bridge-ac3-mount', {
+          root: 'c',
+          elements: {
+            c: {
+              type: 'AC3Clicker',
+              on: { tap: { action: 'tapped', params: { id: 'abc' } } },
+            },
+          },
+        });
+
+        const observed = [];
+        elem.addEventListener('jr-action', function (e) {
+          observed.push(e.detail);
+        });
+
+        return waitFor(
+          function () {
+            return elem.querySelector('ac3-clicker .ac3-btn');
+          },
+          1500,
+          'ac3 clicker never rendered'
+        ).then(function (btn) {
+          btn.click();
+          if (observed.length !== 1) {
+            throw new Error('expected 1 jr-action event, got ' + observed.length);
+          }
+          if (observed[0].action !== 'tapped') {
+            throw new Error('jr-action event action mismatch: ' + observed[0].action);
+          }
+          if (!observed[0].params || observed[0].params.id !== 'abc') {
+            throw new Error('jr-action event params mismatch');
+          }
+        });
+      }
+
+      // AC #4 — data-jr-props attribute on the bridged element matches
+      // JSON.stringify(def.props). The attribute survives the element's
+      // own render() because hyper-element only mutates innerHTML.
+      function ac4_dataJrProps() {
+        window.hyperElement('ac4-probe', {
+          jrType: 'AC4Probe',
+          jrCatalog: {
+            description: 'AC4 props probe',
+            props: { name: { type: 'string' }, count: { type: 'number' } },
+            slots: [],
+            actions: {},
+          },
+          render: (Html, ctx) => {
+            const p = ctx.dataset.jrProps || {};
+            return Html`<div class="ac4-body">${(p.name || '') + ':' + (p.count || 0)}</div>`;
+          },
+        });
+
+        const propsValue = { name: 'foo', count: 7, nested: { ok: true } };
+        const elem = mountSpec('bridge-ac4-mount', {
+          root: 'p',
+          elements: { p: { type: 'AC4Probe', props: propsValue } },
+        });
+
+        return waitFor(
+          function () {
+            return elem.querySelector('ac4-probe');
+          },
+          1500,
+          'ac4 probe never rendered'
+        ).then(function (probe) {
+          const attr = probe.getAttribute('data-jr-props');
+          if (attr !== JSON.stringify(propsValue)) {
+            throw new Error('data-jr-props mismatch: ' + attr);
+          }
+          // The dataset proxy must auto-parse it back to an object that
+          // the custom element's render consumed.
+          const body = probe.querySelector('.ac4-body');
+          if (!body || body.textContent !== 'foo:7') {
+            throw new Error('ac4 body did not consume parsed props: ' + (body && body.textContent));
+          }
+        });
+      }
+
+      // AC #5 — Children present as both light-DOM and data-jr-children.
+      // The custom element captures its child count in setup() (which
+      // runs BEFORE render() wipes the light DOM) so the test has a
+      // stable observation point.
+      function ac5_dataJrChildren() {
+        window.__ac5_lightDomCount = -1;
+        window.hyperElement('ac5-parent', {
+          jrType: 'AC5Parent',
+          jrCatalog: {
+            description: 'AC5 children probe',
+            props: {},
+            slots: ['default'],
+            actions: {},
+          },
+          setup: (ctx) => {
+            // Captured BEFORE first render() runs and wipes the children
+            // — exercises the light-DOM slot path of the bridge.
+            window.__ac5_lightDomCount = ctx.element.childNodes.length;
+          },
+          render: (Html /*, ctx */) => Html`<div class="ac5-after-render">replaced</div>`,
+        });
+
+        const elem = mountSpec('bridge-ac5-mount', {
+          root: 'parent',
+          elements: {
+            parent: {
+              type: 'AC5Parent',
+              children: ['k1', 'k2'],
+            },
+            k1: { type: 'Text', props: { content: 'kid1' } },
+            k2: { type: 'Text', props: { content: 'kid2' } },
+          },
+        });
+
+        return waitFor(
+          function () {
+            return elem.querySelector('ac5-parent');
+          },
+          1500,
+          'ac5 parent never rendered'
+        ).then(function (parent) {
+          // data-jr-children attribute survives render and matches the
+          // raw spec children keys.
+          const attr = parent.getAttribute('data-jr-children');
+          if (attr !== JSON.stringify(['k1', 'k2'])) {
+            throw new Error('data-jr-children mismatch: ' + attr);
+          }
+          // Light-DOM children were observed in setup() before render
+          // wiped them. Two Text kids → two child nodes.
+          if (window.__ac5_lightDomCount !== 2) {
+            throw new Error(
+              'expected 2 light-DOM children at setup() time, got ' +
+                window.__ac5_lightDomCount
+            );
+          }
+        });
+      }
+
+      // AC #6 — data-jr-on attribute matches JSON.stringify(def.on).
+      function ac6_dataJrOn() {
+        window.hyperElement('ac6-probe', {
+          jrType: 'AC6Probe',
+          jrCatalog: {
+            description: 'AC6 events probe',
+            props: {},
+            slots: [],
+            actions: { tap: { description: 'tap' } },
+          },
+          render: (Html /*, ctx */) => Html`<div class="ac6-body">ok</div>`,
+        });
+
+        const onValue = { tap: { action: 'tapped', params: { x: 1, y: 2 } } };
+        const elem = mountSpec('bridge-ac6-mount', {
+          root: 'p',
+          elements: { p: { type: 'AC6Probe', on: onValue } },
+        });
+
+        return waitFor(
+          function () {
+            return elem.querySelector('ac6-probe');
+          },
+          1500,
+          'ac6 probe never rendered'
+        ).then(function (probe) {
+          const attr = probe.getAttribute('data-jr-on');
+          if (attr !== JSON.stringify(onValue)) {
+            throw new Error('data-jr-on mismatch: ' + attr);
+          }
+        });
+      }
+
+      // AC #7 — getCatalog() reflects the AC #1 custom catalog metadata
+      // for the overridden built-in Card type.
+      function ac7_catalogReflects() {
+        const catalog = window.getCatalog();
+        if (!catalog.types.has('Card')) {
+          throw new Error('Card missing from catalog after override');
+        }
+        const cardEntry = catalog.types.get('Card');
+        if (cardEntry.description !== 'AC1 branded card override') {
+          throw new Error('Card catalog description not from AC1 override: ' + cardEntry.description);
+        }
+        if (!cardEntry.props || !cardEntry.props.tone) {
+          throw new Error('Card catalog missing custom prop "tone" from AC1 override');
+        }
+        if (
+          !Array.isArray(cardEntry.props.tone.enum) ||
+          cardEntry.props.tone.enum.indexOf('warm') === -1
+        ) {
+          throw new Error('Card.tone enum did not propagate from AC1 override');
+        }
+      }
+
+      // AC #8 — getCatalog().prompt() includes the custom description
+      // and at least one of the custom prop names from AC #1.
+      function ac8_promptContainsCustom() {
+        const prompt = window.getCatalog().prompt();
+        if (typeof prompt !== 'string' || prompt.length === 0) {
+          throw new Error('prompt() returned empty/non-string');
+        }
+        if (prompt.indexOf('AC1 branded card override') === -1) {
+          throw new Error('prompt() missing AC1 override description');
+        }
+        if (prompt.indexOf('tone (enum: warm|cool)') === -1) {
+          throw new Error('prompt() missing AC1 override prop formatter output');
+        }
+      }
+
+      // AC #10b — jrType without a tag name must throw a diagnostic
+      // error rather than silently skipping the bridge registration.
+      // Catches the missing-tag guard inside createFunctionalElement.
+      function ac10b_jrTypeWithoutTagThrows() {
+        let caught = null;
+        try {
+          window.hyperElement({
+            jrType: 'JrTypeWithoutTagSentinel',
+            render: (Html) => Html`<div>noop</div>`,
+          });
+        } catch (e) {
+          caught = e;
+        }
+        if (!caught) {
+          throw new Error('expected hyperElement({ jrType }) tagless to throw');
+        }
+        if (!(caught instanceof Error)) {
+          throw new Error('thrown value is not an Error: ' + typeof caught);
+        }
+        if (caught.message.indexOf('JrTypeWithoutTagSentinel') === -1) {
+          throw new Error('error message missing offending jrType: ' + caught.message);
+        }
+        if (caught.message.indexOf('tag name') === -1) {
+          throw new Error('error message missing "tag name" guidance: ' + caught.message);
+        }
+        // Sanity: the type was NOT actually registered (the throw should
+        // have happened before registerComponent ran).
+        if (window.listComponentTypes().indexOf('JrTypeWithoutTagSentinel') !== -1) {
+          throw new Error('JrTypeWithoutTagSentinel leaked into the registry despite throw');
+        }
+      }
+
+      // AC #10 — A hyperElement WITHOUT jrType must be a plain custom
+      // element only. The json-render registry is untouched.
+      function ac10_noJrTypeUnaffected() {
+        const beforeTypes = window.listComponentTypes();
+        const beforeCatalog = window.getCatalog().types;
+        window.hyperElement('ac10-plain', {
+          render: (Html /*, ctx */) => Html`<div class="ac10">plain</div>`,
+        });
+        const afterTypes = window.listComponentTypes();
+        const afterCatalog = window.getCatalog().types;
+        if (afterTypes.length !== beforeTypes.length) {
+          throw new Error(
+            'listComponentTypes length changed: ' +
+              beforeTypes.length +
+              ' → ' +
+              afterTypes.length
+          );
+        }
+        if (afterTypes.indexOf('ac10-plain') !== -1) {
+          throw new Error('listComponentTypes unexpectedly contains ac10-plain');
+        }
+        if (afterCatalog.size !== beforeCatalog.size) {
+          throw new Error(
+            'catalog types size changed: ' + beforeCatalog.size + ' → ' + afterCatalog.size
+          );
+        }
+        // Sanity: the plain element is still a real custom element and
+        // can be created normally.
+        const el = document.createElement('ac10-plain');
+        document.body.appendChild(el);
+        const ok = window.customElements.get('ac10-plain');
+        document.body.removeChild(el);
+        if (!ok) {
+          throw new Error('ac10-plain custom element was not registered');
+        }
+      }
+
+      // AC #11 — jrType WITHOUT jrCatalog: render fn is registered but
+      // the catalog filter excludes it (no metadata = invisible to LLM).
+      function ac11_jrTypeWithoutCatalog() {
+        window.hyperElement('ac11-log', {
+          jrType: 'Ac11LogType',
+          render: (Html, ctx) => {
+            const p = ctx.dataset.jrProps || {};
+            return Html`<div class="ac11-log">${p.msg || ''}</div>`;
+          },
+        });
+
+        // Listing must include the type — registry has it.
+        if (window.listComponentTypes().indexOf('Ac11LogType') === -1) {
+          throw new Error('Ac11LogType missing from listComponentTypes()');
+        }
+        // Catalog must NOT include the type — no metadata.
+        if (window.getCatalog().types.has('Ac11LogType')) {
+          throw new Error('Ac11LogType leaked into getCatalog().types');
+        }
+        // Spec rendering must still work (proves the bridge fn was
+        // wired even without catalog).
+        const elem = mountSpec('bridge-ac11-mount', {
+          root: 'l',
+          elements: { l: { type: 'Ac11LogType', props: { msg: 'log line' } } },
+        });
+        return waitFor(
+          function () {
+            const el = elem.querySelector('ac11-log .ac11-log');
+            return el && el.textContent === 'log line' ? el : null;
+          },
+          1500,
+          'ac11 log spec never rendered'
+        );
+      }
+
+      // AC #12 — partial-spec shimmer placeholder still works after
+      // multiple bridge registrations have mutated the registry.
+      //
+      // An empty-body <json-render> is treated as a streaming spec that
+      // hasn't arrived yet. The render() method defaults
+      // `(ctx.wrappedContent || '').trim() || '{}'` so an empty or
+      // whitespace-only body lands in the shimmer branch instead of
+      // throwing a JSON.parse error.
+      function ac12_shimmerStillWorks() {
+        const host = document.getElementById('bridge-ac12-mount');
+        const elem = document.createElement('json-render');
+        host.appendChild(elem);
+        return waitFor(
+          function () {
+            return elem.querySelector('.jr-shimmer');
+          },
+          1500,
+          'jr-shimmer never appeared with empty body'
+        ).then(function (shimmer) {
+          if (!shimmer.querySelector('.jr-text.muted')) {
+            throw new Error('shimmer placeholder missing inner muted text');
+          }
+        });
+      }
+
+      // AC #9 — last-write-wins with console.warn (runs LAST so the
+      // collision does not contaminate any earlier section).
+      function ac9_lastWriteWins() {
+        // Define the first registration via a unique tag.
+        window.hyperElement('ac9-first', {
+          jrType: 'Ac9Type',
+          jrCatalog: {
+            description: 'AC9 first',
+            props: {},
+            slots: [],
+            actions: {},
+          },
+          render: (Html /*, ctx */) => Html`<div class="ac9-first-body">first</div>`,
+        });
+
+        // Capture warnings around the second registration.
+        const origWarn = console.warn;
+        const warns = [];
+        console.warn = function () {
+          warns.push(Array.prototype.join.call(arguments, ' '));
+        };
+        try {
+          window.hyperElement('ac9-second', {
+            jrType: 'Ac9Type',
+            jrCatalog: {
+              description: 'AC9 second',
+              props: {},
+              slots: [],
+              actions: {},
+            },
+            render: (Html /*, ctx */) => Html`<div class="ac9-second-body">second</div>`,
+          });
+        } finally {
+          console.warn = origWarn;
+        }
+
+        const collisionWarn = warns.find(function (m) {
+          return (
+            m.indexOf('Ac9Type') !== -1 &&
+            (m.indexOf('already registered') !== -1 || m.indexOf('last-write-wins') !== -1)
+          );
+        });
+        if (!collisionWarn) {
+          throw new Error('expected last-write-wins warn for Ac9Type, got: ' + JSON.stringify(warns));
+        }
+
+        // Spec rendering must produce the SECOND tag's element, not the first.
+        const elem = mountSpec('bridge-ac9-mount', {
+          root: 'r',
+          elements: { r: { type: 'Ac9Type' } },
+        });
+        return waitFor(
+          function () {
+            return elem.querySelector('ac9-second');
+          },
+          1500,
+          'ac9-second never rendered (last-write-wins not honored)'
+        ).then(function () {
+          if (elem.querySelector('ac9-first')) {
+            throw new Error('ac9-first unexpectedly rendered alongside ac9-second');
+          }
+        });
+      }
+
+      // ── Orchestrator entry point ─────────────────────────────────────
+
+      waitForReady(5000)
+        .then(async function () {
+          // Order matters — see comment block at the top of the body.
+          await runSection('bridge-override-builtin', ac1_overrideBuiltin);
+          await runSection('bridge-mixed-spec', ac2_mixedSpec);
+          await runSection('bridge-jr-action-bubbles', ac3_jrActionBubbles);
+          await runSection('bridge-data-jr-props', ac4_dataJrProps);
+          await runSection('bridge-data-jr-children', ac5_dataJrChildren);
+          await runSection('bridge-data-jr-on', ac6_dataJrOn);
+          await runSection('bridge-catalog-reflects', ac7_catalogReflects);
+          await runSection('bridge-prompt-contains-description', ac8_promptContainsCustom);
+          await runSection('bridge-jrtype-without-tag-throws', ac10b_jrTypeWithoutTagThrows);
+          await runSection('bridge-no-jrtype-unaffected', ac10_noJrTypeUnaffected);
+          await runSection('bridge-jrtype-without-catalog', ac11_jrTypeWithoutCatalog);
+          await runSection('bridge-shimmer-still-works', ac12_shimmerStillWorks);
+          await runSection('bridge-last-write-wins-warn', ac9_lastWriteWins);
+        })
+        .catch(function (err) {
+          console.error('bridge test orchestrator failed to start:', err);
+          for (const name of [
+            'bridge-override-builtin',
+            'bridge-mixed-spec',
+            'bridge-jr-action-bubbles',
+            'bridge-data-jr-props',
+            'bridge-data-jr-children',
+            'bridge-data-jr-on',
+            'bridge-catalog-reflects',
+            'bridge-prompt-contains-description',
+            'bridge-jrtype-without-tag-throws',
+            'bridge-no-jrtype-unaffected',
+            'bridge-jrtype-without-catalog',
+            'bridge-shimmer-still-works',
+            'bridge-last-write-wins-warn',
+          ]) {
+            setResult(name, 'fail', 'orchestrator never started: ' + err.message);
+          }
+        });
+    </script>
+  </body>
+</html>

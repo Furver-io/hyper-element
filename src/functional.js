@@ -4,6 +4,59 @@
  */
 
 import { hyperElement } from './hyperElement.js';
+import { registerComponent } from './json-render/index.js';
+import { createBridgedRenderFn } from './json-render/bridge.js';
+// Imported from registry.js (not index.js) to avoid pulling element.js
+// during the bootstrap cycle. registryInterface is needed for the
+// pre-registration collision check that augments registerComponent's
+// built-in-only warning with one that fires on any custom-vs-custom
+// jrType collision (TASK-04 AC #9 — last-write-wins must surface a
+// console.warn even when neither side is a built-in component).
+import { registryInterface } from './json-render/registry.js';
+import { BUILT_IN_COMPONENTS } from './json-render/components.js';
+
+/**
+ * Wire a hyperElement definition's jrType/jrCatalog into the json-render
+ * registry. Extracted from createFunctionalElement so the branch tracker
+ * sees a clean function-level entry rather than a deeply-nested if block
+ * (v8-to-istanbul mis-attributes branch hits when this code is inlined
+ * inside a long function body containing other branches).
+ *
+ * @param {string|null} tagName - Tag name from the hyperElement(...) call
+ * @param {Object} definition - The full definition with jrType/jrCatalog
+ */
+function registerJrType(tagName, definition) {
+  if (!tagName) {
+    throw new Error(
+      'hyperElement: jrType "' +
+        definition.jrType +
+        '" requires a tag name so the bridge can instantiate the ' +
+        'element via document.createElement(). Call ' +
+        'hyperElement("tag-name", { jrType, ... }) instead of the ' +
+        'tagless form.'
+    );
+  }
+  // Collision warning — TASK-04 AC #9 mandates last-write-wins with a
+  // console.warn on any second registration. registerComponent already
+  // warns when a built-in (Card, Button, ...) is overridden, so we only
+  // emit the extra warn for custom-vs-custom collisions and let the
+  // built-in path use registerComponent's existing diagnostic.
+  if (
+    registryInterface.get(definition.jrType) &&
+    !BUILT_IN_COMPONENTS.has(definition.jrType)
+  ) {
+    console.warn(
+      'hyperElement: jrType "' +
+        definition.jrType +
+        '" is already registered. The previous entry will be ' +
+        'replaced (last-write-wins).'
+    );
+  }
+  registerComponent(definition.jrType, {
+    render: createBridgedRenderFn(tagName),
+    catalog: definition.jrCatalog || null,
+  });
+}
 
 /**
  * Creates a hyperElement class from a functional definition.
@@ -112,6 +165,16 @@ export function createFunctionalElement(tagOrDef, definition) {
       styled: definition.styled || null,
       colors: definition.__options?.colors || null,
     };
+  }
+
+  // json-render bridge: when `jrType` is set, register the custom element
+  // into the json-render registry so any spec referencing that type
+  // renders this custom element instead of the built-in fallback.
+  // Mirrors the styled-config hook above as a "metadata side-effect".
+  // jrType requires a tag name so the bridge can instantiate via
+  // document.createElement; fail loud rather than silently skipping.
+  if (definition.jrType) {
+    registerJrType(tagName, definition);
   }
 
   // Auto-register if tag name provided

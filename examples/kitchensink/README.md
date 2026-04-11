@@ -88,6 +88,8 @@ This directory serves two purposes:
 - [json-render-basic.html](json-render-basic.html) - Declarative `<json-render>` rendering from JSON spec
 - [json-render-custom.html](json-render-custom.html) - Programmatic `renderSpec` + `registerComponent`
 - [json-render-coverage.html](json-render-coverage.html) - JSON render coverage edges
+- [json-render-bridge.html](json-render-bridge.html) - `jrType` / `jrCatalog` bridge: custom elements as spec components
+- [json-render-catalog.html](json-render-catalog.html) - `getCatalog()` API: `.prompt()` and `.toolDefinition()` for LLM integration
 
 ### Edge Cases
 

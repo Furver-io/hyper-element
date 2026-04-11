@@ -149,6 +149,55 @@ export type OnBeforeHydrateFunction = (
 export type OnAfterHydrateFunction = (ctx: ElementContext) => void;
 
 /**
+ * Shape of a single prop definition inside a `JrCatalog`.
+ * Mirrors the metadata consumed by `src/json-render/catalog.js` when
+ * building the LLM-facing prompt and tool definition.
+ */
+export interface JrCatalogProp {
+  /** Prop type tag — one of 'string', 'number', 'boolean', 'array', 'object'. */
+  type: string;
+  /** When true, the LLM must supply this prop. */
+  required?: boolean;
+  /** When true, the prop may be `null`. */
+  nullable?: boolean;
+  /** Finite set of allowed string values (enum-like). */
+  enum?: readonly string[];
+  /** Default value applied when the prop is omitted. */
+  default?: unknown;
+  /** Human-readable explanation surfaced in the prompt. */
+  description?: string;
+}
+
+/**
+ * Shape of a single action definition inside a `JrCatalog`.
+ * Describes a `jr-action` event the custom element dispatches, its
+ * intent, and the typed parameters the LLM can bind on `def.on`.
+ */
+export interface JrCatalogAction {
+  /** When the action fires, in plain language. */
+  description?: string;
+  /** Typed parameters the LLM can attach via `on.<name>.params`. */
+  params?: Record<string, JrCatalogProp>;
+}
+
+/**
+ * Catalog metadata that makes a `jrType`-tagged hyperElement visible
+ * to `getCatalog()` / `.prompt()` / `.toolDefinition()`. Omitting
+ * `jrCatalog` registers the render function in legacy mode — the
+ * component renders correctly but is invisible to the LLM vocabulary.
+ */
+export interface JrCatalog {
+  /** When/why the LLM should use this component. */
+  description: string;
+  /** Typed prop schema — keyed by prop name. */
+  props?: Record<string, JrCatalogProp>;
+  /** Accepted slots. `['default']` = accepts children; `[]` = leaf. */
+  slots?: readonly string[];
+  /** Typed `jr-action` actions — keyed by action name. */
+  actions?: Record<string, JrCatalogAction>;
+}
+
+/**
  * Functional component definition object.
  * Note: observedAttributes is not needed - all attributes are automatically reactive via MutationObserver.
  */
@@ -161,6 +210,23 @@ export interface FunctionalDefinition {
   onBeforeHydrate?: OnBeforeHydrateFunction;
   /** SSR hydration hook - called after replay completes */
   onAfterHydrate?: OnAfterHydrateFunction;
+  /**
+   * json-render bridge: when present, the generated custom element is
+   * auto-registered into the shared json-render component registry
+   * under this type name. Any spec referencing the type renders this
+   * element instead of the built-in fallback (or instead of
+   * `[unknown: ...]` for entirely new types). Requires a tag name —
+   * pass `hyperElement('tag-name', { jrType, ... })`, not the tagless
+   * form.
+   */
+  jrType?: string;
+  /**
+   * Catalog metadata paired with `jrType`. When supplied, the
+   * component becomes visible to `getCatalog()`, `.prompt()`, and
+   * `.toolDefinition()` — the LLM sees the description, typed props,
+   * slots, and actions. Omit to register in legacy render-only mode.
+   */
+  jrCatalog?: JrCatalog;
   /** Additional methods */
   [key: string]:
     | SetupFunction
@@ -168,6 +234,8 @@ export interface FunctionalDefinition {
     | OnBeforeHydrateFunction
     | OnAfterHydrateFunction
     | MethodFunction
+    | string
+    | JrCatalog
     | undefined;
 }
 

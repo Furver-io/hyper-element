@@ -137,6 +137,81 @@ The returned snapshot is immutable: each catalog entry is deep-cloned and
 recursively frozen, and the snapshot instance itself is `Object.freeze`d.
 Mutations cannot reach the live registry.
 
+## Component Bridge
+
+Tag a `hyperElement(...)` definition with `jrType` and `jrCatalog` to
+auto-register the custom element as a json-render component in a single
+declaration. Whenever a spec references that type, json-render
+instantiates your custom element instead of a built-in (or instead of
+`[unknown: ...]` for entirely new types).
+
+```js
+import 'hyper-element/json-render';
+import { hyperElement } from 'hyper-element';
+
+hyperElement('product-card', {
+  jrType: 'ProductCard',
+  jrCatalog: {
+    description: 'Product display with price and buy action',
+    props: {
+      name:  { type: 'string', required: true },
+      price: { type: 'number', required: true },
+      image: { type: 'string' },
+    },
+    slots: [],
+    actions: {
+      press: { description: 'User taps buy', params: { productId: { type: 'string' } } },
+    },
+  },
+  render: (Html, ctx) => {
+    // The bridge serialises def.props as JSON onto data-jr-props.
+    // The dataset proxy auto-parses it back to a real object on read.
+    const { name, price, image } = ctx.dataset.jrProps || {};
+    return Html`
+      <article class="product-card">
+        <img src="${image}" alt="${name}" />
+        <h3>${name}</h3>
+        <span>$${price}</span>
+      </article>`;
+  },
+});
+```
+
+The bridge transports spec data to your custom element via three
+attributes:
+
+| Attribute | Source | Read via |
+|---|---|---|
+| `data-jr-props` | `JSON.stringify(def.props)` | `ctx.dataset.jrProps` (auto-parsed object) |
+| `data-jr-children` | `JSON.stringify(def.children)` (raw spec keys) | `ctx.dataset.jrChildren` (auto-parsed array) |
+| `data-jr-on` | `JSON.stringify(def.on)` | `ctx.dataset.jrOn` (auto-parsed object) |
+
+Pre-rendered child DOM (from other registered components) is also
+appended as light-DOM children at construction time, available for
+inspection in `setup()` before the custom element's first `render()`
+fires.
+
+Interactive bridged components dispatch `jr-action` CustomEvents
+themselves — wire your `onclick`/`onchange`/`onkeydown` handlers to read
+the `ctx.dataset.jrOn` payload and call
+`element.dispatchEvent(new CustomEvent('jr-action', { bubbles: true,
+composed: true, detail: { action, params } }))`.
+
+### Override semantics
+
+- **Global only.** `jrType: 'Card'` overrides the built-in `Card`
+  everywhere. There is no per-instance opt-out in v1.
+- **Last-write-wins** with `console.warn` on collision: registering a
+  second component with the same `jrType` replaces the first and emits
+  a warning. The built-in-override path additionally emits the existing
+  warning from `registerComponent`.
+- **Custom types welcome.** `jrType: 'MyCustomChart'` works without
+  any built-in to override — it simply becomes a new known type.
+- A `jrType` without a `jrCatalog` registers the render function only
+  (legacy mode). The component renders correctly via `<json-render>` and
+  `renderSpec()`, but is intentionally invisible to `getCatalog()` and
+  the LLM schema output.
+
 ## Events
 
 Interactive components dispatch `jr-action` CustomEvents that bubble

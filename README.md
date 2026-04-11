@@ -22,6 +22,7 @@ A lightweight [Custom Elements] library with a fast, built-in render core. Your 
 - Inline style objects supported (similar to React)
 - First class support for [data stores](#connecting-to-a-data-store)
 - [Server-side rendering](#server-side-rendering-ssr) with progressive hydration
+- Built-in [json-render](#json-render-spec-driven-ui) module: render LLM tool-call output as live UI with 12 built-in components and an auto-generated catalog for LLM schema/prompt generation
 - Pass `function` to other custom hyper-elements via there tag attribute
 
 # Setup
@@ -1989,6 +1990,218 @@ hyperElement('todo-list', {
   `,
 });
 ```
+
+---
+
+# json-render (Spec-Driven UI)
+
+hyper-element ships with a **json-render** module that turns flat JSON
+specs — the kind an LLM produces from a `render_ui` tool call — into
+live DOM trees. It is designed for agent-driven UIs: the model emits
+a structured spec, hyper-element renders it, interactive components
+bubble `jr-action` CustomEvents back up, and the agent reacts.
+
+Import the module once and a `<json-render>` custom element becomes
+available in HTML. The JSON spec goes between the tags as body text —
+no attribute, no quote escaping.
+
+```html
+<link rel="stylesheet" href="hyper-element/src/json-render/json-render.css" />
+<script type="module">
+  // Auto-registers <json-render> and exposes the API
+  import 'hyper-element/json-render';
+</script>
+
+<json-render>
+  {"root":"msg","elements":{"msg":{"type":"Text","props":{"content":"Hello from
+  json-render!"}}}}
+</json-render>
+```
+
+JSON structural characters (`{` `}` `[` `]` `:` `,` `"`) are all
+HTML-safe, so the spec survives HTML parsing untouched. Only literal
+`<` / `>` inside string values need JSON unicode escapes
+(`\u003c` / `\u003e`). To update a spec at runtime, assign to
+`textContent`:
+
+```js
+document.querySelector('json-render').textContent = JSON.stringify(nextSpec);
+```
+
+hyper-element's `MutationObserver` sees the childList change and
+re-renders automatically — no `observedAttributes`, no manual
+invalidation.
+
+## Spec format
+
+A spec is a flat `{ root, elements }` map, not a tree. Children are
+key references, so partial streaming specs (where a child key exists
+but its definition has not arrived yet) show a `[loading...]`
+placeholder instead of crashing.
+
+```json
+{
+  "root": "card_0",
+  "elements": {
+    "card_0": {
+      "type": "Card",
+      "props": { "title": "Approval Required" },
+      "children": ["row_0"]
+    },
+    "row_0": {
+      "type": "Row",
+      "children": ["btn_ok", "btn_cancel"]
+    },
+    "btn_ok": {
+      "type": "Button",
+      "props": { "label": "Approve", "variant": "primary" },
+      "on": { "press": { "action": "approve", "params": { "id": "123" } } }
+    },
+    "btn_cancel": {
+      "type": "Button",
+      "props": { "label": "Cancel", "variant": "destructive" },
+      "on": { "press": { "action": "reject" } }
+    }
+  }
+}
+```
+
+## Built-in components
+
+| Type      | Props                             | Events                    |
+| --------- | --------------------------------- | ------------------------- |
+| Card      | title, description                | —                         |
+| Row       | gap                               | —                         |
+| Column    | gap                               | —                         |
+| Button    | label, variant, disabled, loading | `on.press` → `jr-action`  |
+| Text      | content, variant                  | —                         |
+| Alert     | variant, message                  | —                         |
+| Progress  | label, value (0-100)              | —                         |
+| Divider   | —                                 | —                         |
+| CodeBlock | language, code                    | —                         |
+| Image     | src, alt, width, height           | —                         |
+| Checklist | label, items                      | checkbox → `jr-action`    |
+| TextField | label, placeholder, maxLength     | `on.submit` → `jr-action` |
+
+## Programmatic API
+
+```js
+import {
+  renderSpec,
+  registerComponent,
+  validateSpec,
+  getCatalog,
+  listComponentTypes,
+} from 'hyper-element';
+
+// Render a spec inside any hyper-element component. Pull the spec
+// from wherever is natural — a store, a tool-call response, etc.
+hyperElement('chat-message', (Html, ctx) => {
+  const spec = JSON.parse(ctx.wrappedContent);
+  return renderSpec(Html, spec, ctx.element);
+});
+
+// Validate a spec before rendering. Returns every violation, not
+// just the first, so the LLM (or the developer) sees the full
+// diagnostic picture.
+const { valid, errors } = validateSpec(spec);
+```
+
+## Interactive events
+
+Every interactive component dispatches a `jr-action` CustomEvent from
+the `<json-render>` host. The event bubbles and is composed so a
+single listener on the host (or any ancestor) sees all user actions:
+
+```js
+document.querySelector('json-render').addEventListener('jr-action', (e) => {
+  console.log(e.detail.action); // "approve"
+  console.log(e.detail.params); // { id: "123" }
+});
+```
+
+## LLM schema generation (`getCatalog`)
+
+Every built-in component is shipped with structured catalog metadata
+(description, typed props, slots, actions). `getCatalog()` walks the
+live registry and returns a frozen snapshot that exposes two LLM-facing
+formatters:
+
+```js
+import { getCatalog } from 'hyper-element';
+
+const catalog = getCatalog();
+
+// Natural-language system prompt listing every cataloged component
+// with its props (type/required/enum/nullable), children capability,
+// and actions, followed by the `{ root, elements }` output-format block.
+const prompt = catalog.prompt({
+  customRules: ['Use Card as the root element for any layout'],
+});
+
+// Claude/OpenAI-compatible JSON Schema tool definition. The `type.enum`
+// lists every cataloged component name, so the model can only emit
+// types the renderer knows how to handle.
+const tool = catalog.toolDefinition({
+  name: 'render_ui',
+  description: 'Render interactive UI components',
+});
+```
+
+The snapshot is deep-cloned and recursively frozen, so the raw
+catalog data in the live registry can never be mutated through the
+API. A new snapshot is built on every call, so any components
+registered since the last call automatically appear.
+
+## Custom components via `jrType`
+
+Tag any `hyperElement(...)` definition with `jrType` to auto-register
+the resulting custom element into json-render's registry. Whenever a
+spec references that type, json-render instantiates your custom
+element instead of a built-in (or instead of an `[unknown: ...]`
+placeholder for entirely new types). Adding `jrCatalog` alongside
+makes the component visible to `getCatalog()` for LLM prompt / tool
+generation.
+
+```js
+hyperElement('product-card', {
+  jrType: 'ProductCard',
+  jrCatalog: {
+    description: 'Product display with price and buy action',
+    props: {
+      name: { type: 'string', required: true },
+      price: { type: 'number', required: true },
+      image: { type: 'string' },
+    },
+    slots: [],
+    actions: {
+      press: {
+        description: 'User taps buy',
+        params: { productId: { type: 'string' } },
+      },
+    },
+  },
+  render: (Html, ctx) => {
+    // The bridge serialises def.props as JSON onto data-jr-props.
+    // The dataset proxy auto-parses it back to a real object on read.
+    const { name, price, image } = ctx.dataset.jrProps || {};
+    return Html`
+      <article class="product-card">
+        <img src="${image}" alt="${name}" />
+        <h3>${name}</h3>
+        <span>$${price}</span>
+      </article>`;
+  },
+});
+```
+
+Two overlap rules apply: registering a `jrType` that already matches
+a built-in (e.g. `jrType: 'Card'`) replaces the built-in globally —
+every subsequent `Card` in any spec renders the bridged element,
+with a console.warn on registration. Registering the same custom
+`jrType` twice is last-write-wins, also with a console.warn.
+
+Full documentation: [`src/json-render/README.md`](src/json-render/README.md).
 
 ---
 

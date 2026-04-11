@@ -293,6 +293,65 @@ document.querySelector('json-render').addEventListener('jr-action', (e) => {
 });
 ```
 
+### LLM Integration (`getCatalog`)
+
+`getCatalog()` walks the live registry and returns a frozen snapshot
+with two LLM-facing formatters. Built-ins are already cataloged, so
+`.prompt()` / `.toolDefinition()` work out of the box — custom
+components only show up when you register them with a `catalog`
+metadata object (legacy function-only registrations render correctly
+but are hidden from the LLM vocabulary on purpose).
+
+```js
+import { getCatalog } from 'hyper-element';
+
+const catalog = getCatalog();
+
+// Natural-language prompt listing every component, its props
+// (type/required/enum/nullable), children capability, and actions.
+const prompt = catalog.prompt({
+  customRules: ['Use Card as the root element for any layout'],
+});
+
+// Claude/OpenAI tool definition with an enum of every registered type.
+const tool = catalog.toolDefinition({
+  name: 'render_ui',
+  description: 'Render interactive UI components',
+});
+```
+
+### Custom Elements as Spec Components (`jrType`)
+
+Tag a regular `hyperElement(...)` definition with `jrType` to
+auto-register the custom element into json-render's registry. Specs
+referencing that type render through your custom element instead of
+the built-in fallback. Adding `jrCatalog` alongside the render
+function makes the custom component visible to `getCatalog()` for
+LLM prompt / tool-definition generation.
+
+```js
+hyperElement('product-card', {
+  jrType: 'ProductCard',
+  jrCatalog: {
+    description: 'Product display with price and buy action',
+    props: {
+      name:  { type: 'string', required: true },
+      price: { type: 'number', required: true },
+    },
+    slots: [],
+    actions: {
+      press: { description: 'Buy tapped', params: { productId: { type: 'string' } } },
+    },
+  },
+  render: (Html, ctx) => {
+    // Bridge serialises def.props as JSON on data-jr-props; the
+    // dataset proxy auto-parses it back to an object on read.
+    const { name, price } = ctx.dataset.jrProps || {};
+    return Html`<article><h3>${name}</h3><span>$${price}</span></article>`;
+  },
+});
+```
+
 ### Theming
 
 Override `--jr-*` CSS custom properties:

@@ -50,6 +50,21 @@ function-only registrations are excluded), and returns a frozen
 Schema tool definition with a `type.enum` listing every cataloged type).
 Aligned with the json-render.dev catalog/schema patterns.
 
+### `bridge.js`
+
+Component bridge that wraps a hyperElement custom element as a
+json-render component. Exports `createBridgedRenderFn(tagName)` which
+returns a render function matching the registry signature
+`(Html, def, key, kids, hostEl) => Node`. The function imperatively
+instantiates `<tagName>` (tag-name interpolation is impossible in
+tagged template literals), serialises `def.props`, `def.children`, and
+`def.on` into `data-jr-props`, `data-jr-children`, and `data-jr-on`
+attributes consumed by the existing dataset proxy, and slots
+pre-rendered child Holes/Nodes as light-DOM children. Used by
+`createFunctionalElement` (in `src/functional.js`) when a developer
+attaches `jrType`/`jrCatalog` to a hyperElement definition; can also
+be invoked directly by external `registerComponent` consumers.
+
 ### `element.js`
 
 The `<json-render>` custom element definition, created via hyper-element's

@@ -30,7 +30,7 @@ const browserFiles = [
   'ssr/capture.js', 'ssr/replay.js', 'ssr/index.js',
   'lifecycle/onNext.js', 'lifecycle/observer.js', 'lifecycle/processFragmentResult.js', 'lifecycle/connectedCallback.js',
   'hyperElement.js', 'functional.js', 'withOptions.js',
-  'json-render/validator.js', 'json-render/catalog-metadata.js', 'json-render/components.js', 'json-render/registry.js', 'json-render/catalog.js', 'json-render/renderer.js', 'json-render/index.js', 'json-render/element.js',
+  'json-render/validator.js', 'json-render/catalog-metadata.js', 'json-render/components.js', 'json-render/registry.js', 'json-render/catalog.js', 'json-render/renderer.js', 'json-render/bridge.js', 'json-render/index.js', 'json-render/element.js',
 ];
 
 const ssrServerFiles = [
@@ -145,7 +145,7 @@ function createBundle() {
   var captureScrollState, captureCheckedState, handleCapturedEvent, restoreElementState;
   var startCapture, replayEvents, initSSR, ssrState, markTagRegistered, createSyntheticEvent;
   var onNext, observer, createdCallback;
-  var renderSpec, registerComponent, validateSpec, listComponentTypes, BUILT_IN_COMPONENTS, renderNode, renderSpecTree, registry, registryInterface, getCatalog;
+  var renderSpec, registerComponent, validateSpec, listComponentTypes, BUILT_IN_COMPONENTS, renderNode, renderSpecTree, registry, registryInterface, getCatalog, createBridgedRenderFn, registerJrType;
   var CatalogSnapshot, EM_DASH, OUTPUT_FORMAT_BLOCK, deepFreeze, cloneCatalog, formatProp, formatActionParams, formatAction, formatComponent, buildPrompt, buildToolDefinition;
   var getKnownTypes;
   var CATALOG, entry;
