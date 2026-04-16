@@ -146,7 +146,7 @@ function createBundle() {
   var startCapture, replayEvents, initSSR, ssrState, markTagRegistered, createSyntheticEvent;
   var onNext, observer, createdCallback;
   var renderSpec, registerComponent, validateSpec, listComponentTypes, BUILT_IN_COMPONENTS, renderNode, renderSpecTree, registry, registryInterface, getCatalog, createBridgedRenderFn, registerJrType;
-  var CatalogSnapshot, EM_DASH, OUTPUT_FORMAT_BLOCK, deepFreeze, cloneCatalog, formatProp, formatActionParams, formatAction, formatComponent, buildPrompt, buildToolDefinition;
+  var CatalogSnapshot, EM_DASH, OUTPUT_FORMAT_BLOCK, deepFreeze, cloneCatalog, formatProp, formatActionParams, formatAction, formatComponent, buildPrompt, buildToolDefinition, propToSchema, componentBranch;
   var getKnownTypes;
   var CATALOG, entry;
   var dispatchAction, renderCard, renderRow, renderColumn, renderButton, renderText, renderAlert, renderProgress, renderDivider, renderCodeBlock, renderImage, renderChecklist, renderTextField;

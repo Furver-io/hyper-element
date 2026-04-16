@@ -196,7 +196,100 @@ function buildPrompt(types, options) {
  * @param {Object} [options] - Optional config: `name`, `description`.
  * @returns {Object} JSON Schema tool definition object.
  */
+/**
+ * Map a catalog prop type token to JSON Schema type. Keeps the mapping
+ * centralised so adding a new prop type only touches this function.
+ *
+ * @param {Object} propMeta - Prop metadata from catalog-metadata.js
+ * @returns {Object} JSON Schema fragment for this prop
+ */
+function propToSchema(propMeta) {
+  const schema = {};
+  // Map type token → JSON Schema type
+  switch (propMeta.type) {
+    case 'string':
+      schema.type = 'string';
+      break;
+    case 'number':
+      schema.type = 'number';
+      break;
+    case 'boolean':
+      schema.type = 'boolean';
+      break;
+    case 'array':
+      schema.type = 'array';
+      break;
+    default:
+      schema.type = 'string';
+      break;
+  }
+  if (propMeta.enum) schema.enum = propMeta.enum;
+  if (propMeta.description) schema.description = propMeta.description;
+  return schema;
+}
+
+/**
+ * Build a per-component JSON Schema branch for the oneOf discriminated
+ * union. Each branch matches `type: "<ComponentName>"` and carries
+ * a props schema with per-component prop validation.
+ *
+ * @param {string} typeName - Component type name (e.g. "Button")
+ * @param {Object} entry - Catalog metadata entry
+ * @returns {Object} JSON Schema object for this component branch
+ */
+function componentBranch(typeName, entry) {
+  const propsSchema = { type: 'object' };
+  const propEntries = entry.props ? Object.entries(entry.props) : [];
+
+  if (propEntries.length > 0) {
+    propsSchema.properties = {};
+    const requiredProps = [];
+    for (const [name, meta] of propEntries) {
+      propsSchema.properties[name] = propToSchema(meta);
+      if (meta.required) requiredProps.push(name);
+    }
+    if (requiredProps.length > 0) propsSchema.required = requiredProps;
+  }
+
+  return {
+    type: 'object',
+    required: ['type'],
+    properties: {
+      type: { type: 'string', const: typeName },
+      props: propsSchema,
+      children: { type: 'array', items: { type: 'string' } },
+      on: { type: 'object' },
+    },
+  };
+}
+
+/**
+ * Build the Claude/OpenAI-compatible tool definition for render_ui.
+ *
+ * Emits a JSON Schema with elements.additionalProperties as a oneOf
+ * discriminated union — one branch per registered component type,
+ * each with its own per-component props schema. Replaces the earlier
+ * single-shape + type-enum output so tool-calling layers can reject
+ * malformed tool calls (wrong props for a given type) before they
+ * reach the gateway.
+ *
+ * @param {Map<string, Object>} types - Cataloged component entries.
+ * @param {Object} [options] - Tool-definition overrides.
+ * @param {string} [options.name='render_ui'] - Tool name for the LLM.
+ * @param {string} [options.description] - Tool description for the LLM.
+ * @returns {Object} JSON Schema tool definition.
+ */
 function buildToolDefinition(types, options) {
+  // Build a oneOf discriminated union — one branch per component
+  // with per-component prop schemas derived from catalog metadata.
+  // This gives the LLM pre-call validation feedback: the API rejects
+  // malformed tool calls before the gateway sees them, preventing
+  // unrenderable specs from reaching the browser.
+  const branches = [];
+  for (const [typeName, entry] of types.entries()) {
+    branches.push(componentBranch(typeName, entry));
+  }
+
   return {
     name: options.name || 'render_ui',
     description: options.description || 'Render interactive UI components',
@@ -208,14 +301,7 @@ function buildToolDefinition(types, options) {
         elements: {
           type: 'object',
           additionalProperties: {
-            type: 'object',
-            required: ['type'],
-            properties: {
-              type: { type: 'string', enum: [...types.keys()] },
-              props: { type: 'object' },
-              children: { type: 'array', items: { type: 'string' } },
-              on: { type: 'object' },
-            },
+            oneOf: branches,
           },
         },
       },

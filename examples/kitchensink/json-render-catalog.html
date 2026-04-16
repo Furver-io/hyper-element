@@ -355,25 +355,43 @@
         if (!props.elements || props.elements.type !== 'object') {
           throw new Error('input_schema.properties.elements missing or wrong type');
         }
+        // additionalProperties is now a oneOf discriminated union with
+        // one branch per registered component type. Each branch pins
+        // the "type" field via const and declares its own per-component
+        // props schema so the LLM receives typed pre-call validation.
         const ap = props.elements.additionalProperties;
-        if (!ap || ap.type !== 'object') {
-          throw new Error('elements.additionalProperties missing or wrong type');
+        if (!ap || !Array.isArray(ap.oneOf)) {
+          throw new Error(
+            'elements.additionalProperties missing oneOf union: ' +
+              JSON.stringify(ap).slice(0, 120)
+          );
         }
-        if (!ap.required || ap.required[0] !== 'type') {
-          throw new Error('elements.additionalProperties.required must include "type"');
+        // Pull the discriminator type names from each branch so the
+        // per-built-in assertion below can check membership.
+        const branchTypes = [];
+        for (const branch of ap.oneOf) {
+          if (!branch || branch.type !== 'object') {
+            throw new Error('oneOf branch missing object type: ' + JSON.stringify(branch).slice(0, 120));
+          }
+          if (!Array.isArray(branch.required) || branch.required[0] !== 'type') {
+            throw new Error('oneOf branch.required must include "type"');
+          }
+          const typeProp = branch.properties && branch.properties.type;
+          if (!typeProp || typeProp.type !== 'string' || typeof typeProp.const !== 'string') {
+            throw new Error('oneOf branch type discriminator missing const: ' + JSON.stringify(branch.properties));
+          }
+          branchTypes.push(typeProp.const);
         }
-        const typeProp = ap.properties && ap.properties.type;
-        if (!typeProp || typeProp.type !== 'string' || !Array.isArray(typeProp.enum)) {
-          throw new Error('per-element type.enum missing or wrong shape');
-        }
-        // Every built-in must appear in the enum (excluding LegacyFn from AC #2).
+        // Every built-in must appear in at least one branch (excluding
+        // LegacyFn from AC #2 — legacy fn-only registrations never get
+        // a oneOf branch because they lack catalog metadata).
         for (const name of BUILTIN_NAMES) {
-          if (typeProp.enum.indexOf(name) === -1) {
-            throw new Error('toolDefinition enum missing built-in: ' + name);
+          if (branchTypes.indexOf(name) === -1) {
+            throw new Error('toolDefinition oneOf missing built-in: ' + name);
           }
         }
-        if (typeProp.enum.indexOf('LegacyFn') !== -1) {
-          throw new Error('toolDefinition enum unexpectedly includes legacy fn-only registration');
+        if (branchTypes.indexOf('LegacyFn') !== -1) {
+          throw new Error('toolDefinition oneOf unexpectedly includes legacy fn-only registration');
         }
         // Default name path: omitting options.name uses 'render_ui'.
         const defaultTool = window.getCatalog().toolDefinition({});
@@ -401,6 +419,12 @@
               props: {
                 label: { type: 'string', required: true, description: 'Display label' },
                 count: { type: 'number', description: 'Optional numeric count' },
+                // Exercises the propToSchema default branch — any prop
+                // type outside {string, number, boolean, array} falls
+                // back to 'string' in the generated JSON Schema. Picked
+                // 'object' because it is a plausible real-world request
+                // but not natively mapped.
+                metadata: { type: 'object', description: 'Arbitrary metadata' },
               },
               slots: ['default'],
               actions: {
@@ -442,9 +466,16 @@
           throw new Error('CatalogThing second action (multi-action branch) missing from prompt()');
         }
         const tool = catalog.toolDefinition({ name: 'render_ui' });
-        const enumList = tool.input_schema.properties.elements.additionalProperties.properties.type.enum;
-        if (enumList.indexOf('CatalogThing') === -1) {
-          throw new Error('CatalogThing missing from toolDefinition() enum');
+        // Walk the oneOf union and collect each branch's type.const so
+        // we can confirm CatalogThing appears as its own branch (and
+        // therefore carries its own per-component prop schema).
+        const branches = tool.input_schema.properties.elements.additionalProperties.oneOf;
+        const branchTypes = branches.map((b) => b.properties && b.properties.type && b.properties.type.const);
+        if (branchTypes.indexOf('CatalogThing') === -1) {
+          throw new Error(
+            'CatalogThing missing from toolDefinition() oneOf; got: ' +
+              JSON.stringify(branchTypes)
+          );
         }
       }
 
