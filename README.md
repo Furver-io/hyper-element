@@ -1996,10 +1996,15 @@ hyperElement('todo-list', {
 # json-render (Spec-Driven UI)
 
 hyper-element ships with a **json-render** module that turns flat JSON
-specs — the kind an LLM produces from a `render_ui` tool call — into
+specs — the kind an LLM produces from a `json_render` tool call — into
 live DOM trees. It is designed for agent-driven UIs: the model emits
 a structured spec, hyper-element renders it, interactive components
 bubble `jr-action` CustomEvents back up, and the agent reacts.
+
+The `<json-render>` element wraps a JSON spec the same way `<script>`
+wraps JavaScript — the tag is the mount point, and the JSON inside is
+the payload. A plain ` ```json ` code fence never mounts UI; it is
+documentation only.
 
 Import the module once and a `<json-render>` custom element becomes
 available in HTML. The JSON spec goes between the tags as body text —
@@ -2143,7 +2148,7 @@ const prompt = catalog.prompt({
 // lists every cataloged component name, so the model can only emit
 // types the renderer knows how to handle.
 const tool = catalog.toolDefinition({
-  name: 'render_ui',
+  name: 'json_render',
   description: 'Render interactive UI components',
 });
 ```

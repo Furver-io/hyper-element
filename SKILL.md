@@ -225,7 +225,13 @@ hyperElement('user-profile', {
 ## json-render (Spec-Driven UI)
 
 Render flat JSON specs into live DOM trees. Designed for LLM tool calls
-that produce structured UI via the `render_ui` tool.
+that produce structured UI via the `json_render` tool.
+
+The `<json-render>` element wraps a JSON spec the same way `<script>`
+wraps JavaScript — the tag is the mount point, and the JSON inside is
+the payload. A plain ` ```json ` code fence never mounts UI; it is
+documentation only. Use `<json-render>…</json-render>` as the canonical
+mount wrapper in assistant output.
 
 ### Quick Start
 
@@ -315,7 +321,7 @@ const prompt = catalog.prompt({
 
 // Claude/OpenAI tool definition with an enum of every registered type.
 const tool = catalog.toolDefinition({
-  name: 'render_ui',
+  name: 'json_render',
   description: 'Render interactive UI components',
 });
 ```

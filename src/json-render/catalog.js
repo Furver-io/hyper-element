@@ -170,8 +170,24 @@ const OUTPUT_FORMAT_BLOCK =
  * @returns {string} The complete prompt string.
  */
 function buildPrompt(types, options) {
+  // The opening paragraph frames json-render in terms the model's
+  // training corpus already recognises: a <json-render> tag wraps JSON
+  // the same way a <script> tag wraps JavaScript — the tag is the
+  // execution boundary, the JSON inside is just the payload syntax.
+  // This analogy is load-bearing. Without it small models default to
+  // ```json code fences (a strong training prior), and the chat client
+  // correctly renders those as literal code, not as mounted UI.
   const sections = [
-    'You can render interactive UI using the render_ui tool.\n\nAvailable components:',
+    'You can render interactive UI using the json_render tool.\n\n' +
+      'The <json-render> element wraps a JSON spec the same way <script> ' +
+      'wraps JavaScript — the tag is the mount point, and the JSON inside ' +
+      'is the payload. To render UI, either call the json_render tool ' +
+      'directly or output <json-render>{...}</json-render> inline in your ' +
+      'text response.\n\n' +
+      'Never wrap a render spec in a ```json code fence — code fences ' +
+      'are documentation only; the client will display the spec as ' +
+      'literal text rather than mounting it as interactive UI.\n\n' +
+      'Available components:',
   ];
   for (const [name, catalog] of types) {
     sections.push(formatComponent(name, catalog));
@@ -264,7 +280,7 @@ function componentBranch(typeName, entry) {
 }
 
 /**
- * Build the Claude/OpenAI-compatible tool definition for render_ui.
+ * Build the Claude/OpenAI-compatible tool definition for json_render.
  *
  * Emits a JSON Schema with elements.additionalProperties as a oneOf
  * discriminated union — one branch per registered component type,
@@ -275,7 +291,7 @@ function componentBranch(typeName, entry) {
  *
  * @param {Map<string, Object>} types - Cataloged component entries.
  * @param {Object} [options] - Tool-definition overrides.
- * @param {string} [options.name='render_ui'] - Tool name for the LLM.
+ * @param {string} [options.name='json_render'] - Tool name for the LLM.
  * @param {string} [options.description] - Tool description for the LLM.
  * @returns {Object} JSON Schema tool definition.
  */
@@ -291,7 +307,7 @@ function buildToolDefinition(types, options) {
   }
 
   return {
-    name: options.name || 'render_ui',
+    name: options.name || 'json_render',
     description: options.description || 'Render interactive UI components',
     input_schema: {
       type: 'object',
@@ -356,7 +372,7 @@ class CatalogSnapshot {
   /**
    * Build the JSON Schema tool definition for this catalog snapshot.
    * @param {Object} [options] - Optional config.
-   * @param {string} [options.name='render_ui'] - Tool name for the LLM.
+   * @param {string} [options.name='json_render'] - Tool name for the LLM.
    * @param {string} [options.description] - Tool description for the LLM.
    * @returns {Object} JSON Schema tool definition.
    */

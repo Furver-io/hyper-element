@@ -6,7 +6,7 @@ efficient tagged template rendering engine.
 
 ## Purpose
 
-When an LLM calls the `render_ui` tool, it produces a JSON spec in
+When an LLM calls the `json_render` tool, it produces a JSON spec in
 the format `{ root: string, elements: { [key]: ElementDef } }`. This
 module renders those specs into real DOM components with:
 
@@ -144,7 +144,7 @@ const prompt = catalog.prompt({
 // JSON Schema tool definition for Claude/OpenAI function calling. The
 // `type.enum` lists every cataloged component name.
 const tool = catalog.toolDefinition({
-  name: 'render_ui',
+  name: 'json_render',
   description: 'Render interactive UI components',
 });
 ```

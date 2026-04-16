@@ -107,7 +107,7 @@
     <section data-test="catalog-tool-definition" data-test-result="pending">
       <h2>AC #6 — toolDefinition() returns valid JSON Schema</h2>
       <p>
-        <code>toolDefinition({ name: 'render_ui' })</code> must return a
+        <code>toolDefinition({ name: 'json_render' })</code> must return a
         Claude/OpenAI-compatible tool definition with the correct structure
         and a <code>type.enum</code> listing every cataloged component.
       </p>
@@ -251,7 +251,7 @@
           throw new Error('prompt() returned empty/non-string');
         }
         // Header line.
-        if (prompt.indexOf('You can render interactive UI using the render_ui tool.') === -1) {
+        if (prompt.indexOf('You can render interactive UI using the json_render tool.') === -1) {
           throw new Error('prompt missing header line');
         }
         if (prompt.indexOf('Available components:') === -1) {
@@ -333,9 +333,9 @@
       }
 
       function ac6_toolDefinition() {
-        const tool = window.getCatalog().toolDefinition({ name: 'render_ui' });
-        if (tool.name !== 'render_ui') {
-          throw new Error('toolDefinition.name !== "render_ui": ' + tool.name);
+        const tool = window.getCatalog().toolDefinition({ name: 'json_render' });
+        if (tool.name !== 'json_render') {
+          throw new Error('toolDefinition.name !== "json_render": ' + tool.name);
         }
         if (typeof tool.description !== 'string' || tool.description.length === 0) {
           throw new Error('toolDefinition.description missing/empty');
@@ -393,10 +393,10 @@
         if (branchTypes.indexOf('LegacyFn') !== -1) {
           throw new Error('toolDefinition oneOf unexpectedly includes legacy fn-only registration');
         }
-        // Default name path: omitting options.name uses 'render_ui'.
+        // Default name path: omitting options.name uses 'json_render'.
         const defaultTool = window.getCatalog().toolDefinition({});
-        if (defaultTool.name !== 'render_ui') {
-          throw new Error('default toolDefinition name !== "render_ui"');
+        if (defaultTool.name !== 'json_render') {
+          throw new Error('default toolDefinition name !== "json_render"');
         }
         // Custom description override.
         const customTool = window.getCatalog().toolDefinition({
@@ -465,7 +465,7 @@
         if (prompt.indexOf('           hover \u2014 Fired when the thing is hovered. Params: x (number), y (number)') === -1) {
           throw new Error('CatalogThing second action (multi-action branch) missing from prompt()');
         }
-        const tool = catalog.toolDefinition({ name: 'render_ui' });
+        const tool = catalog.toolDefinition({ name: 'json_render' });
         // Walk the oneOf union and collect each branch's type.const so
         // we can confirm CatalogThing appears as its own branch (and
         // therefore carries its own per-component prop schema).
