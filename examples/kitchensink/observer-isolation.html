@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Observer Isolation - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Observer Isolation</h1>
+    <p>
+      Verifies that descendant renders do not cause ancestor hyper-elements to
+      re-render.
+    </p>
+
+    <section
+      data-test="descendant-childlist-does-not-rerender-parent"
+      data-test-result="pending"
+    >
+      <h2>Descendant ChildList Mutations Stay Local</h2>
+      <p>
+        A child updating its own light DOM should not make the parent think its
+        wrapped content changed.
+      </p>
+      <pre><code>const childCount = signal(0);
+let parentRenderCount = 0;
+
+hyperElement('observer-childlist-child', {
+  setup: (ctx, onNext) => {
+    const render = onNext(() => ({ count: childCount.value }));
+    const stop = effect(() => render());
+    ctx.bump = () => { childCount.value = childCount.value + 1; };
+    return stop;
+  },
+  render: (Html, ctx, state) => Html`
+    &lt;button onclick=${ctx.bump}&gt;count=${state.count}&lt;/button&gt;
+    &lt;span&gt;child=${state.count}&lt;/span&gt;
+  `,
+});
+
+customElements.define(
+  'observer-childlist-parent',
+  class extends hyperElement {
+    render(Html) {
+      parentRenderCount++;
+      this.dataset.parentRenders = String(parentRenderCount);
+      Html`&lt;observer-childlist-child&gt;&lt;/observer-childlist-child&gt;`;
+    }
+  }
+);
+
+document.getElementById('observer-childlist-output').innerHTML =
+  '&lt;observer-childlist-parent&gt;&lt;/observer-childlist-parent&gt;';
+
+setTimeout(() => {
+  const parent = document.querySelector('observer-childlist-parent');
+  const button = parent.querySelector('button');
+  const rendersBeforeClick = parent.dataset.parentRenders;
+  button.click();
+
+  setTimeout(() => {
+    const childText = parent.querySelector('observer-childlist-child').textContent.replace(/\s+/g, ' ').trim();
+    const section = document.querySelector('[data-test="descendant-childlist-does-not-rerender-parent"]');
+    const pass =
+      parent.dataset.parentRenders === rendersBeforeClick &&
+      childText.includes('count=1') &&
+      childText.includes('child=1');
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+    if (!pass) {
+      console.error(
+        'Expected child update without parent rerender. before=' +
+        rendersBeforeClick +
+        ' after=' + parent.dataset.parentRenders +
+        ' childText=' + childText
+      );
+    }
+  }, 100);
+}, 100);</code></pre>
+      <div id="observer-childlist-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="descendant-childlist-does-not-rerender-parent"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="observer-childlist-output"><observer-childlist-parent data-parent-renders="2"><observer-childlist-child><!--<>--><button>count=1</button>\n    <span>child=1</span>\n  <!--</>--></observer-childlist-child></observer-childlist-parent></div>';
+        const poll = setInterval(() => {
+          const sec = document.querySelector('[data-test="descendant-childlist-does-not-rerender-parent"]');
+          if (sec.dataset.testResult === 'pending') return;
+          clearInterval(poll);
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot(
+            'descendant-childlist-does-not-rerender-parent',
+            document.getElementById('observer-childlist-output')
+          , expected);
+        }, 50);
+      </script>
+    </section>
+
+    <section
+      data-test="descendant-attributes-does-not-rerender-parent"
+      data-test-result="pending"
+    >
+      <h2>Descendant Attribute Mutations Stay Local</h2>
+      <p>
+        A child toggling its own descendant attributes should not trip the
+        ancestor observer either.
+      </p>
+      <pre><code>const disabledSig = signal(false);
+let attrParentRenderCount = 0;
+
+hyperElement('observer-attr-child', {
+  setup: (ctx, onNext) => {
+    const render = onNext(() => ({ disabled: disabledSig.value }));
+    const stop = effect(() => render());
+    ctx.toggle = () => { disabledSig.value = !disabledSig.value; };
+    return stop;
+  },
+  render: (Html, ctx, state) => Html`
+    &lt;button
+      onclick=${ctx.toggle}
+      ?disabled=${state.disabled}
+      title=${state.disabled ? 'disabled' : 'enabled'}
+    &gt;toggle&lt;/button&gt;
+  `,
+});
+
+customElements.define(
+  'observer-attr-parent',
+  class extends hyperElement {
+    render(Html) {
+      attrParentRenderCount++;
+      this.dataset.parentRenders = String(attrParentRenderCount);
+      Html`&lt;observer-attr-child&gt;&lt;/observer-attr-child&gt;`;
+    }
+  }
+);
+
+document.getElementById('observer-attr-output').innerHTML =
+  '&lt;observer-attr-parent&gt;&lt;/observer-attr-parent&gt;';
+
+setTimeout(() => {
+  const parent = document.querySelector('observer-attr-parent');
+  const button = parent.querySelector('button');
+  const rendersBeforeClick = parent.dataset.parentRenders;
+  button.click();
+
+  setTimeout(() => {
+    const section = document.querySelector('[data-test="descendant-attributes-does-not-rerender-parent"]');
+    const pass =
+      parent.dataset.parentRenders === rendersBeforeClick &&
+      button.disabled === true &&
+      button.getAttribute('title') === 'disabled';
+    section.dataset.testResult = pass ? 'pass' : 'fail';
+    if (!pass) {
+      console.error(
+        'Expected descendant attribute update without parent rerender. before=' +
+        rendersBeforeClick +
+        ' after=' + parent.dataset.parentRenders +
+        ' disabled=' + button.disabled +
+        ' title=' + button.getAttribute('title')
+      );
+    }
+  }, 100);
+}, 100);</code></pre>
+      <div id="observer-attr-output"></div>
+      <script type="module">
+        const code = document.querySelector('[data-test="descendant-attributes-does-not-rerender-parent"] pre code').textContent;
+        eval(code);
+        const expected = '<div id="observer-attr-output"><observer-attr-parent data-parent-renders="2"><observer-attr-child><!--<>--><button title="disabled" disabled="">toggle</button>\n  <!--</>--></observer-attr-child></observer-attr-parent></div>';
+        const poll = setInterval(() => {
+          const sec = document.querySelector('[data-test="descendant-attributes-does-not-rerender-parent"]');
+          if (sec.dataset.testResult === 'pending') return;
+          clearInterval(poll);
+          if (sec.dataset.testResult === 'fail') return;
+          window.assertSnapshot(
+            'descendant-attributes-does-not-rerender-parent',
+            document.getElementById('observer-attr-output')
+          , expected);
+        }, 50);
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

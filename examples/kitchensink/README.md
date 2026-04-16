@@ -61,6 +61,7 @@ This directory serves two purposes:
 - [nested-each-deep.html](nested-each-deep.html) - Deeply nested `{+each}` with property references
 - [same-type-nesting.html](same-type-nesting.html) - Same custom element nested in itself
 - [child-redraw.html](child-redraw.html) - Parent-child attribute passing and re-renders
+- [observer-isolation.html](observer-isolation.html) - Descendant re-renders stay local and do not fan out to ancestors
 - [child-styles.html](child-styles.html) - Passing style objects to children
 - [complex-type-attrs.html](complex-type-attrs.html) - Passing objects/functions to child elements
 

@@ -22,8 +22,25 @@ export function observer(ref) {
   const mutationObserver = new MutationObserver((mutations) => {
     if (!ref.observe) return;
 
+    // Only the host element's own mutations should trigger a host re-render.
+    // Why this guard exists:
+    //   - hyper-element renders nested custom elements into each other's light DOM.
+    //   - When a CHILD re-renders, its DOM writes appear as descendant
+    //     childList/attribute mutations to every ancestor observer because the
+    //     observer is attached with `subtree: true`.
+    //   - Treating those descendant writes as "the ancestor's content changed"
+    //     causes the ancestor to clear and re-render itself, which fans the
+    //     update out through the whole tree.
+    //
+    // We therefore ignore any batch where no mutation targeted the host
+    // element directly. This preserves the intended host reactivity
+    // (setAttribute, innerHTML/textContent on the custom element itself)
+    // while isolating child renders from parent renders.
+    const hostMutations = mutations.filter((m) => m.target === element);
+    if (hostMutations.length === 0) return;
+
     // Check for attribute changes
-    const attrMutations = mutations.filter((m) => m.type === 'attributes');
+    const attrMutations = hostMutations.filter((m) => m.type === 'attributes');
     if (attrMutations.length > 0) {
       // Handle data-* attribute additions and removals
       attrMutations.forEach((m) => {
@@ -53,7 +70,7 @@ export function observer(ref) {
     }
 
     // Handle content changes
-    let textContent = element.textContent;
+    const textContent = element.textContent;
 
     ref.innerHTML = element.innerHTML;
     if (that.attrs.template) {
