@@ -185,7 +185,9 @@ function createBundle() {
     return { renderElement: renderElement, renderElements: renderElements, createRenderer: createRenderer,
       renderToString: renderToString, ssrHtml: ssrHtml, createSSRHtml: createSSRHtml,
       createSSRTemplate: createSSRTemplate, escapeHtml: escapeHtml, safeHtml: safeHtml,
-      signal: signal, computed: computed, effect: effect, batch: batch, untracked: untracked };
+      signal: signal, computed: computed, effect: effect, batch: batch, untracked: untracked,
+      stringCommentArray: stringCommentArray, stringUnsafe: stringUnsafe,
+      processAdvancedTemplate: processAdvancedTemplate, replayEvents: replayEvents };
   }
 });
 `);
