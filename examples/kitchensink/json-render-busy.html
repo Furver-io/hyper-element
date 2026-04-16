@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JSON Render Auto-Busy Lifecycle - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <link rel="stylesheet" href="../../src/json-render/json-render.css" />
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+        max-width: 70rem;
+        margin: 0 auto;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JSON Render Auto-Busy Lifecycle</h1>
+    <p>
+      Verifies the auto-busy interaction lifecycle on
+      <code>&lt;json-render&gt;</code>: dispatching a <code>jr-action</code>
+      from any descendant interactive component must atomically set
+      <code>data-jr-busy="true"</code> on the host, the next textContent
+      replacement must clear it, and the
+      <code>data-jr-busy-mode="off"</code> attribute must opt the element
+      out of the behavior.
+    </p>
+
+    <section data-test="busy-initial-state" data-test-result="pending">
+      <h2>AC #1 — A freshly mounted &lt;json-render&gt; has no busy marker</h2>
+      <p>
+        Mounting a spec without dispatching any action must leave the
+        host element with neither <code>data-jr-busy</code> nor
+        <code>data-jr-busy-action</code> set. The marker is purely
+        interaction-driven, never spec-driven.
+      </p>
+      <div id="busy-mount-1"></div>
+    </section>
+
+    <section data-test="busy-set-on-dispatch" data-test-result="pending">
+      <h2>AC #2 — Dispatching jr-action sets data-jr-busy synchronously</h2>
+      <p>
+        Programmatically clicking the rendered Button must trigger the
+        Button's built-in <code>dispatchAction</code>, which the host
+        listener (installed in capture phase by element.js's setup hook)
+        catches and uses to set <code>data-jr-busy="true"</code> and
+        <code>data-jr-busy-action="approve"</code>.
+      </p>
+      <div id="busy-mount-2"></div>
+    </section>
+
+    <section data-test="busy-cleared-on-rerender" data-test-result="pending">
+      <h2>AC #3 — Replacing textContent clears the busy marker</h2>
+      <p>
+        After dispatching an action, replacing the host's
+        <code>textContent</code> with a new spec must trigger the
+        MutationObserver-driven re-render and clear both
+        <code>data-jr-busy</code> and <code>data-jr-busy-action</code>
+        as part of render(). This is what makes the lock auto-release
+        when the LLM responds with a fresh spec.
+      </p>
+      <div id="busy-mount-3"></div>
+    </section>
+
+    <section data-test="busy-opt-out" data-test-result="pending">
+      <h2>AC #4 — data-jr-busy-mode="off" disables auto-busy</h2>
+      <p>
+        Setting <code>data-jr-busy-mode="off"</code> on the host element
+        before mounting must prevent the listener from setting
+        <code>data-jr-busy</code> on dispatch. Consumers that want
+        full external control over interaction state use this opt-out.
+      </p>
+      <div id="busy-mount-4"></div>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+
+    <script type="module">
+      // ─────────────────────────────────────────────────────────────────
+      // Auto-busy lifecycle test orchestrator.
+      //
+      // Each AC mounts its own <json-render> element so a failure in
+      // one section cannot poison the next. The orchestrator is async
+      // because hyper-element's render is observed via MutationObserver
+      // microtasks — every assertion that depends on a render needs a
+      // microtask boundary first.
+      // ─────────────────────────────────────────────────────────────────
+
+      function setResult(name, result, reason) {
+        const section = document.querySelector('[data-test="' + name + '"]');
+        if (!section) return;
+        section.dataset.testResult = result;
+        if (result === 'fail' && reason) {
+          console.error('[' + name + '] ' + reason);
+        }
+      }
+
+      // Wait for the loader to expose hyperElement so the
+      // <json-render> custom element is registered before mount.
+      function waitForReady(timeoutMs) {
+        return new Promise((resolve, reject) => {
+          const deadline = Date.now() + timeoutMs;
+          (function poll() {
+            if (typeof window.hyperElement === 'function' &&
+                customElements.get('json-render')) {
+              resolve();
+              return;
+            }
+            if (Date.now() > deadline) {
+              reject(new Error('hyperElement / <json-render> never ready'));
+              return;
+            }
+            setTimeout(poll, 25);
+          })();
+        });
+      }
+
+      // Wait for the next render cycle. hyper-element renders inside
+      // a microtask after a textContent mutation, so a single
+      // double-rAF is enough to land after the render and any
+      // subsequent attribute updates.
+      function nextRender() {
+        return new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve))
+        );
+      }
+
+      // A minimal interactive spec — single Button that fires an
+      // "approve" action when pressed. Used by ACs #2, #3, and #4.
+      const INTERACTIVE_SPEC = {
+        root: 'btn',
+        elements: {
+          btn: {
+            type: 'Button',
+            props: { label: 'Approve', variant: 'primary' },
+            on: { press: { action: 'approve', params: { id: '42' } } },
+          },
+        },
+      };
+
+      // A display-only spec used by AC #1 — no interactive elements,
+      // so dispatching anything from it would not happen organically.
+      const DISPLAY_SPEC = {
+        root: 't',
+        elements: {
+          t: { type: 'Text', props: { content: 'Just text, no actions.' } },
+        },
+      };
+
+      async function runAll() {
+        // ── AC #1 ───────────────────────────────────────────────
+        try {
+          const mount = document.querySelector('#busy-mount-1');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify(DISPLAY_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          if (jr.hasAttribute('data-jr-busy')) {
+            throw new Error('fresh mount unexpectedly has data-jr-busy');
+          }
+          if (jr.hasAttribute('data-jr-busy-action')) {
+            throw new Error('fresh mount unexpectedly has data-jr-busy-action');
+          }
+          setResult('busy-initial-state', 'pass');
+        } catch (err) {
+          setResult('busy-initial-state', 'fail', err.message);
+        }
+
+        // ── AC #2 ───────────────────────────────────────────────
+        try {
+          const mount = document.querySelector('#busy-mount-2');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          // Verify the button rendered (sanity check) before testing
+          // the listener wiring.
+          const button = jr.querySelector('button.jr-btn');
+          if (!button) {
+            throw new Error('Button did not render — cannot test dispatch');
+          }
+          // Dispatch jr-action directly on the host instead of
+          // clicking the button. This isolates the auto-busy listener
+          // from the Button's own onclick wiring — both should land
+          // at the same listener, but a direct dispatch keeps this
+          // assertion focused on element.js's setup hook contract.
+          jr.dispatchEvent(
+            new CustomEvent('jr-action', {
+              bubbles: true,
+              composed: true,
+              detail: { action: 'approve', params: { id: '42' } },
+            })
+          );
+          // The capture-phase listener fires synchronously inside
+          // dispatchEvent, so the attributes are set before the
+          // dispatchEvent call returns. No await needed.
+          if (jr.getAttribute('data-jr-busy') !== 'true') {
+            throw new Error(
+              'data-jr-busy not set after dispatch; got: ' +
+                JSON.stringify(jr.getAttribute('data-jr-busy'))
+            );
+          }
+          if (jr.getAttribute('data-jr-busy-action') !== 'approve') {
+            throw new Error(
+              'data-jr-busy-action wrong; got: ' +
+                JSON.stringify(jr.getAttribute('data-jr-busy-action'))
+            );
+          }
+          setResult('busy-set-on-dispatch', 'pass');
+        } catch (err) {
+          setResult('busy-set-on-dispatch', 'fail', err.message);
+        }
+
+        // ── AC #3 ───────────────────────────────────────────────
+        try {
+          const mount = document.querySelector('#busy-mount-3');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          // Trigger a dispatch to set the busy marker. Direct
+          // dispatch keeps this section's assertion focused on the
+          // re-render clearing path; AC #2 already pinned the
+          // listener-fires-on-dispatch contract.
+          jr.dispatchEvent(
+            new CustomEvent('jr-action', {
+              bubbles: true,
+              composed: true,
+              detail: { action: 'approve', params: {} },
+            })
+          );
+          if (jr.getAttribute('data-jr-busy') !== 'true') {
+            throw new Error(
+              'precondition failed: data-jr-busy not set after dispatch'
+            );
+          }
+          // Now replace the textContent with a fresh spec — this
+          // simulates the LLM responding to the action with new UI.
+          // The MutationObserver-driven re-render must clear the
+          // busy marker as part of the new render() execution.
+          const NEXT_SPEC = {
+            root: 'msg',
+            elements: {
+              msg: { type: 'Text', props: { content: 'Done!' } },
+            },
+          };
+          jr.textContent = JSON.stringify(NEXT_SPEC);
+          await nextRender();
+          if (jr.hasAttribute('data-jr-busy')) {
+            throw new Error('data-jr-busy not cleared after re-render');
+          }
+          if (jr.hasAttribute('data-jr-busy-action')) {
+            throw new Error('data-jr-busy-action not cleared after re-render');
+          }
+          setResult('busy-cleared-on-rerender', 'pass');
+        } catch (err) {
+          setResult('busy-cleared-on-rerender', 'fail', err.message);
+        }
+
+        // ── AC #4 ───────────────────────────────────────────────
+        try {
+          const mount = document.querySelector('#busy-mount-4');
+          const jr = document.createElement('json-render');
+          // Set opt-out BEFORE inserting into the DOM so the setup
+          // hook sees it on the very first jr-action it processes.
+          jr.setAttribute('data-jr-busy-mode', 'off');
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          jr.dispatchEvent(
+            new CustomEvent('jr-action', {
+              bubbles: true,
+              composed: true,
+              detail: { action: 'approve', params: {} },
+            })
+          );
+          if (jr.hasAttribute('data-jr-busy')) {
+            throw new Error(
+              'opt-out failed: data-jr-busy was set despite ' +
+                'data-jr-busy-mode="off"'
+            );
+          }
+          setResult('busy-opt-out', 'pass');
+        } catch (err) {
+          setResult('busy-opt-out', 'fail', err.message);
+        }
+      }
+
+      waitForReady(5000)
+        .then(runAll)
+        .catch((err) => {
+          console.error('busy test orchestrator failed to start:', err);
+          for (const name of [
+            'busy-initial-state',
+            'busy-set-on-dispatch',
+            'busy-cleared-on-rerender',
+            'busy-opt-out',
+          ]) {
+            setResult(name, 'fail', 'orchestrator never started: ' + err.message);
+          }
+        });
+    </script>
+  </body>
+</html>
