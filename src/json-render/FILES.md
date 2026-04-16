@@ -24,6 +24,30 @@ Each follows the signature `(Html, def, key, kids, hostEl) => template`.
 Interactive components dispatch `jr-action` CustomEvents via `dispatchAction()`.
 Exports `BUILT_IN_COMPONENTS` map pairing render functions with catalog metadata.
 
+**Checklist local state:** The per-spec optimistic boolean array is
+owned by `checklist-state.js` (see below). `components.js` imports
+`getChecklistState(hostEl, specKey, items)` and reads/mutates the
+returned array inside `renderChecklist`. Toggles mutate the array in
+place, dispatch `jr-action` for gateway-authoritative flows, and call
+`hostEl.render()` to re-run the `<json-render>` render pipeline
+(Html.wire-keyed node identity keeps the patch surgical).
+
+### `checklist-state.js`
+
+Per-host optimistic state store for the Checklist component.
+Module-level `WeakMap<hostEl, Map<specKey, { fingerprint, checked }>>`
+with a label-based fingerprint that distinguishes self-triggered
+re-renders (same labels → reuse `checked` array) from a genuine spec
+replacement (different labels → seed fresh state from
+`props.items[i].checked`). Keying by host (not by `def` identity) is
+necessary because `<json-render>` re-parses its textContent on every
+render, producing fresh `def` references each pass — a def-keyed map
+would miss on the self-triggered re-render that follows a toggle. The
+WeakMap auto-collects entries when the host is removed from the DOM —
+no cross-spec state leakage. Extracted from `components.js` so each
+file stays under the 260-NCLOC cap and so the storage layout has a
+single named home.
+
 ### `registry.js`
 
 Shared component registry. Houses the mutable `registry` Map (initialized

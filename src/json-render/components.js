@@ -13,8 +13,26 @@
  * host element. The event bubbles so parents can listen for actions
  * from any depth in the spec tree.
  *
+ * Local optimistic state:
+ *   A few components (Checklist today) maintain per-spec internal
+ *   state so toggles reflect in the UI immediately — the `jr-action`
+ *   event still fires for every change so gateway-authoritative
+ *   flows keep working, but the component no longer waits for a spec
+ *   replacement to show a new visual state. Local state is stored in
+ *   a module-level `WeakMap` keyed by the `<json-render>` host
+ *   element (with a nested Map keyed by the spec element's `key`),
+ *   so it is garbage-collected when the host is removed from the
+ *   DOM. The host-keyed layout is necessary because `<json-render>`
+ *   re-parses its textContent on every render and produces fresh
+ *   `def` references each pass — a def-keyed map would miss on the
+ *   self-triggered re-render that follows the `hostEl.render()` call
+ *   a toggle issues. `Html.wire` keyed on `def`/`item` ensures only
+ *   the touched DOM nodes get patched.
+ *
  * @module hyper-element/json-render/components
  */
+
+import { getChecklistState } from './checklist-state.js';
 
 /**
  * Dispatch a jr-action CustomEvent from the host element.
@@ -258,6 +276,32 @@ function renderImage(Html, def, key) {
  * Checklist — vertical list of checkbox items with toggle events.
  * Props: label (string), items (Array<{ label: string, checked: boolean }>)
  * Events: checkbox change → jr-action with { index, checked, label }
+ *
+ * Local optimistic state:
+ *   The component owns a per-spec boolean array seeded from
+ *   `props.items[i].checked`. This is what drives the visual
+ *   checkbox state, the `.checked` class on each `<label>` (for the
+ *   strikethrough styling), and the "N/M complete" counter text.
+ *   Without local state the component would be stuck projecting the
+ *   immutable spec the LLM sent — toggles would fire `jr-action`
+ *   but never move the counter or the checkmarks.
+ *
+ *   The state is stored in the module-level `checklistStateByHost`
+ *   WeakMap keyed by the `<json-render>` host element, with a nested
+ *   Map keyed by the Checklist's spec `key`. An item-label
+ *   fingerprint distinguishes self-triggered re-renders (reuse state)
+ *   from a spec replacement (seed fresh state from the new
+ *   `props.items[i].checked`). Host-keying is required because
+ *   `<json-render>` re-parses its textContent on every render, so
+ *   `def` identity is not stable across the re-render a toggle
+ *   itself triggers.
+ *
+ *   Every toggle mutates the array in place, calls `hostEl.render()`
+ *   to re-run `<json-render>`'s render pipeline (Html.wire preserves
+ *   node identity so only affected nodes patch), then dispatches
+ *   `jr-action` with the same payload shape consumers already
+ *   expect — gateway-authoritative round trips keep working.
+ *
  * @param {Function} Html - Tagged template function with .wire()
  * @param {Object} def - Element definition { type, props, children, on }
  * @param {string} key - Unique key for Html.wire() identity
@@ -267,8 +311,14 @@ function renderImage(Html, def, key) {
  */
 function renderChecklist(Html, def, key, kids, hostEl) {
   const items = def.props?.items || [];
-  // Compute completion count for the progress counter label
-  const doneCount = items.filter((it) => it.checked).length;
+
+  // Read optimistic checked-flags from local state (seeded from the
+  // spec on first render, preserved across self-triggered re-renders).
+  // All three rendered outputs — the `?checked` attribute, the
+  // `.checked` class on each label, and the "N/M complete" counter —
+  // project from this single source.
+  const checked = getChecklistState(hostEl, key, items);
+  const doneCount = checked.filter(Boolean).length;
 
   return Html.wire(def, ':' + key)`
     <div class="jr-checklist">
@@ -278,14 +328,26 @@ function renderChecklist(Html, def, key, kids, hostEl) {
           Html.wire(
             item,
             ':ci' + i
-          )`<label class="jr-checklist-item ${item.checked ? 'checked' : ''}">
-          <input type="checkbox" checked=${item.checked}
-            onchange=${(e) =>
+          )`<label class="jr-checklist-item ${checked[i] ? 'checked' : ''}">
+          <input type="checkbox" ?checked=${checked[i]}
+            onchange=${(e) => {
+              // Mutate the local checked-array in place, dispatch
+              // jr-action for external authoritative flows, then
+              // call hostEl.render() to re-run the <json-render>
+              // render pipeline. Html.wire's keying on `def` / `item`
+              // preserves node identity so only the affected checkbox
+              // (?checked attribute), its label class, and the
+              // counter text node get patched — no full rebuild.
+              checked[i] = e.target.checked;
               dispatchAction(hostEl, 'checklist_toggle', {
                 index: i,
                 checked: e.target.checked,
                 label: item.label,
-              })} /><span>${item.label}</span>
+              });
+              if (hostEl && typeof hostEl.render === 'function') {
+                hostEl.render();
+              }
+            }} /><span>${item.label}</span>
         </label>`
       )}
       ${items.length > 0 ? Html.wire(def, ':cc')`<div class="jr-checklist-counter">${doneCount}/${items.length} complete</div>` : ''}

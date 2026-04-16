@@ -122,6 +122,22 @@
       <div id="mount-checklist-empty"></div>
     </section>
 
+    <section data-test="checklist-toggle-updates" data-test-result="pending">
+      <h2>AC #8b — Clicking a Checklist item updates the visual state + counter</h2>
+      <p>
+        With every spec item set to <code>checked: false</code>:
+        (a) zero boxes render checked on first paint,
+        (b) a click on item 0 flips that box to checked, adds the
+        <code>.checked</code> class to its label (enabling the
+        strikethrough CSS rule), updates the counter to
+        <code>1/3 complete</code>, and fires a bubbling
+        <code>jr-action</code> with <code>{index:0, checked:true, label:'Milk'}</code>,
+        (c) a second click flips it back to unchecked and the
+        counter returns to <code>0/3 complete</code>.
+      </p>
+      <div id="mount-checklist-toggle-updates"></div>
+    </section>
+
     <section data-test="textfield-counter" data-test-result="pending">
       <h2>AC #9 — TextField with maxLength renders a counter</h2>
       <p>
@@ -481,6 +497,123 @@
           setResult('checklist-counter-empty', 'pass');
         } catch (err) {
           setResult('checklist-counter-empty', 'fail', err.message);
+        }
+
+        // ── AC #8b — Checklist toggle updates visual state + counter ─
+        // Mount a spec with every item checked:false, verify
+        // initial DOM is fully unchecked, click item 0, verify the
+        // checkbox is now checked, the label carries the .checked
+        // class (so the strikethrough CSS rule applies), the counter
+        // reads "1/3 complete", and a jr-action CustomEvent fired
+        // with the correct payload. Finally click again to un-toggle
+        // and verify the counter goes back to "0/3 complete".
+        try {
+          const mount = document.querySelector('#mount-checklist-toggle-updates');
+          const jr = document.createElement('json-render');
+          const actionEvents = [];
+          jr.addEventListener('jr-action', (e) => actionEvents.push(e.detail));
+          jr.textContent = JSON.stringify({
+            root: 'cl',
+            elements: {
+              cl: {
+                type: 'Checklist',
+                props: {
+                  items: [
+                    { label: 'Milk', checked: false },
+                    { label: 'Eggs', checked: false },
+                    { label: 'Bread', checked: false },
+                  ],
+                },
+                on: { checklist_toggle: { action: 'toggle', params: {} } },
+              },
+            },
+          });
+          mount.appendChild(jr);
+          await nextRender();
+
+          // (a) initial state — nothing checked, counter reads 0/3
+          const boxes = jr.querySelectorAll('.jr-checklist-item input[type="checkbox"]');
+          if (boxes.length !== 3) {
+            throw new Error('expected 3 checkboxes, got ' + boxes.length);
+          }
+          for (let i = 0; i < boxes.length; i++) {
+            if (boxes[i].checked) {
+              throw new Error('box ' + i + ' rendered checked on first paint');
+            }
+          }
+          let counter = jr.querySelector('.jr-checklist-counter');
+          if (!/0\/3 complete/.test((counter || {}).textContent || '')) {
+            throw new Error(
+              'initial counter wrong; got: ' +
+                JSON.stringify(counter?.textContent)
+            );
+          }
+
+          // (b) click item 0 — flips checkbox, adds .checked class,
+          // increments counter, fires jr-action.
+          boxes[0].click();
+          await nextRender();
+          const boxesAfter = jr.querySelectorAll('.jr-checklist-item input[type="checkbox"]');
+          if (!boxesAfter[0].checked) {
+            throw new Error('box 0 did not flip to checked after click');
+          }
+          const label0 = boxesAfter[0].closest('.jr-checklist-item');
+          if (!label0 || !label0.classList.contains('checked')) {
+            throw new Error(
+              'label 0 missing .checked class; classList=' +
+                JSON.stringify(label0?.className)
+            );
+          }
+          counter = jr.querySelector('.jr-checklist-counter');
+          if (!/1\/3 complete/.test((counter || {}).textContent || '')) {
+            throw new Error(
+              'counter did not update to 1/3; got: ' +
+                JSON.stringify(counter?.textContent)
+            );
+          }
+          const lastEvent = actionEvents[actionEvents.length - 1];
+          if (
+            !lastEvent ||
+            lastEvent.action !== 'toggle' && lastEvent.action !== 'checklist_toggle'
+          ) {
+            // dispatchAction in components.js uses the action-name
+            // 'checklist_toggle' regardless of spec 'on' mapping; the
+            // spec's 'on.checklist_toggle.action' field is not applied
+            // by the built-in Checklist today. Accept either for
+            // forward-compat.
+            throw new Error(
+              'jr-action did not fire a toggle; events=' +
+                JSON.stringify(actionEvents)
+            );
+          }
+          if (
+            !lastEvent.params ||
+            lastEvent.params.index !== 0 ||
+            lastEvent.params.checked !== true ||
+            lastEvent.params.label !== 'Milk'
+          ) {
+            throw new Error(
+              'jr-action payload wrong; got: ' + JSON.stringify(lastEvent)
+            );
+          }
+
+          // (c) click again — flips back, counter returns to 0/3.
+          boxesAfter[0].click();
+          await nextRender();
+          const boxesFinal = jr.querySelectorAll('.jr-checklist-item input[type="checkbox"]');
+          if (boxesFinal[0].checked) {
+            throw new Error('second click did not flip box 0 back to unchecked');
+          }
+          counter = jr.querySelector('.jr-checklist-counter');
+          if (!/0\/3 complete/.test((counter || {}).textContent || '')) {
+            throw new Error(
+              'counter did not return to 0/3 after un-toggle; got: ' +
+                JSON.stringify(counter?.textContent)
+            );
+          }
+          setResult('checklist-toggle-updates', 'pass');
+        } catch (err) {
+          setResult('checklist-toggle-updates', 'fail', err.message);
         }
 
         // ── AC #9 — TextField counter appears ─────────────────────

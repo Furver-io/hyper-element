@@ -247,6 +247,144 @@ document.getElementById('interactive-output').appendChild(elem);</code></pre>
       </script>
     </section>
 
+    <section data-test="checklist-state" data-test-result="pending">
+      <h2>Checklist Optimistic State</h2>
+      <p>
+        Regression coverage for three historical bugs in the built-in
+        <code>Checklist</code> component: (1) every item visually
+        rendering checked on first mount regardless of
+        <code>props.items[i].checked</code>, (2) the
+        "N/M complete" counter never updating on toggle, (3) no
+        strike-through on toggled items. All three cluster in
+        <code>renderChecklist</code> and are driven by the per-host
+        optimistic <code>checked</code> array.
+      </p>
+      <pre><code>const specChecklist = {
+  root: 'main',
+  elements: {
+    'main': {
+      type: 'Checklist',
+      props: {
+        label: 'Shopping',
+        items: [
+          { label: 'Milk',  checked: false },
+          { label: 'Eggs',  checked: false },
+          { label: 'Bread', checked: false }
+        ]
+      },
+      on: { change: { action: 'ChecklistToggle' } }
+    }
+  }
+};
+const elem = document.createElement('json-render');
+elem.textContent = JSON.stringify(specChecklist);
+document.getElementById('checklist-state-output').appendChild(elem);</code></pre>
+      <div id="checklist-state-output"></div>
+      <script type="module">
+        // Drive the same Checklist spec through a mount → toggle-on →
+        // toggle-off cycle, asserting the three bug regressions each
+        // step: class on <label>, ?checked attribute on the input,
+        // counter text, and the jr-action payload.
+        const code = document.querySelector('[data-test="checklist-state"] pre code').textContent;
+        eval(code);
+        const elem = document.getElementById('checklist-state-output').firstChild;
+
+        const firedActions = [];
+        elem.addEventListener('jr-action', (e) => {
+          if (e.detail?.action === 'checklist_toggle') {
+            firedActions.push(e.detail.params || e.detail);
+          }
+        });
+
+        // Phase 1 — initial mount. Verify Bug 1 (no checkbox is
+        // visually checked when the spec declares checked:false) and
+        // the counter starts at 0/3.
+        setTimeout(() => {
+          const section = document.querySelector('[data-test="checklist-state"]');
+          const labels = elem.querySelectorAll('.jr-checklist-item');
+          const boxes = elem.querySelectorAll('input[type="checkbox"]');
+          const counter = elem.querySelector('.jr-checklist-counter');
+
+          const mountedOk =
+            labels.length === 3
+            && Array.from(labels).every((l) => !l.classList.contains('checked'))
+            && Array.from(boxes).every((b) => b.checked === false)
+            && boxes[0].hasAttribute('checked') === false
+            && counter && counter.textContent.trim() === '0/3 complete';
+
+          if (!mountedOk) {
+            console.error('checklist-state Phase 1 (mount) failed', {
+              classes: Array.from(labels).map((l) => l.className),
+              checked: Array.from(boxes).map((b) => b.checked),
+              counter: counter?.textContent,
+            });
+          }
+
+          // Phase 2 — toggle item index 1 ON. After hostEl.render() the
+          // DOM nodes may be replaced, so re-query every assertion.
+          boxes[1].checked = true;
+          boxes[1].dispatchEvent(new Event('change', { bubbles: true }));
+
+          setTimeout(() => {
+            const labels2 = elem.querySelectorAll('.jr-checklist-item');
+            const boxes2 = elem.querySelectorAll('input[type="checkbox"]');
+            const counter2 = elem.querySelector('.jr-checklist-counter');
+
+            const toggledOnOk =
+              labels2[1].classList.contains('checked')
+              && !labels2[0].classList.contains('checked')
+              && !labels2[2].classList.contains('checked')
+              && boxes2[1].checked === true
+              && counter2 && counter2.textContent.trim() === '1/3 complete'
+              && firedActions.length >= 1
+              && firedActions[firedActions.length - 1].index === 1
+              && firedActions[firedActions.length - 1].checked === true
+              && firedActions[firedActions.length - 1].label === 'Eggs';
+
+            if (!toggledOnOk) {
+              console.error('checklist-state Phase 2 (toggle on) failed', {
+                classes: Array.from(labels2).map((l) => l.className),
+                checked: Array.from(boxes2).map((b) => b.checked),
+                counter: counter2?.textContent,
+                actions: firedActions,
+              });
+            }
+
+            // Phase 3 — toggle item 1 OFF again. Class, checkbox, and
+            // counter must revert; a second jr-action must fire.
+            boxes2[1].checked = false;
+            boxes2[1].dispatchEvent(new Event('change', { bubbles: true }));
+
+            setTimeout(() => {
+              const labels3 = elem.querySelectorAll('.jr-checklist-item');
+              const boxes3 = elem.querySelectorAll('input[type="checkbox"]');
+              const counter3 = elem.querySelector('.jr-checklist-counter');
+
+              const toggledOffOk =
+                Array.from(labels3).every((l) => !l.classList.contains('checked'))
+                && Array.from(boxes3).every((b) => b.checked === false)
+                && counter3 && counter3.textContent.trim() === '0/3 complete'
+                && firedActions.length >= 2
+                && firedActions[firedActions.length - 1].index === 1
+                && firedActions[firedActions.length - 1].checked === false;
+
+              if (!toggledOffOk) {
+                console.error('checklist-state Phase 3 (toggle off) failed', {
+                  classes: Array.from(labels3).map((l) => l.className),
+                  checked: Array.from(boxes3).map((b) => b.checked),
+                  counter: counter3?.textContent,
+                  actions: firedActions,
+                });
+              }
+
+              section.dataset.testResult =
+                (mountedOk && toggledOnOk && toggledOffOk) ? 'pass' : 'fail';
+            }, 80);
+          }, 80);
+        }, 120);
+      </script>
+    </section>
+
     <section data-test="render-missing-fallbacks" data-test-result="pending">
       <h2>Render Missing Fallbacks</h2>
       <p>Tests robust renderer protections against completely missing branch paths and unknown components safely outputting default components.</p>
