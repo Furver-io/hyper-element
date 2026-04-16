@@ -34,6 +34,7 @@ Index of every file in this directory and its specific responsibility.
 | `nested-each-deep.html` | Deeply nested `{+each}` with property references | A, B |
 | `same-type-nesting.html` | Same custom element nested in itself | B |
 | `child-redraw.html` | Parent-child attribute passing and re-renders | C |
+| `observer-isolation.html` | Verifies descendant child renders do not cause ancestor re-renders | C |
 | `child-styles.html` | Passing style objects to children | A, B |
 | `complex-type-attrs.html` | Passing objects/functions to child elements | A |
 | `signals.html` | `signal()`, `computed()`, `effect()`, `batch()`, `untracked()` | B |
@@ -57,6 +58,7 @@ Index of every file in this directory and its specific responsibility.
 | `json-render-catalog.html` | `getCatalog()` API: `.prompt()` and `.toolDefinition()` for LLM schema generation | A, B |
 | `json-render-coverage.html` | JSON render coverage edges | A |
 | `json-render-custom.html` | Programmatic `renderSpec` + `registerComponent` | A |
+| `json-render-hardened.html` | Phase 1.6/1.7 hardening — `replaceSpec()`, `toolUseId`, CodeBlock copy+lines, Checklist/TextField counters | C |
 
 ## Test infrastructure (read-only)
 
