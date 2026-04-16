@@ -703,3 +703,129 @@ export function escapeHtml(str: string): string;
  * @returns Safe HTML object
  */
 export function safeHtml(html: string): { value: string };
+
+// ── json-render subpath exports ─────────────────────────────────────
+// These types document the public API of `hyper-element/json-render`.
+// The runtime module lives at `src/json-render/index.js`; these
+// declarations mirror its exports so TypeScript consumers using
+// `import ... from 'hyper-element/json-render'` resolve correctly
+// through the package.json `exports` field.
+
+/**
+ * An element inside a json-render spec. Each element names its
+ * component type, carries typed props, may include an ordered list
+ * of child element keys (resolved against `spec.elements`), and
+ * may bind named actions to `jr-action` events.
+ */
+export interface JsonRenderElement {
+  /** Component type name (e.g. "Button", "Card", "CodeBlock"). */
+  type: string;
+  /** Component props — shape determined by the catalog entry. */
+  props?: Record<string, unknown>;
+  /** Ordered child element keys. Each key resolves in `spec.elements`. */
+  children?: string[];
+  /** Action bindings — keyed by action name, value carries dispatch intent. */
+  on?: Record<string, { action?: string; params?: Record<string, unknown> }>;
+}
+
+/**
+ * Top-level json-render spec. The LLM-produced wire format used by
+ * the `<json-render>` custom element. `root` names the starting
+ * element key; `elements` maps every key to its definition.
+ */
+export interface JsonRenderSpec {
+  /** Key of the root element in `elements`. */
+  root: string;
+  /** Map of element keys to element definitions. */
+  elements: Record<string, JsonRenderElement>;
+}
+
+/**
+ * Render function signature accepted by `registerComponent`. Runs on
+ * every (re)render of any spec element whose `type` matches the
+ * registered name. Return a hyper-element wire template result.
+ */
+export type JsonRenderFunction = (
+  Html: HtmlFunction,
+  def: JsonRenderElement,
+  key: string,
+  kids: unknown[],
+  hostEl: HTMLElement
+) => unknown;
+
+/**
+ * Catalog snapshot entry — one per registered component type.
+ */
+export interface JsonRenderCatalogEntry {
+  type: string;
+  description?: string;
+  props?: Record<string, JrCatalogProp>;
+  slots?: readonly string[];
+  actions?: Record<string, JrCatalogAction>;
+}
+
+/**
+ * Registry interface exposed for internal element.js use. Consumers
+ * typically use `registerComponent` + `listComponentTypes` instead.
+ */
+export interface JsonRenderRegistryInterface {
+  get(type: string): { render: JsonRenderFunction; catalog: JrCatalog | null } | undefined;
+  all(): string[];
+  has(type: string): boolean;
+}
+
+/**
+ * Validation result returned by `validateSpec`.
+ */
+export interface JsonRenderValidationResult {
+  ok: boolean;
+  errors: string[];
+}
+
+/**
+ * `<json-render>` custom element — exposes `replaceSpec()` and
+ * `toolUseId` as a programmatic API in addition to the standard
+ * HTMLElement surface.
+ */
+export interface JsonRenderHostElement extends HTMLElement {
+  /** Replace the current spec. Accepts an object (stringified) or a pre-serialized JSON string. */
+  replaceSpec(spec: JsonRenderSpec | string): void;
+  /** Correlation id with the LLM tool_use block that produced the current spec. */
+  toolUseId: string | null;
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'json-render': JsonRenderHostElement;
+  }
+}
+
+declare module 'hyper-element/json-render' {
+  export function registerComponent(
+    type: string,
+    renderFnOrEntry: JsonRenderFunction | { render: JsonRenderFunction; catalog?: JrCatalog }
+  ): void;
+
+  export function renderSpec(
+    Html: HtmlFunction,
+    spec: JsonRenderSpec,
+    hostEl: HTMLElement
+  ): unknown;
+
+  export function listComponentTypes(): string[];
+
+  export function validateSpec(spec: unknown): JsonRenderValidationResult;
+
+  export function getCatalog(): {
+    types: JsonRenderCatalogEntry[];
+    prompt(): string;
+    toolDefinition(): Record<string, unknown>;
+  };
+
+  export const BUILT_IN_COMPONENTS: Map<
+    string,
+    { render: JsonRenderFunction; catalog: JrCatalog }
+  >;
+
+  export const registryInterface: JsonRenderRegistryInterface;
+}

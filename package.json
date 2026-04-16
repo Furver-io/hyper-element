@@ -5,9 +5,25 @@
   "description": "Fast, lightweight web components",
   "main": "build/hyperElement.min.js",
   "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./build/hyperElement.min.js",
+      "require": "./build/hyperElement.min.js"
+    },
+    "./json-render": {
+      "types": "./index.d.ts",
+      "import": "./src/json-render/index.js"
+    },
+    "./json-render/css": "./src/json-render/json-render.css",
+    "./package.json": "./package.json"
+  },
   "files": [
     "build/hyperElement.min.js",
     "build/hyperElement.min.js.map",
+    "src/json-render/",
+    "src/functional.js",
+    "src/index.js",
     "index.d.ts",
     "llms.txt",
     "llms-full.txt",
