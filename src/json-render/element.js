@@ -34,6 +34,17 @@
  * Events: interactive components inside the spec dispatch "jr-action"
  * CustomEvents that bubble up from the <json-render> host element.
  *
+ * Interaction lifecycle (auto-busy):
+ *   When a child component dispatches `jr-action`, the element marks
+ *   itself with `data-jr-busy="true"` and `data-jr-busy-action="<name>"`.
+ *   CSS rules in json-render.css disable all interactive children while
+ *   this attribute is present, preventing duplicate dispatches during
+ *   the network round-trip to the LLM. The next spec replacement (via
+ *   `element.textContent = JSON.stringify(nextSpec)`) re-enters render()
+ *   and the busy attributes are cleared automatically. Consumers can
+ *   opt out with `<json-render data-jr-busy-mode="off">` for cases
+ *   where the host wants full control over interaction state.
+ *
  * @module hyper-element/json-render/element
  */
 
@@ -60,6 +71,107 @@ import { registryInterface } from './registry.js';
  */
 export const jsonRenderElement = createFunctionalElement('json-render', {
   /**
+   * Setup lifecycle — runs once when the element connects to the DOM.
+   *
+   * Installs the auto-busy interaction-lifecycle listener: a single
+   * capture-phase `jr-action` listener on the host element that flips
+   * `data-jr-busy="true"` whenever any descendant interactive component
+   * dispatches an action. The listener is intentionally on the host
+   * (not the rendered tree) so it survives every render replacement
+   * without re-attachment, and runs in capture phase so it sets the
+   * busy state before any consumer-installed `jr-action` handler runs.
+   *
+   * Auto-clear is handled inside render() — the next time render()
+   * runs (which happens whenever element.textContent is replaced via
+   * MutationObserver), the busy attributes are removed before the
+   * new tree is built. This means a fresh spec from the LLM
+   * automatically re-enables interaction without any consumer code.
+   *
+   * Opt-out: setting `data-jr-busy-mode="off"` on the host element
+   * disables the auto-busy behavior so consumers that want to manage
+   * interaction state externally are not double-managed.
+   *
+   * @param {Object} ctx - Element context with .element reference
+   * @param {Function} _onNext - Reactive store hook (unused)
+   * @returns {Function} Teardown function — removes the listener
+   */
+  setup: (ctx, _onNext) => {
+    /**
+     * Stamp the host element with data-jr-busy + data-jr-busy-action
+     * when a descendant dispatches jr-action. Capture-phase so this
+     * runs before any consumer handler — the visual lock is visible
+     * before the action travels to the network.
+     * @param {CustomEvent} event - The jr-action event with detail.action.
+     */
+    const handleAction = (event) => {
+      // Skip auto-busy when the consumer has opted out via attribute.
+      // Read fresh on each event so the consumer can flip the mode
+      // dynamically without re-mounting the element.
+      if (ctx.element.getAttribute('data-jr-busy-mode') === 'off') return;
+      // Stamp the host element with the busy marker. CSS in
+      // json-render.css uses [data-jr-busy] as the gating selector
+      // for pointer-events: none on every interactive descendant.
+      ctx.element.setAttribute('data-jr-busy', 'true');
+      // Surface which action triggered the busy state — useful for
+      // diagnostic logging and for CSS that wants to highlight a
+      // specific in-flight action by name.
+      const actionName = event?.detail?.action || '';
+      if (actionName) {
+        ctx.element.setAttribute('data-jr-busy-action', actionName);
+      }
+    };
+    // Capture phase so we set busy BEFORE any consumer listener runs
+    // (consumers typically dispatch the action across the network in
+    // their handler — we want the visual lock in place first).
+    ctx.element.addEventListener('jr-action', handleAction, true);
+
+    // ── Programmatic API: replaceSpec() ──────────────────────
+    // Convenience method so consumers don't need to manually stringify
+    // and assign to textContent. Accepts either an object (stringified
+    // internally) or a pre-serialized JSON string. The textContent
+    // assignment triggers hyper-element's MutationObserver, which
+    // updates ctx.wrappedContent and calls render() automatically.
+    ctx.element.replaceSpec = (spec) => {
+      ctx.element.textContent =
+        typeof spec === 'string' ? spec : JSON.stringify(spec);
+    };
+
+    // ── Programmatic API: toolUseId ──────────────────────────
+    // First-class property that mirrors the data-tool-use-id dataset
+    // attribute. Consumers (e.g. mount-spec.js) use this to correlate
+    // a <json-render> element with a specific tool_use_id from the
+    // LLM response, enabling targeted spec replacement when multiple
+    // tool_use blocks exist in a single message.
+    Object.defineProperty(ctx.element, 'toolUseId', {
+      /**
+       * Read the tool_use_id from the data-tool-use-id dataset attribute.
+       * @returns {string|null} The stored id, or null when unset.
+       */
+      get() {
+        return ctx.element.dataset.toolUseId || null;
+      },
+      /**
+       * Mirror the value onto data-tool-use-id. Passing null/empty
+       * removes the attribute entirely rather than setting it to "".
+       * @param {string|null} v - New id value, or null to clear.
+       */
+      set(v) {
+        if (v) ctx.element.dataset.toolUseId = v;
+        else delete ctx.element.dataset.toolUseId;
+      },
+      configurable: true,
+    });
+
+    // Teardown — remove the listener and API when the element is removed.
+    // hyper-element's disconnectedCallback invokes the returned fn.
+    return () => {
+      ctx.element.removeEventListener('jr-action', handleAction, true);
+      delete ctx.element.replaceSpec;
+      delete ctx.element.toolUseId;
+    };
+  },
+
+  /**
    * Render the json-render spec from the element's body text content.
    *
    * Handles three states:
@@ -67,11 +179,25 @@ export const jsonRenderElement = createFunctionalElement('json-render', {
    * 2. Invalid spec — show diagnostic error alert
    * 3. Valid spec — render the component tree
    *
+   * Auto-clears the auto-busy marker on every render. A new render
+   * means the spec was replaced (typically by a tool result resolving
+   * a pending action), so any in-flight interaction is now resolved
+   * and the interactive children should re-enable.
+   *
    * @param {Object} Html - hyper-element's tagged template function
    * @param {Object} ctx - Element context with wrappedContent and element ref
    * @returns {Node} Rendered template
    */
   render: (Html, ctx) => {
+    // Auto-clear the busy marker installed by setup()'s jr-action
+    // listener. Done at the top of render() so the host attributes
+    // reflect the freshly-rendered tree's state, not the previous
+    // tree's pending interaction. The removeAttribute calls are
+    // no-ops when the marker is absent.
+    if (ctx.element.hasAttribute('data-jr-busy')) {
+      ctx.element.removeAttribute('data-jr-busy');
+      ctx.element.removeAttribute('data-jr-busy-action');
+    }
     try {
       // Read the JSON spec from the element's body text content.
       // ctx.wrappedContent is populated by connectedCallback() on

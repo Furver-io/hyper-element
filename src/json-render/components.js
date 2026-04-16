@@ -181,18 +181,56 @@ function renderDivider(Html, def, key) {
 }
 
 /**
- * CodeBlock — syntax-highlighted code display with language label.
- * Props: language (string), code (string)
+ * CodeBlock — syntax-highlighted code display with language label,
+ * copy-to-clipboard button, and optional line numbers.
+ * Props: language (string), code (string), showLineNumbers (boolean)
  * @param {Function} Html - Tagged template function with .wire()
  * @param {Object} def - Element definition { type, props, children, on }
  * @param {string} key - Unique key for Html.wire() identity
  * @returns {Object} Html wire template result
  */
 function renderCodeBlock(Html, def, key) {
+  const code = def.props?.code || '';
+  const showLines = def.props?.showLineNumbers || false;
+
+  // Build line number gutter when showLineNumbers is enabled.
+  // Each line gets a numbered <span> for alignment with the code.
+  const lines = code.split('\n');
+  const lineGutter = showLines
+    ? Html.wire(def, ':lg')`<div class="jr-codeblock-lines">${lines
+        .map((_, i) => `${i + 1}`)
+        .join('\n')}</div>`
+    : '';
+
   return Html.wire(def, ':' + key)`
     <div class="jr-codeblock">
-      <div class="jr-codeblock-header"><span>${def.props?.language || 'code'}</span></div>
-      <pre><code>${def.props?.code || ''}</code></pre>
+      <div class="jr-codeblock-header">
+        <span>${def.props?.language || 'code'}</span>
+        <button class="jr-codeblock-copy" onclick=${(e) => {
+          // Copy code to clipboard. navigator.clipboard requires
+          // secure context (localhost or HTTPS) — gracefully no-op
+          // if unavailable. Brief visual feedback via button text.
+          const btn = e.currentTarget;
+          navigator.clipboard
+            .writeText(code)
+            .then(() => {
+              btn.textContent = 'Copied!';
+              setTimeout(() => {
+                btn.textContent = 'Copy';
+              }, 1500);
+            })
+            .catch(() => {
+              btn.textContent = 'Failed';
+              setTimeout(() => {
+                btn.textContent = 'Copy';
+              }, 1500);
+            });
+        }}>Copy</button>
+      </div>
+      <div class="${showLines ? 'jr-codeblock-body with-lines' : 'jr-codeblock-body'}">
+        ${lineGutter}
+        <pre><code>${code}</code></pre>
+      </div>
     </div>`;
 }
 
@@ -228,10 +266,14 @@ function renderImage(Html, def, key) {
  * @returns {Object} Html wire template result
  */
 function renderChecklist(Html, def, key, kids, hostEl) {
+  const items = def.props?.items || [];
+  // Compute completion count for the progress counter label
+  const doneCount = items.filter((it) => it.checked).length;
+
   return Html.wire(def, ':' + key)`
     <div class="jr-checklist">
       ${def.props?.label ? Html.wire(def, ':cl')`<div class="jr-checklist-label">${def.props.label}</div>` : ''}
-      ${(def.props?.items || []).map(
+      ${items.map(
         (item, i) =>
           Html.wire(
             item,
@@ -246,6 +288,7 @@ function renderChecklist(Html, def, key, kids, hostEl) {
               })} /><span>${item.label}</span>
         </label>`
       )}
+      ${items.length > 0 ? Html.wire(def, ':cc')`<div class="jr-checklist-counter">${doneCount}/${items.length} complete</div>` : ''}
     </div>`;
 }
 
@@ -262,12 +305,14 @@ function renderChecklist(Html, def, key, kids, hostEl) {
  */
 function renderTextField(Html, def, key, kids, hostEl) {
   const submitData = def.on?.submit || {};
+  const maxLen = def.props?.maxLength;
+
   return Html.wire(def, ':' + key)`
     <div>
       ${def.props?.label ? Html.wire(def, ':tl')`<div class="jr-text muted">${def.props.label}</div>` : ''}
       <input type="text" class="jr-textfield"
         placeholder="${def.props?.placeholder || ''}"
-        maxlength=${def.props?.maxLength || ''}
+        maxlength=${maxLen || ''}
         onkeydown=${(e) => {
           if (e.key === 'Enter') {
             dispatchAction(hostEl, submitData.action || 'submit', {
@@ -276,8 +321,29 @@ function renderTextField(Html, def, key, kids, hostEl) {
             });
             // Clear input after submit for better UX
             e.target.value = '';
+            // Reset the counter after clearing the input
+            const counter = e.target.parentNode.querySelector(
+              '.jr-textfield-counter'
+            );
+            if (counter) counter.textContent = '0/' + maxLen;
           }
-        }} />
+        }}
+        oninput=${
+          maxLen
+            ? (e) => {
+                // Live-update the character counter. We target the sibling
+                // span by class rather than holding a ref, because the DOM
+                // is managed by hyper-element's template diffing and expando
+                // refs would be wiped on re-render.
+                const counter = e.target.parentNode.querySelector(
+                  '.jr-textfield-counter'
+                );
+                if (counter)
+                  counter.textContent = e.target.value.length + '/' + maxLen;
+              }
+            : null
+        } />
+      ${maxLen ? Html.wire(def, ':tc')`<span class="jr-textfield-counter">0/${maxLen}</span>` : ''}
     </div>`;
 }
 

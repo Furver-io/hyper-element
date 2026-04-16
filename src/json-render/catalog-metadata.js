@@ -161,7 +161,7 @@ export const CATALOG = {
   },
   CodeBlock: {
     description:
-      'Code display with language label. Use for showing source code, config snippets, or terminal output.',
+      'Code display with language label, copy button, and optional line numbers. Use for showing source code, config snippets, or terminal output.',
     props: {
       language: {
         type: 'string',
@@ -171,6 +171,10 @@ export const CATALOG = {
         type: 'string',
         required: true,
         description: 'The code text to display',
+      },
+      showLineNumbers: {
+        type: 'boolean',
+        description: 'Show numbered line gutter alongside the code',
       },
     },
     slots: [],

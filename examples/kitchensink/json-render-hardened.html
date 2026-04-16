@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JSON Render Hardened API & Components - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <link rel="stylesheet" href="../../src/json-render/json-render.css" />
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+        max-width: 70rem;
+        margin: 0 auto;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JSON Render Hardened API & Components</h1>
+    <p>
+      Covers the Phase 1.6 programmatic API (<code>replaceSpec()</code>,
+      <code>toolUseId</code>) and the Phase 1.7 component completeness
+      enhancements (CodeBlock copy + line numbers, Checklist counter,
+      TextField char counter) added under COMP-14.
+    </p>
+
+    <section data-test="replaceSpec-method" data-test-result="pending">
+      <h2>AC #1 — element.replaceSpec(obj) re-renders the DOM</h2>
+      <p>
+        The programmatic helper installed in <code>element.js:setup()</code>
+        must stringify the spec, assign it to <code>textContent</code>,
+        and trigger a re-render via the MutationObserver-driven
+        reactivity path.
+      </p>
+      <div id="mount-replacespec"></div>
+    </section>
+
+    <section data-test="replaceSpec-string" data-test-result="pending">
+      <h2>AC #2 — replaceSpec accepts pre-serialized JSON string</h2>
+      <p>
+        Passing a string should assign directly (no double-encoding).
+        Verifies the <code>typeof === 'string'</code> branch.
+      </p>
+      <div id="mount-replacespec-string"></div>
+    </section>
+
+    <section data-test="toolUseId-property" data-test-result="pending">
+      <h2>AC #3 — element.toolUseId getter/setter mirrors dataset</h2>
+      <p>
+        Setting <code>element.toolUseId = "tu_xyz"</code> must stamp
+        <code>data-tool-use-id</code> on the host and the property
+        must read back the same value. Setting null/empty removes
+        the attribute.
+      </p>
+      <div id="mount-tooluseid"></div>
+    </section>
+
+    <section data-test="codeblock-copy-button" data-test-result="pending">
+      <h2>AC #4 — CodeBlock renders a copy button in the header</h2>
+      <p>
+        The new <code>.jr-codeblock-copy</code> button must appear in
+        the header and be clickable. Initial label is "Copy".
+      </p>
+      <div id="mount-codeblock-copy"></div>
+    </section>
+
+    <section data-test="codeblock-line-numbers" data-test-result="pending">
+      <h2>AC #5 — CodeBlock showLineNumbers renders the gutter</h2>
+      <p>
+        Setting <code>props.showLineNumbers: true</code> must render a
+        <code>.jr-codeblock-lines</code> gutter containing one line
+        number per line of code.
+      </p>
+      <div id="mount-codeblock-lines"></div>
+    </section>
+
+    <section data-test="codeblock-no-lines-by-default" data-test-result="pending">
+      <h2>AC #6 — CodeBlock has no gutter when showLineNumbers is absent</h2>
+      <p>
+        Backwards compatibility: existing CodeBlock consumers that do
+        not opt in must render without the line gutter.
+      </p>
+      <div id="mount-codeblock-plain"></div>
+    </section>
+
+    <section data-test="checklist-counter" data-test-result="pending">
+      <h2>AC #7 — Checklist renders a completion counter</h2>
+      <p>
+        A checklist with 2 of 5 items checked must render the
+        <code>.jr-checklist-counter</code> div with the text
+        <code>2/5 complete</code>.
+      </p>
+      <div id="mount-checklist-counter"></div>
+    </section>
+
+    <section data-test="checklist-counter-empty" data-test-result="pending">
+      <h2>AC #8 — Empty Checklist does NOT render a counter</h2>
+      <p>
+        A checklist with zero items must skip the counter entirely
+        (avoids "0/0 complete" clutter).
+      </p>
+      <div id="mount-checklist-empty"></div>
+    </section>
+
+    <section data-test="textfield-counter" data-test-result="pending">
+      <h2>AC #9 — TextField with maxLength renders a counter</h2>
+      <p>
+        The <code>.jr-textfield-counter</code> span must appear
+        when <code>maxLength</code> is set, with initial text
+        <code>0/&lt;max&gt;</code>.
+      </p>
+      <div id="mount-textfield-counter"></div>
+    </section>
+
+    <section data-test="textfield-counter-updates" data-test-result="pending">
+      <h2>AC #10 — TextField counter updates on input</h2>
+      <p>
+        Typing into the input must live-update the counter's text
+        via the <code>oninput</code> handler.
+      </p>
+      <div id="mount-textfield-updates"></div>
+    </section>
+
+    <section data-test="textfield-no-counter" data-test-result="pending">
+      <h2>AC #11 — TextField without maxLength has NO counter</h2>
+      <p>
+        Backwards compatibility: TextFields that do not declare a
+        maxLength must render without the counter span.
+      </p>
+      <div id="mount-textfield-no-counter"></div>
+    </section>
+
+    <section data-test="codeblock-copy-click-success" data-test-result="pending">
+      <h2>AC #12 — CodeBlock copy button success path (clipboard resolves)</h2>
+      <p>
+        Clicking the copy button must call
+        <code>navigator.clipboard.writeText</code> and flip the button
+        label to "Copied!" briefly.
+      </p>
+      <div id="mount-codeblock-copy-success"></div>
+    </section>
+
+    <section data-test="codeblock-copy-click-failure" data-test-result="pending">
+      <h2>AC #13 — CodeBlock copy button failure path (clipboard rejects)</h2>
+      <p>
+        When <code>navigator.clipboard.writeText</code> rejects (e.g.
+        insecure context, permission denied), the button must flip to
+        "Failed" via the .catch branch instead of throwing.
+      </p>
+      <div id="mount-codeblock-copy-failure"></div>
+    </section>
+
+    <section data-test="teardown-removes-api" data-test-result="pending">
+      <h2>AC #14 — Disconnecting the element cleans up the programmatic API</h2>
+      <p>
+        Removing a <code>&lt;json-render&gt;</code> from the DOM fires
+        hyper-element's disconnectedCallback, which runs the teardown
+        returned by <code>setup()</code>. That teardown must delete both
+        <code>replaceSpec</code> and <code>toolUseId</code> from the
+        element so no stale references survive.
+      </p>
+      <div id="mount-teardown"></div>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+
+    <script type="module">
+      // ─────────────────────────────────────────────────────────────────
+      // Hardened-API orchestrator — each AC mounts into its own div so
+      // a failure in one section cannot poison the next. Runs async
+      // because hyper-element renders through MutationObserver
+      // microtasks; tests that depend on render completion use
+      // nextRender() to land past a double-rAF boundary.
+      // ─────────────────────────────────────────────────────────────────
+
+      function setResult(name, result, reason) {
+        const section = document.querySelector('[data-test="' + name + '"]');
+        if (!section) return;
+        section.dataset.testResult = result;
+        if (result === 'fail' && reason) {
+          console.error('[' + name + '] ' + reason);
+        }
+      }
+
+      function waitForReady(timeoutMs) {
+        return new Promise((resolve, reject) => {
+          const deadline = Date.now() + timeoutMs;
+          (function poll() {
+            if (
+              typeof window.hyperElement === 'function' &&
+              customElements.get('json-render')
+            ) {
+              resolve();
+              return;
+            }
+            if (Date.now() > deadline) {
+              reject(new Error('hyperElement / <json-render> never ready'));
+              return;
+            }
+            setTimeout(poll, 25);
+          })();
+        });
+      }
+
+      function nextRender() {
+        return new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve))
+        );
+      }
+
+      async function runAll() {
+        // ── AC #1 — replaceSpec(object) ───────────────────────────
+        try {
+          const mount = document.querySelector('#mount-replacespec');
+          const jr = document.createElement('json-render');
+          jr.textContent = '{}';
+          mount.appendChild(jr);
+          await nextRender();
+          if (typeof jr.replaceSpec !== 'function') {
+            throw new Error('replaceSpec method missing on element');
+          }
+          jr.replaceSpec({
+            root: 'a',
+            elements: { a: { type: 'Text', props: { content: 'hello' } } },
+          });
+          await nextRender();
+          const rendered = jr.querySelector('.jr-text');
+          if (!rendered || rendered.textContent !== 'hello') {
+            throw new Error(
+              'replaceSpec did not re-render Text with "hello"; got: ' +
+                JSON.stringify(rendered && rendered.textContent)
+            );
+          }
+          setResult('replaceSpec-method', 'pass');
+        } catch (err) {
+          setResult('replaceSpec-method', 'fail', err.message);
+        }
+
+        // ── AC #2 — replaceSpec(string) ───────────────────────────
+        try {
+          const mount = document.querySelector('#mount-replacespec-string');
+          const jr = document.createElement('json-render');
+          jr.textContent = '{}';
+          mount.appendChild(jr);
+          await nextRender();
+          const spec = {
+            root: 'a',
+            elements: { a: { type: 'Text', props: { content: 'string-path' } } },
+          };
+          jr.replaceSpec(JSON.stringify(spec));
+          await nextRender();
+          // If double-encoding occurred, the textContent would be the
+          // JSON of the JSON (quotes-within-quotes) and render() would
+          // fail to find .root — the error alert would appear instead.
+          const rendered = jr.querySelector('.jr-text');
+          if (!rendered || rendered.textContent !== 'string-path') {
+            throw new Error(
+              'replaceSpec(string) did not render; got: ' +
+                (jr.innerHTML || '(empty)')
+            );
+          }
+          setResult('replaceSpec-string', 'pass');
+        } catch (err) {
+          setResult('replaceSpec-string', 'fail', err.message);
+        }
+
+        // ── AC #3 — toolUseId getter/setter ───────────────────────
+        try {
+          const mount = document.querySelector('#mount-tooluseid');
+          const jr = document.createElement('json-render');
+          jr.textContent = '{}';
+          mount.appendChild(jr);
+          await nextRender();
+          if (jr.toolUseId !== null) {
+            throw new Error(
+              'initial toolUseId should be null; got: ' +
+                JSON.stringify(jr.toolUseId)
+            );
+          }
+          jr.toolUseId = 'tu_xyz';
+          if (jr.dataset.toolUseId !== 'tu_xyz') {
+            throw new Error(
+              'setter did not mirror dataset; got: ' +
+                JSON.stringify(jr.dataset.toolUseId)
+            );
+          }
+          if (jr.toolUseId !== 'tu_xyz') {
+            throw new Error(
+              'getter did not read value; got: ' +
+                JSON.stringify(jr.toolUseId)
+            );
+          }
+          jr.toolUseId = null;
+          if (jr.dataset.toolUseId !== undefined) {
+            throw new Error(
+              'null assign did not remove attribute; remaining: ' +
+                JSON.stringify(jr.dataset.toolUseId)
+            );
+          }
+          setResult('toolUseId-property', 'pass');
+        } catch (err) {
+          setResult('toolUseId-property', 'fail', err.message);
+        }
+
+        // ── AC #4 — CodeBlock copy button ─────────────────────────
+        try {
+          const mount = document.querySelector('#mount-codeblock-copy');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify({
+            root: 'c',
+            elements: {
+              c: {
+                type: 'CodeBlock',
+                props: { language: 'js', code: "console.log('hi')" },
+              },
+            },
+          });
+          mount.appendChild(jr);
+          await nextRender();
+          const btn = jr.querySelector('.jr-codeblock-copy');
+          if (!btn) {
+            throw new Error('copy button not rendered');
+          }
+          if ((btn.textContent || '').trim() !== 'Copy') {
+            throw new Error(
+              'copy button label wrong; got: ' +
+                JSON.stringify(btn.textContent)
+            );
+          }
+          setResult('codeblock-copy-button', 'pass');
+        } catch (err) {
+          setResult('codeblock-copy-button', 'fail', err.message);
+        }
+
+        // ── AC #5 — CodeBlock line numbers ────────────────────────
+        try {
+          const mount = document.querySelector('#mount-codeblock-lines');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify({
+            root: 'c',
+            elements: {
+              c: {
+                type: 'CodeBlock',
+                props: {
+                  language: 'js',
+                  code: 'line one\nline two\nline three',
+                  showLineNumbers: true,
+                },
+              },
+            },
+          });
+          mount.appendChild(jr);
+          await nextRender();
+          const gutter = jr.querySelector('.jr-codeblock-lines');
+          if (!gutter) {
+            throw new Error('line gutter missing with showLineNumbers=true');
+          }
+          // Expect three numbered lines. The gutter uses \n separators
+          // with white-space:pre so we compare raw text content.
+          if (!/1/.test(gutter.textContent) || !/3/.test(gutter.textContent)) {
+            throw new Error(
+              'line gutter missing numbers; got: ' +
+                JSON.stringify(gutter.textContent)
+            );
+          }
+          const body = jr.querySelector('.jr-codeblock-body');
+          if (!body || !body.classList.contains('with-lines')) {
+            throw new Error('body missing with-lines modifier class');
+          }
+          setResult('codeblock-line-numbers', 'pass');
+        } catch (err) {
+          setResult('codeblock-line-numbers', 'fail', err.message);
+        }
+
+        // ── AC #6 — CodeBlock without line numbers ────────────────
+        try {
+          const mount = document.querySelector('#mount-codeblock-plain');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify({
+            root: 'c',
+            elements: {
+              c: {
+                type: 'CodeBlock',
+                props: { language: 'js', code: "console.log('plain')" },
+              },
+            },
+          });
+          mount.appendChild(jr);
+          await nextRender();
+          const gutter = jr.querySelector('.jr-codeblock-lines');
+          if (gutter) {
+            throw new Error(
+              'line gutter rendered without showLineNumbers (backwards compat broken)'
+            );
+          }
+          setResult('codeblock-no-lines-by-default', 'pass');
+        } catch (err) {
+          setResult('codeblock-no-lines-by-default', 'fail', err.message);
+        }
+
+        // ── AC #7 — Checklist counter ─────────────────────────────
+        try {
+          const mount = document.querySelector('#mount-checklist-counter');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify({
+            root: 'cl',
+            elements: {
+              cl: {
+                type: 'Checklist',
+                props: {
+                  items: [
+                    { label: 'a', checked: true },
+                    { label: 'b', checked: true },
+                    { label: 'c', checked: false },
+                    { label: 'd', checked: false },
+                    { label: 'e', checked: false },
+                  ],
+                },
+              },
+            },
+          });
+          mount.appendChild(jr);
+          await nextRender();
+          const counter = jr.querySelector('.jr-checklist-counter');
+          if (!counter) {
+            throw new Error('checklist counter missing');
+          }
+          if (!/2\/5 complete/.test(counter.textContent)) {
+            throw new Error(
+              'counter text wrong; got: ' +
+                JSON.stringify(counter.textContent)
+            );
+          }
+          setResult('checklist-counter', 'pass');
+        } catch (err) {
+          setResult('checklist-counter', 'fail', err.message);
+        }
+
+        // ── AC #8 — Empty checklist has no counter ────────────────
+        try {
+          const mount = document.querySelector('#mount-checklist-empty');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify({
+            root: 'cl',
+            elements: {
+              cl: {
+                type: 'Checklist',
+                props: { items: [] },
+              },
+            },
+          });
+          mount.appendChild(jr);
+          await nextRender();
+          const counter = jr.querySelector('.jr-checklist-counter');
+          if (counter) {
+            throw new Error(
+              'counter rendered for empty checklist; text: ' +
+                JSON.stringify(counter.textContent)
+            );
+          }
+          setResult('checklist-counter-empty', 'pass');
+        } catch (err) {
+          setResult('checklist-counter-empty', 'fail', err.message);
+        }
+
+        // ── AC #9 — TextField counter appears ─────────────────────
+        try {
+          const mount = document.querySelector('#mount-textfield-counter');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify({
+            root: 'tf',
+            elements: {
+              tf: {
+                type: 'TextField',
+                props: { label: 'Name', maxLength: 20 },
+              },
+            },
+          });
+          mount.appendChild(jr);
+          await nextRender();
+          const counter = jr.querySelector('.jr-textfield-counter');
+          if (!counter) {
+            throw new Error('textfield counter missing');
+          }
+          if ((counter.textContent || '').trim() !== '0/20') {
+            throw new Error(
+              'initial counter text wrong; got: ' +
+                JSON.stringify(counter.textContent)
+            );
+          }
+          setResult('textfield-counter', 'pass');
+        } catch (err) {
+          setResult('textfield-counter', 'fail', err.message);
+        }
+
+        // ── AC #10 — TextField counter updates on input ──────────
+        try {
+          const mount = document.querySelector('#mount-textfield-updates');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify({
+            root: 'tf',
+            elements: {
+              tf: {
+                type: 'TextField',
+                props: { label: 'Name', maxLength: 10 },
+              },
+            },
+          });
+          mount.appendChild(jr);
+          await nextRender();
+          const input = jr.querySelector('input.jr-textfield');
+          const counter = jr.querySelector('.jr-textfield-counter');
+          if (!input || !counter) {
+            throw new Error('input or counter missing');
+          }
+          // Simulate typing: set value and dispatch an input event so
+          // the oninput handler (which is attached as a property) fires.
+          input.value = 'hello';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          if ((counter.textContent || '').trim() !== '5/10') {
+            throw new Error(
+              'counter did not update on input; got: ' +
+                JSON.stringify(counter.textContent)
+            );
+          }
+          setResult('textfield-counter-updates', 'pass');
+        } catch (err) {
+          setResult('textfield-counter-updates', 'fail', err.message);
+        }
+
+        // ── AC #11 — No counter without maxLength ────────────────
+        try {
+          const mount = document.querySelector('#mount-textfield-no-counter');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify({
+            root: 'tf',
+            elements: {
+              tf: {
+                type: 'TextField',
+                props: { label: 'Freeform' },
+              },
+            },
+          });
+          mount.appendChild(jr);
+          await nextRender();
+          const counter = jr.querySelector('.jr-textfield-counter');
+          if (counter) {
+            throw new Error(
+              'counter rendered without maxLength (backwards compat broken)'
+            );
+          }
+          setResult('textfield-no-counter', 'pass');
+        } catch (err) {
+          setResult('textfield-no-counter', 'fail', err.message);
+        }
+
+        // Shared helper — override setTimeout with an immediate
+        // stand-in so the 1500ms revert timers inside the copy
+        // handler execute synchronously. Must stay in effect through
+        // the microtask boundary where the promise .then/.catch
+        // runs (that is where the original setTimeout is registered).
+        // Avoids 3+ seconds of wall-clock sleep in the test runner.
+        async function withImmediateSetTimeout(asyncFn) {
+          const originalSetTimeout = window.setTimeout;
+          window.setTimeout = (cb) => {
+            Promise.resolve().then(cb);
+            return 0;
+          };
+          try {
+            await asyncFn();
+          } finally {
+            window.setTimeout = originalSetTimeout;
+          }
+        }
+
+        // ── AC #12 — Copy button success path ────────────────────
+        // Replace navigator.clipboard.writeText with a resolving stub so
+        // we exercise the .then branch (button text → "Copied!" → "Copy").
+        // Restored to the original implementation in a try/finally so a
+        // failure here does not poison subsequent tests.
+        try {
+          const mount = document.querySelector('#mount-codeblock-copy-success');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify({
+            root: 'c',
+            elements: {
+              c: {
+                type: 'CodeBlock',
+                props: { language: 'js', code: 'copy-me' },
+              },
+            },
+          });
+          mount.appendChild(jr);
+          await nextRender();
+          const btn = jr.querySelector('.jr-codeblock-copy');
+          if (!btn) throw new Error('copy button missing');
+          const originalWriteText = navigator.clipboard && navigator.clipboard.writeText;
+          let captured = null;
+          // Redefine writeText on the existing clipboard object so the
+          // handler's navigator.clipboard.writeText(...) call resolves.
+          Object.defineProperty(navigator.clipboard, 'writeText', {
+            configurable: true,
+            value: (text) => {
+              captured = text;
+              return Promise.resolve();
+            },
+          });
+          try {
+            await withImmediateSetTimeout(async () => {
+              btn.click();
+              // Yield enough microtasks for: the promise resolution,
+              // the .then body (writes 'Copied!' and schedules revert),
+              // and the revert Promise.resolve().then(cb) to run.
+              for (let i = 0; i < 4; i++) {
+                await Promise.resolve();
+              }
+            });
+            if (captured !== 'copy-me') {
+              throw new Error(
+                'clipboard did not receive code; got: ' + JSON.stringify(captured)
+              );
+            }
+            // With the stubbed setTimeout the revert fires on the next
+            // microtask, so the final label is "Copy" not "Copied!".
+            if ((btn.textContent || '').trim() !== 'Copy') {
+              throw new Error(
+                'button label did not revert to Copy after success; got: ' +
+                  JSON.stringify(btn.textContent)
+              );
+            }
+            setResult('codeblock-copy-click-success', 'pass');
+          } finally {
+            if (originalWriteText) {
+              Object.defineProperty(navigator.clipboard, 'writeText', {
+                configurable: true,
+                value: originalWriteText,
+              });
+            }
+          }
+        } catch (err) {
+          setResult('codeblock-copy-click-success', 'fail', err.message);
+        }
+
+        // ── AC #13 — Copy button failure path ────────────────────
+        // Same pattern as AC #12 but with a rejecting stub so we cover
+        // the .catch branch (button text → "Failed" → "Copy").
+        try {
+          const mount = document.querySelector('#mount-codeblock-copy-failure');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify({
+            root: 'c',
+            elements: {
+              c: {
+                type: 'CodeBlock',
+                props: { language: 'js', code: 'oh-no' },
+              },
+            },
+          });
+          mount.appendChild(jr);
+          await nextRender();
+          const btn = jr.querySelector('.jr-codeblock-copy');
+          if (!btn) throw new Error('copy button missing');
+          const originalWriteText = navigator.clipboard && navigator.clipboard.writeText;
+          Object.defineProperty(navigator.clipboard, 'writeText', {
+            configurable: true,
+            value: () => Promise.reject(new Error('denied')),
+          });
+          try {
+            await withImmediateSetTimeout(async () => {
+              btn.click();
+              for (let i = 0; i < 4; i++) {
+                await Promise.resolve();
+              }
+            });
+            if ((btn.textContent || '').trim() !== 'Copy') {
+              throw new Error(
+                'button label did not revert to Copy after failure; got: ' +
+                  JSON.stringify(btn.textContent)
+              );
+            }
+            setResult('codeblock-copy-click-failure', 'pass');
+          } finally {
+            if (originalWriteText) {
+              Object.defineProperty(navigator.clipboard, 'writeText', {
+                configurable: true,
+                value: originalWriteText,
+              });
+            }
+          }
+        } catch (err) {
+          setResult('codeblock-copy-click-failure', 'fail', err.message);
+        }
+
+        // ── AC #14 — Teardown cleans up programmatic API ─────────
+        // Mount, verify replaceSpec + toolUseId are present, then
+        // .remove() the element. hyper-element's disconnectedCallback
+        // invokes the teardown function returned by setup(), which must
+        // delete both expando APIs. Confirms the cleanup path runs.
+        try {
+          const mount = document.querySelector('#mount-teardown');
+          const jr = document.createElement('json-render');
+          jr.textContent = '{}';
+          mount.appendChild(jr);
+          await nextRender();
+          if (typeof jr.replaceSpec !== 'function') {
+            throw new Error('replaceSpec missing before teardown');
+          }
+          jr.toolUseId = 'tu_teardown_test';
+          if (jr.dataset.toolUseId !== 'tu_teardown_test') {
+            throw new Error('toolUseId setter did not land before teardown');
+          }
+          jr.remove();
+          // disconnectedCallback runs synchronously on remove(); give
+          // hyper-element a microtask anyway in case teardown defers.
+          await new Promise((r) => setTimeout(r, 0));
+          if (jr.replaceSpec !== undefined) {
+            throw new Error('replaceSpec not cleaned up after teardown');
+          }
+          // toolUseId uses defineProperty; teardown deletes it so the
+          // property descriptor is gone — reads now hit the prototype,
+          // which yields undefined.
+          if (jr.toolUseId !== undefined) {
+            throw new Error(
+              'toolUseId not cleaned up after teardown; got: ' +
+                JSON.stringify(jr.toolUseId)
+            );
+          }
+          setResult('teardown-removes-api', 'pass');
+        } catch (err) {
+          setResult('teardown-removes-api', 'fail', err.message);
+        }
+      }
+
+      waitForReady(5000).then(runAll).catch((err) => {
+        console.error('[json-render-hardened] setup error:', err);
+        document
+          .querySelectorAll('[data-test-result="pending"]')
+          .forEach((sec) => {
+            sec.dataset.testResult = 'fail';
+          });
+      });
+    </script>
+  </body>
+</html>

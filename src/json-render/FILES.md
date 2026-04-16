@@ -74,6 +74,22 @@ delegates to `renderSpecTree()`. Re-renders automatically when the body
 text changes (via hyper-element's MutationObserver). Auto-registers when
 imported.
 
+Owns the auto-busy interaction lifecycle: a `setup()` hook installs a
+single capture-phase `jr-action` listener on the host element that flips
+`data-jr-busy="true"` (and `data-jr-busy-action="<name>"`) whenever any
+descendant interactive component dispatches an action. The marker stays
+in place — and CSS in `json-render.css` keeps every interactive
+descendant disabled — until the next render replaces the spec, at which
+point `render()` clears the marker at the top of its body. Consumers
+opt out with `data-jr-busy-mode="off"` on the host element.
+
+Exposes a programmatic API on every `<json-render>` instance:
+`element.replaceSpec(spec)` stringifies (or assigns a string directly)
+and triggers the MutationObserver-driven re-render; `element.toolUseId`
+is a getter/setter property that mirrors `data-tool-use-id` on the
+host, used by LLM chat clients to correlate specs with tool_use blocks
+when multiple interactive fragments appear in a single response.
+
 ### `validator.js`
 
 Spec validation. `validateSpec(spec, customTypes?)` checks 7 rules:

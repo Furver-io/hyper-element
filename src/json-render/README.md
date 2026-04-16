@@ -50,6 +50,28 @@ document.querySelector('json-render').textContent = JSON.stringify(nextSpec);
 hyper-element's `MutationObserver` sees the childList change and re-renders
 automatically.
 
+### Programmatic API on the host element
+
+The `<json-render>` element exposes two conveniences for consumers that
+programmatically manage specs (e.g. an LLM chat client replacing the
+spec after each tool-use round-trip):
+
+```js
+const jr = document.querySelector('json-render');
+
+// replaceSpec(spec) — stringify + assign + trigger re-render in one call.
+// Accepts either an object (stringified internally) or a pre-serialized
+// JSON string (assigned directly, no double-encoding).
+jr.replaceSpec({ root: 'msg', elements: { msg: { type: 'Text', props: { content: 'Hi' } } } });
+
+// toolUseId — first-class property that mirrors data-tool-use-id.
+// Useful for correlating a <json-render> with a specific LLM tool_use
+// block when multiple interactive UI fragments exist in one response.
+jr.toolUseId = 'tu_abc123';  // stamps data-tool-use-id="tu_abc123"
+jr.toolUseId;                // 'tu_abc123'
+jr.toolUseId = null;         // removes the attribute
+```
+
 ## API
 
 ```js
@@ -222,6 +244,71 @@ document.querySelector('json-render').addEventListener('jr-action', (e) => {
   console.log(e.detail.action);  // "approve"
   console.log(e.detail.params);  // { id: "123" }
 });
+```
+
+## Interaction lifecycle (auto-busy)
+
+When any interactive descendant dispatches `jr-action`, the
+`<json-render>` host automatically marks itself with
+`data-jr-busy="true"` and `data-jr-busy-action="<name>"`. CSS rules
+in `json-render.css` use that attribute to disable every interactive
+descendant — buttons, checklist toggles, text fields — until the
+host's `textContent` is replaced with a new spec (typically the
+LLM's response to the action).
+
+This means consumers do **not** need to:
+
+- track which component was clicked
+- manually disable buttons after dispatch
+- re-enable controls when the next spec arrives
+- wire any per-component "loading" state
+
+The lock auto-engages on dispatch and auto-releases on the next
+`element.textContent = JSON.stringify(spec)` assignment.
+
+```js
+const jr = document.querySelector('json-render');
+
+// Forward actions to your backend / LLM
+jr.addEventListener('jr-action', async (e) => {
+  // <json-render> already set data-jr-busy="true" by the time this
+  // listener runs (capture phase). The user CAN'T click again.
+  const result = await fetch('/api/action', {
+    method: 'POST',
+    body: JSON.stringify({ action: e.detail.action, params: e.detail.params }),
+  });
+  const nextSpec = await result.json();
+  // Replacing textContent triggers re-render and clears data-jr-busy
+  jr.textContent = JSON.stringify(nextSpec);
+});
+```
+
+### Opt-out
+
+Set `data-jr-busy-mode="off"` on the host element to disable the
+auto-busy behavior. Use this when the consumer wants exclusive
+control over interaction state (e.g. selectively disabling only
+the dispatching button rather than the whole tree, or surfacing a
+custom overlay instead of the CSS-driven lock).
+
+```html
+<json-render data-jr-busy-mode="off">{ ...spec... }</json-render>
+```
+
+### CSS hooks
+
+The visual lock is purely CSS — override these selectors in your
+own stylesheet to customize:
+
+```css
+/* Tighten or loosen the dim while busy */
+json-render[data-jr-busy] .jr-root { opacity: 0.5; }
+
+/* Hide the spinner overlay if you prefer the dim alone */
+json-render[data-jr-busy] .jr-btn:not(.loading)::after { display: none; }
+
+/* Highlight a specific in-flight action */
+json-render[data-jr-busy-action='approve'] .jr-btn { border-color: var(--jr-success); }
 ```
 
 ## Theming
