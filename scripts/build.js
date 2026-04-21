@@ -103,6 +103,7 @@ function createBundle() {
       root.untracked = exports.untracked;
       root.withOptions = exports.withOptions;
       root.html = exports.html;
+      root.bind = exports.bind;
       root.dom = exports.dom;
       root.renderSpec = exports.renderSpec;
       root.registerComponent = exports.registerComponent;
@@ -181,7 +182,7 @@ function createBundle() {
       renderSpec: renderSpec, registerComponent: registerComponent, validateSpec: validateSpec,
       listComponentTypes: listComponentTypes, BUILT_IN_COMPONENTS: BUILT_IN_COMPONENTS,
       getCatalog: getCatalog,
-      html: html, dom: dom };
+      html: html, bind: bind, dom: dom };
   } else {
     return { renderElement: renderElement, renderElements: renderElements, createRenderer: createRenderer,
       renderToString: renderToString, ssrHtml: ssrHtml, createSSRHtml: createSSRHtml,

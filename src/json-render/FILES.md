@@ -112,7 +112,16 @@ Exposes a programmatic API on every `<json-render>` instance:
 and triggers the MutationObserver-driven re-render; `element.toolUseId`
 is a getter/setter property that mirrors `data-tool-use-id` on the
 host, used by LLM chat clients to correlate specs with tool_use blocks
-when multiple interactive fragments appear in a single response.
+when multiple interactive fragments appear in a single response;
+`element.onaction` is a React-style IDL property for the `jr-action`
+CustomEvent — assigning a function registers a single listener,
+reassigning atomically replaces it, `null` removes it, and anything
+else throws `TypeError`. The same setter is hit by the declarative
+form `<json-render onaction=${fn}>…</json-render>` inside a
+hyper-element template (the template engine's `directFor` path
+lowercases the attribute and performs `element.onaction = fn`).
+Teardown removes any active `onaction` listener before deleting the
+property descriptor so reconnect cycles start clean.
 
 ### `validator.js`
 

@@ -14,10 +14,13 @@
 
   // Check hash first, then query string
   var mode = hashParams.get('mode') || searchParams.get('mode') || 'bundle';
-  var isMinified = hashParams.get('bundle') === 'min' || searchParams.get('bundle') === 'min';
+  var isMinified =
+    hashParams.get('bundle') === 'min' || searchParams.get('bundle') === 'min';
 
   // Detect if served from project root (/examples/kitchensink/...) or kitchensink root (/)
-  var isProjectRoot = window.location.pathname.includes('/examples/kitchensink/');
+  var isProjectRoot = window.location.pathname.includes(
+    '/examples/kitchensink/'
+  );
   var basePath = isProjectRoot ? '../../' : './';
 
   if (mode === 'src' && !isMinified) {
@@ -40,7 +43,7 @@
     document.write(
       '<script type="module">' +
         'import { hyperElement, withOptions, signal, computed, effect, batch, untracked, configureSSR, renderSpec, registerComponent, validateSpec, listComponentTypes, getCatalog } from "hyper-element";' +
-        'import { html, dom } from "hyper-element/render/index.js";' +
+        'import { html, bind, dom } from "hyper-element/render/index.js";' +
         'import { BUILT_IN_COMPONENTS } from "hyper-element/json-render/index.js";' +
         // Add configureSSR as static method to match bundle behavior
         'hyperElement.configureSSR = configureSSR;' +
@@ -58,6 +61,7 @@
         'window.listComponentTypes = listComponentTypes;' +
         'window.getCatalog = getCatalog;' +
         'window.html = html;' +
+        'window.bind = bind;' +
         'window.dom = dom;' +
         'window.BUILT_IN_COMPONENTS = BUILT_IN_COMPONENTS;' +
         // Dispatch event when ready so tests can wait
@@ -78,7 +82,7 @@
     '<style>' +
       'section[data-test-result="pass"] h2::after { content: "✅"; filter: grayscale(100%); display: inline-block; margin-left: 0.5em; }' +
       'section[data-test-result="fail"] h2::after { content: "❎"; filter: grayscale(100%); display: inline-block; margin-left: 0.5em; }' +
-    '</style>'
+      '</style>'
   );
 
   // ===== Phase-aware snapshot helpers =====
@@ -93,8 +97,7 @@
   // before comparing against an expected static snapshot.
   function canonicalizeRender(html) {
     if (typeof html !== 'string') return '';
-    return html
-      .replace(/(["'>])(fn|ob)-[a-z0-9]+/gi, '$1$2-RND');
+    return html.replace(/(["'>])(fn|ob)-[a-z0-9]+/gi, '$1$2-RND');
   }
   window.canonicalizeRender = canonicalizeRender;
 
@@ -107,9 +110,7 @@
   function assertSnapshot(sectionName, target, expected, normalize) {
     var section = document.querySelector('[data-test="' + sectionName + '"]');
     var actualRaw =
-      typeof target === 'function'
-        ? target()
-        : target && target.outerHTML;
+      typeof target === 'function' ? target() : target && target.outerHTML;
     var actual = canonicalizeRender(actualRaw || '');
     if (typeof normalize === 'function') actual = normalize(actual);
     if (actual === expected) {
@@ -117,9 +118,14 @@
       return true;
     }
     console.error(
-      'Snapshot mismatch for "' + sectionName + '"\n' +
-        'Expected: ' + expected + '\n' +
-        'Actual:   ' + actual
+      'Snapshot mismatch for "' +
+        sectionName +
+        '"\n' +
+        'Expected: ' +
+        expected +
+        '\n' +
+        'Actual:   ' +
+        actual
     );
     if (section) section.dataset.testResult = 'fail';
     return false;

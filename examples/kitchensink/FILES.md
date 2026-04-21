@@ -59,6 +59,7 @@ Index of every file in this directory and its specific responsibility.
 | `json-render-coverage.html` | JSON render coverage edges | A |
 | `json-render-custom.html` | Programmatic `renderSpec` + `registerComponent` | A |
 | `json-render-hardened.html` | Phase 1.6/1.7 hardening — `replaceSpec()`, `toolUseId`, CodeBlock copy+lines, Checklist/TextField counters | C |
+| `json-render-onaction.html` | React-style `onaction` IDL property + declarative `@jr-action` + `event()` identity short-circuit | A, C |
 
 ## Test infrastructure (read-only)
 

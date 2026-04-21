@@ -2125,6 +2125,28 @@ document.querySelector('json-render').addEventListener('jr-action', (e) => {
 });
 ```
 
+For a React-style spelling, every `<json-render>` also exposes an
+`onaction` IDL property. Assigning a function registers a single
+bubble-phase listener; reassigning atomically replaces it (never
+stacks); `null` removes it; any other value throws `TypeError` so
+typos surface loudly. The same setter backs the declarative
+attribute form inside hyper-element templates:
+
+```js
+// Imperative
+document.querySelector('json-render').onaction = (e) => {
+  console.log(e.detail.action, e.detail.params);
+};
+
+// Declarative inside a hyper-element template
+Html`<json-render onaction=${(e) => handle(e.detail)}>${JSON.stringify(spec)}</json-render>`;
+```
+
+The auto-busy `data-jr-busy` lock is independent from `onaction`:
+a capture-phase listener on the host stamps the busy attributes
+before any bubble-phase `onaction` handler runs, so the visual lock
+is in place by the time consumer code sees the event.
+
 ## LLM schema generation (`getCatalog`)
 
 Every built-in component is shipped with structured catalog metadata

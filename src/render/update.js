@@ -183,10 +183,60 @@ const styleHandler = (node, value) => {
 
 /**
  * Creates an event listener handler.
+ *
+ * Identity short-circuit (`prev === value`): when the previously
+ * bound listener reference is being reassigned unchanged, the
+ * remove/add cycle is skipped entirely. Applied to the single-slot
+ * variant (the overwhelmingly common case for `@click=${fn}` /
+ * `onclick=${fn}` bindings); the `[handler, options]` array
+ * variant intentionally does not add a second guard at this layer
+ * because freshly-allocated tuples defeat an array-identity check
+ * anyway, and `Hole.update()` already short-circuits on tuple
+ * identity one level up (see "defensive redundancy" below).
+ *
+ * Defensive redundancy with Hole.update(): the primary render-loop
+ * caller already avoids calling this update function in most
+ * same-identity scenarios. `src/render/hole.js` (Hole.update,
+ * approx. line 205) contains `if (value !== prev) update(...)` —
+ * the per-slot `prev` stored in `entry[2]` is the most recent
+ * value seen on the previous render, and if the hole re-evaluates
+ * to the same reference the update factory is not invoked at all.
+ * The guard added here therefore serves two narrower purposes:
+ *   1. Alternative render paths that bypass Hole.update (direct
+ *      update invocation, custom renderers, SSR replay hooks)
+ *      still benefit from the skip at this layer.
+ *   2. It makes the invariant explicit at the function that wires
+ *      DOM listeners, rather than relying entirely on an upstream
+ *      caller to enforce it.
+ *
+ * Freshly-allocated inline handlers (e.g. `onclick=${() => …}`
+ * recreated each render) still rebind as before because their
+ * identity changes per render — the old listener is removed and
+ * the new one added in a single pass, preserving the
+ * "swap, never stack" invariant the rest of the engine depends on.
+ *
+ * Branch-level guards inside the returned closures:
+ *   - `prev?.length` (array variant): truthy only when `prev` is
+ *     a non-empty tuple, handling both the first-render case
+ *     (prev === undefined) and the degenerate empty-tuple case
+ *     (prev === []) without a `removeEventListener` call.
+ *   - `if (prev)` (single variant): same intent, simpler shape
+ *     because `prev` is either a function or a nullish placeholder.
+ *   - `if (value)` (both variants): a template hole that resolves
+ *     to null/undefined/false is treated as "unbind" — a single
+ *     truthy branch handles that without explicit null testing.
+ *
  * @param {string} type - Event type
- * @param {symbol} at - Property key for storing listener
- * @param {boolean} array - Whether value is [handler, options] array
- * @returns {Function} Event update function
+ * @param {symbol} at - Per-slot symbol used to store the previously
+ *                       bound listener on the DOM node. Each event
+ *                       binding site in the parsed template gets
+ *                       its own symbol so sibling handlers for the
+ *                       same event type do not collide.
+ * @param {boolean} array - Whether value is a `[handler, options]`
+ *                           array rather than a bare handler.
+ * @returns {Function} Event update function with signature
+ *                      `(node, value) => void` that binds, rebinds,
+ *                      or unbinds the listener in place.
  */
 const event = (type, at, array) =>
   array
@@ -198,6 +248,7 @@ const event = (type, at, array) =>
       }
     : (node, value) => {
         const prev = node[at];
+        if (prev === value) return;
         if (prev) node.removeEventListener(type, prev);
         if (value) node.addEventListener(type, value);
         node[at] = value;

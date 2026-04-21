@@ -45,6 +45,22 @@
  *   opt out with `<json-render data-jr-busy-mode="off">` for cases
  *   where the host wants full control over interaction state.
  *
+ * React-style `onaction` IDL property:
+ *   Every instance exposes `element.onaction` as a first-class
+ *   getter/setter that mirrors the semantics of native `on*` IDL
+ *   properties (e.g. `element.onclick`). Assigning a function
+ *   registers a single `jr-action` listener; reassigning atomically
+ *   replaces the prior listener (never stacks); assigning `null`
+ *   removes it; anything else throws a `TypeError` — strict semantics
+ *   picked over native silent coercion because a made-up
+ *   domain-specific IDL like `onaction` benefits from surfacing typos
+ *   immediately rather than silently doing nothing. The same setter
+ *   is hit by the declarative form
+ *   `<json-render onaction=${fn}>…</json-render>` written inside a
+ *   hyper-element template: the template engine's `directFor` path
+ *   lowercases the attribute name and performs `element.onaction =
+ *   fn`, which flows through the identical code path.
+ *
  * @module hyper-element/json-render/element
  */
 
@@ -136,6 +152,130 @@ export const jsonRenderElement = createFunctionalElement('json-render', {
         typeof spec === 'string' ? spec : JSON.stringify(spec);
     };
 
+    // ── Programmatic API: onaction ──────────────────────────
+    // React-style IDL property that mirrors the semantics of native
+    // `on*` handlers (onclick, onchange, ...) for the custom
+    // `jr-action` event. Storage is a closure-local variable
+    // (`activeOnAction`) rather than an instance field because:
+    //   1. It participates in the teardown path — a module-level or
+    //      element-level field would outlive the setup/teardown
+    //      boundary and risk leaking listeners across reconnect
+    //      cycles.
+    //   2. The getter/setter pair needs to observe and mutate the
+    //      same slot; a property descriptor backed by a closure
+    //      keeps that invariant encapsulated.
+    //
+    // The setter is intentionally strict: non-function, non-null
+    // assignments throw a TypeError rather than silently coercing
+    // to null. Native `onclick = 'foo'` coerces to null because the
+    // HTML spec demands it for historical compatibility; `onaction`
+    // is a made-up IDL with no such obligation, so we surface typos
+    // loudly. A failed assignment is guaranteed to leave prior state
+    // untouched — the validation happens before any mutation.
+    //
+    // Identity short-circuit: reassigning the same function reference
+    // is a no-op. This matters when a hyper-element parent re-renders
+    // with a stable handler (e.g. hoisted to module scope or fixed in
+    // setup) and hyper-element's `directFor` path performs
+    // `node.onaction = fn` on every pass — the setter avoids a
+    // redundant removeEventListener/addEventListener cycle.
+    //
+    // Pre-connect hoovering: when a hyper-element template is
+    // materialized via `dom(hole)` the template engine applies its
+    // attribute bindings BEFORE the element is inserted into the
+    // DOM, which means `node.onaction = fn` runs as a plain expando
+    // assignment before `setup()` has had a chance to install the
+    // accessor descriptor. Without capturing that expando value
+    // first, the Object.defineProperty call below would silently
+    // wipe the pre-connect assignment and the listener would never
+    // fire. The capture is done once, just before the accessor is
+    // installed, and re-applied through the setter so the full
+    // register/validate/short-circuit pipeline runs on it.
+    let activeOnAction = null;
+    const preConnect = ctx.element.onaction;
+    Object.defineProperty(ctx.element, 'onaction', {
+      /**
+       * Return the currently registered onaction handler, or null
+       * when nothing is installed. Read-after-write round-trips so
+       * consumer code that inspects the property reflects the wire
+       * state (not a cached copy).
+       * @returns {Function|null}
+       */
+      get() {
+        return activeOnAction;
+      },
+      /**
+       * Register, replace, or remove the onaction handler.
+       * @param {Function|null} fn - New handler, or null to unbind.
+       * @throws {TypeError} When fn is neither a function nor null.
+       */
+      set(fn) {
+        // Normalize undefined to null so `jr.onaction = undefined`
+        // behaves like an explicit unbind rather than a TypeError —
+        // this matches how JS engines expose missing values.
+        const next = fn === undefined ? null : fn;
+        if (next !== null && typeof next !== 'function') {
+          throw new TypeError(
+            'json-render: onaction must be a function or null, got ' +
+              typeof next
+          );
+        }
+        // Idempotent reassignment: skip the rebind when the same
+        // function reference is assigned again. Also handles the
+        // null → null case as a no-op.
+        if (activeOnAction === next) return;
+        if (activeOnAction) {
+          ctx.element.removeEventListener('jr-action', activeOnAction);
+        }
+        activeOnAction = next;
+        if (activeOnAction) {
+          ctx.element.addEventListener('jr-action', activeOnAction);
+        }
+      },
+      configurable: true,
+    });
+
+    // Re-apply any pre-connect expando assignment via the accessor
+    // so the same validation + listener-registration path runs on
+    // it. `undefined` means "no pre-connect assignment" and is
+    // intentionally silent.
+    //
+    // Error policy for invalid pre-connect values (e.g.
+    // `node.onaction = 'oops'` set before appendChild): the setter
+    // throws TypeError, which without a guard would propagate out
+    // of connectedCallback and be reported by the UA as an
+    // unhandled script error — the spec requires the insertion to
+    // continue regardless. The knock-on effect is worse: setup()
+    // would abort mid-way, skipping `toolUseId` installation and
+    // the teardown return, leaving the element with a broken
+    // render pipeline (render() would never run because hyper-
+    // element treats setup() throwing as a mount failure).
+    //
+    // To keep the consumer-visible behavior safe, we catch only at
+    // this narrow re-apply site: the typo is logged via
+    // `console.error` with the original TypeError message so the
+    // author sees it loudly, but the rest of setup() completes and
+    // the element renders normally. `activeOnAction` remains null
+    // because the setter threw before assigning, so reads of
+    // `jr.onaction` correctly round-trip to null and no listener
+    // is wired.
+    //
+    // Post-connect assignments (`jr.onaction = 'oops'` after
+    // connection) still throw synchronously — that site cannot
+    // corrupt setup() because setup() has already completed, so
+    // surfacing the error loudly at the assignment site is both
+    // safe and useful.
+    if (preConnect !== undefined) {
+      try {
+        ctx.element.onaction = preConnect;
+      } catch (err) {
+        console.error(
+          'json-render: ignoring invalid pre-connect onaction value — ' +
+            (err && err.message ? err.message : String(err))
+        );
+      }
+    }
+
     // ── Programmatic API: toolUseId ──────────────────────────
     // First-class property that mirrors the data-tool-use-id dataset
     // attribute. Consumers (e.g. mount-spec.js) use this to correlate
@@ -164,8 +304,19 @@ export const jsonRenderElement = createFunctionalElement('json-render', {
 
     // Teardown — remove the listener and API when the element is removed.
     // hyper-element's disconnectedCallback invokes the returned fn.
+    //
+    // onaction teardown order matters: we remove the currently
+    // installed handler BEFORE deleting the property descriptor so
+    // the `jr-action` listener does not survive the disconnect and
+    // leak into any subsequent reconnect (setup() runs fresh on
+    // reconnect, redefining the descriptor with activeOnAction=null).
     return () => {
       ctx.element.removeEventListener('jr-action', handleAction, true);
+      if (activeOnAction) {
+        ctx.element.removeEventListener('jr-action', activeOnAction);
+        activeOnAction = null;
+      }
+      delete ctx.element.onaction;
       delete ctx.element.replaceSpec;
       delete ctx.element.toolUseId;
     };

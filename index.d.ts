@@ -769,7 +769,9 @@ export interface JsonRenderCatalogEntry {
  * typically use `registerComponent` + `listComponentTypes` instead.
  */
 export interface JsonRenderRegistryInterface {
-  get(type: string): { render: JsonRenderFunction; catalog: JrCatalog | null } | undefined;
+  get(
+    type: string
+  ): { render: JsonRenderFunction; catalog: JrCatalog | null } | undefined;
   all(): string[];
   has(type: string): boolean;
 }
@@ -783,15 +785,34 @@ export interface JsonRenderValidationResult {
 }
 
 /**
- * `<json-render>` custom element — exposes `replaceSpec()` and
- * `toolUseId` as a programmatic API in addition to the standard
- * HTMLElement surface.
+ * Listener signature for the `jr-action` CustomEvent bubbled by
+ * interactive descendants of `<json-render>`. The event carries
+ * `{ action, params }` on its `detail` payload.
+ */
+export type JsonRenderActionHandler = (
+  event: CustomEvent<{ action: string; params: Record<string, unknown> }>
+) => void;
+
+/**
+ * `<json-render>` custom element — exposes `replaceSpec()`,
+ * `toolUseId`, and `onaction` as a programmatic API in addition to
+ * the standard HTMLElement surface.
  */
 export interface JsonRenderHostElement extends HTMLElement {
   /** Replace the current spec. Accepts an object (stringified) or a pre-serialized JSON string. */
   replaceSpec(spec: JsonRenderSpec | string): void;
   /** Correlation id with the LLM tool_use block that produced the current spec. */
   toolUseId: string | null;
+  /**
+   * React-style shorthand for subscribing to the `jr-action`
+   * CustomEvent. Assigning a function registers a single listener;
+   * reassigning atomically replaces it (never stacks); assigning
+   * `null` removes it; any other value throws `TypeError`. The same
+   * setter backs the declarative form
+   * `<json-render onaction=${fn}>…</json-render>` used inside
+   * hyper-element templates.
+   */
+  onaction: JsonRenderActionHandler | null;
 }
 
 declare global {
@@ -803,7 +824,9 @@ declare global {
 declare module 'hyper-element/json-render' {
   export function registerComponent(
     type: string,
-    renderFnOrEntry: JsonRenderFunction | { render: JsonRenderFunction; catalog?: JrCatalog }
+    renderFnOrEntry:
+      | JsonRenderFunction
+      | { render: JsonRenderFunction; catalog?: JrCatalog }
   ): void;
 
   export function renderSpec(

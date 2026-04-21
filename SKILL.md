@@ -299,6 +299,19 @@ document.querySelector('json-render').addEventListener('jr-action', (e) => {
 });
 ```
 
+Or use the React-style `onaction` IDL property — assigning a function
+registers a single bubble-phase listener; reassigning replaces it;
+`null` removes it; any other value throws `TypeError`. The same
+setter backs the declarative `<json-render onaction=${fn}>` form
+inside hyper-element templates. The capture-phase `data-jr-busy`
+lock runs first, so the visual lock is already in place by the time
+`onaction` fires.
+
+```js
+document.querySelector('json-render').onaction = (e) =>
+  console.log(e.detail.action, e.detail.params);
+```
+
 ### LLM Integration (`getCatalog`)
 
 `getCatalog()` walks the live registry and returns a frozen snapshot

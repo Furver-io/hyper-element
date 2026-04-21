@@ -21,7 +21,7 @@ module renders those specs into real DOM components with:
 
 ```html
 <!-- Import the CSS -->
-<link rel="stylesheet" href="hyper-element/src/json-render/json-render.css">
+<link rel="stylesheet" href="hyper-element/src/json-render/json-render.css" />
 
 <!-- Import registers <json-render> automatically -->
 <script type="module">
@@ -30,7 +30,8 @@ module renders those specs into real DOM components with:
 
 <!-- Use it: place the JSON spec as body content -->
 <json-render>
-{"root":"msg","elements":{"msg":{"type":"Text","props":{"content":"Hello from json-render!"}}}}
+  {"root":"msg","elements":{"msg":{"type":"Text","props":{"content":"Hello from
+  json-render!"}}}}
 </json-render>
 ```
 
@@ -52,9 +53,9 @@ automatically.
 
 ### Programmatic API on the host element
 
-The `<json-render>` element exposes two conveniences for consumers that
-programmatically manage specs (e.g. an LLM chat client replacing the
-spec after each tool-use round-trip):
+The `<json-render>` element exposes three conveniences for consumers
+that programmatically manage specs (e.g. an LLM chat client replacing
+the spec after each tool-use round-trip):
 
 ```js
 const jr = document.querySelector('json-render');
@@ -62,20 +63,63 @@ const jr = document.querySelector('json-render');
 // replaceSpec(spec) — stringify + assign + trigger re-render in one call.
 // Accepts either an object (stringified internally) or a pre-serialized
 // JSON string (assigned directly, no double-encoding).
-jr.replaceSpec({ root: 'msg', elements: { msg: { type: 'Text', props: { content: 'Hi' } } } });
+jr.replaceSpec({
+  root: 'msg',
+  elements: { msg: { type: 'Text', props: { content: 'Hi' } } },
+});
 
 // toolUseId — first-class property that mirrors data-tool-use-id.
 // Useful for correlating a <json-render> with a specific LLM tool_use
 // block when multiple interactive UI fragments exist in one response.
-jr.toolUseId = 'tu_abc123';  // stamps data-tool-use-id="tu_abc123"
-jr.toolUseId;                // 'tu_abc123'
-jr.toolUseId = null;         // removes the attribute
+jr.toolUseId = 'tu_abc123'; // stamps data-tool-use-id="tu_abc123"
+jr.toolUseId; // 'tu_abc123'
+jr.toolUseId = null; // removes the attribute
+
+// onaction — React-style IDL property for the jr-action event.
+// Assigning a function registers a single listener; reassigning
+// atomically replaces it (never stacks); null removes it; anything
+// else throws TypeError so typos surface loudly instead of silently
+// no-oping. The same setter backs the declarative attribute form
+// inside hyper-element templates (see "Declarative onaction" below).
+jr.onaction = (e) => console.log(e.detail.action, e.detail.params);
+jr.onaction = null; // removes the listener
 ```
+
+### `onaction` semantics reference
+
+| Behaviour                                                | Contract                                                                                                                                                                                                              |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `jr.onaction = fn`                                       | Registers `fn` as a bubble-phase `jr-action` listener. Getter round-trips to `fn`.                                                                                                                                    |
+| `jr.onaction = fn2`                                      | Removes `fn` and registers `fn2` atomically — never stacks.                                                                                                                                                           |
+| `jr.onaction = null`                                     | Removes any active listener. Getter returns `null`.                                                                                                                                                                   |
+| `jr.onaction = undefined`                                | Normalized to `null` (explicit unbind), never throws.                                                                                                                                                                 |
+| `jr.onaction = 'oops'` (post-connect)                    | Throws `TypeError` synchronously from the setter. Prior handler left intact.                                                                                                                                          |
+| `jr.onaction = 'oops'` (pre-connect, then `appendChild`) | Caught during `setup()`'s re-apply, logged via `console.error`. Element renders normally. `jr.onaction` reads as `null`.                                                                                              |
+| `jr.onaction = fn; jr.onaction = fn;`                    | Idempotent — no rebind, no duplicate dispatch.                                                                                                                                                                        |
+| `Object.getOwnPropertyDescriptor(jr, 'onaction')`        | `{ get, set, enumerable: false, configurable: true }` — matches the shape of native `on*` accessors.                                                                                                                  |
+| `Object.keys(jr)`                                        | Does **not** include `'onaction'` (non-enumerable by design).                                                                                                                                                         |
+| Disconnect                                               | Teardown removes any active listener and deletes the property descriptor. Reconnection starts with `onaction === undefined` (then re-installs the accessor, starting from `null`).                                    |
+| Dispatch ordering                                        | The capture-phase `data-jr-busy` listener runs first (DOM guarantee). By the time the bubble-phase `onaction` handler runs, `data-jr-busy="true"` and `data-jr-busy-action="<name>"` are already stamped on the host. |
+
+Why pre-connect typos log instead of throwing: a throw inside
+`connectedCallback` is not propagated out of `appendChild` (the
+custom-elements spec requires the UA to report it as an unhandled
+error and continue the insertion). Throwing out of `setup()` would
+also abort the rest of the setup hook, skipping `toolUseId` and the
+teardown return and leaving the element with a broken render
+pipeline. Catching at the narrow re-apply site preserves loud
+surfacing via `console.error` while keeping the element functional.
+Post-connect assignments have no such constraint — the setter throws
+synchronously because the failure site is the typo site.
 
 ## API
 
 ```js
-import { renderSpec, registerComponent, validateSpec } from 'hyper-element/json-render';
+import {
+  renderSpec,
+  registerComponent,
+  validateSpec,
+} from 'hyper-element/json-render';
 
 // Render a spec programmatically inside a hyper-element component
 hyperElement('my-view', (Html, ctx) => {
@@ -84,8 +128,10 @@ hyperElement('my-view', (Html, ctx) => {
 });
 
 // Register a custom component type
-registerComponent('MyChart', (Html, def, key, kids, hostEl) =>
-  Html.wire(def, ':' + key)`<div class="chart">${def.props?.data}</div>`
+registerComponent(
+  'MyChart',
+  (Html, def, key, kids, hostEl) =>
+    Html.wire(def, ':' + key)`<div class="chart">${def.props?.data}</div>`
 );
 
 // Validate a spec before rendering
@@ -176,13 +222,16 @@ hyperElement('product-card', {
   jrCatalog: {
     description: 'Product display with price and buy action',
     props: {
-      name:  { type: 'string', required: true },
+      name: { type: 'string', required: true },
       price: { type: 'number', required: true },
       image: { type: 'string' },
     },
     slots: [],
     actions: {
-      press: { description: 'User taps buy', params: { productId: { type: 'string' } } },
+      press: {
+        description: 'User taps buy',
+        params: { productId: { type: 'string' } },
+      },
     },
   },
   render: (Html, ctx) => {
@@ -202,11 +251,11 @@ hyperElement('product-card', {
 The bridge transports spec data to your custom element via three
 attributes:
 
-| Attribute | Source | Read via |
-|---|---|---|
-| `data-jr-props` | `JSON.stringify(def.props)` | `ctx.dataset.jrProps` (auto-parsed object) |
+| Attribute          | Source                                         | Read via                                     |
+| ------------------ | ---------------------------------------------- | -------------------------------------------- |
+| `data-jr-props`    | `JSON.stringify(def.props)`                    | `ctx.dataset.jrProps` (auto-parsed object)   |
 | `data-jr-children` | `JSON.stringify(def.children)` (raw spec keys) | `ctx.dataset.jrChildren` (auto-parsed array) |
-| `data-jr-on` | `JSON.stringify(def.on)` | `ctx.dataset.jrOn` (auto-parsed object) |
+| `data-jr-on`       | `JSON.stringify(def.on)`                       | `ctx.dataset.jrOn` (auto-parsed object)      |
 
 Pre-rendered child DOM (from other registered components) is also
 appended as light-DOM children at construction time, available for
@@ -237,12 +286,73 @@ composed: true, detail: { action, params } }))`.
 ## Events
 
 Interactive components dispatch `jr-action` CustomEvents that bubble
-up from the `<json-render>` host element:
+up from the `<json-render>` host element. Three idiomatic ways to
+subscribe, all exercising the same event channel:
 
 ```js
+// (1) addEventListener — canonical form for standalone consumers.
 document.querySelector('json-render').addEventListener('jr-action', (e) => {
-  console.log(e.detail.action);  // "approve"
-  console.log(e.detail.params);  // { id: "123" }
+  console.log(e.detail.action); // "approve"
+  console.log(e.detail.params); // { id: "123" }
+});
+
+// (2) onaction IDL property — React-style shorthand. Assigning
+// replaces the active listener; null removes it.
+document.querySelector('json-render').onaction = (e) => {
+  console.log(e.detail.action, e.detail.params);
+};
+
+// (3) Declarative attribute — inside a hyper-element template,
+// hyper-element's directFor path lowercases the attribute and
+// performs `element.onaction = fn`, routing through the same setter.
+Html`
+  <json-render onaction=${(e) => console.log(e.detail)}>
+    ${JSON.stringify(spec)}
+  </json-render>`;
+
+// (4) @-prefixed event binding — inside a hyper-element template
+// when you prefer the addEventListener channel directly (e.g. to
+// handle the same event with multiple host-specific listeners or to
+// pass listener options via the array form `@jr-action=${[fn, { capture: true }]}`).
+Html`
+  <json-render @jr-action=${(e) => console.log(e.detail)}>
+    ${JSON.stringify(spec)}
+  </json-render>`;
+```
+
+### Which form should I use?
+
+| Form               | Best for                                                                                                  | Rebind cost on re-render                                                               |
+| ------------------ | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `addEventListener` | top-level consumers bound once outside any render loop                                                    | none — attached manually                                                               |
+| `onaction = fn`    | imperative flows; React-style spelling inside a template                                                  | no rebind when same function reference is passed                                       |
+| `@jr-action=${fn}` | when you want listener options (`capture`, `once`, …) via the array form, or just prefer the `@` spelling | no rebind when same function reference is passed (identity short-circuit in `event()`) |
+
+Fresh inline closures (`onaction=${(e) => …}` rebuilt per render)
+still work correctly — hyper-element swaps the listener on every
+render rather than stacking it — but they skip the identity
+short-circuit, so expect one remove/add cycle per parent render. If
+that matters, hoist the handler to module scope or stash it in the
+parent's `setup()` closure so the reference is stable across renders.
+
+### Stable handler via `setup()`
+
+Think of `setup()` as hyper-element's equivalent of `useCallback`
+without a dependency array — a handler defined there keeps its
+identity for the lifetime of the element, so the `prev === value`
+guard in `event()` skips the rebind on every subsequent render:
+
+```js
+hyperElement('my-view', {
+  setup(ctx) {
+    ctx.handleAction = (e) => dispatchToBackend(e.detail);
+  },
+  render(Html, ctx) {
+    return Html`
+      <json-render @jr-action=${ctx.handleAction}>
+        ${JSON.stringify(spec)}
+      </json-render>`;
+  },
 });
 ```
 
@@ -302,13 +412,19 @@ own stylesheet to customize:
 
 ```css
 /* Tighten or loosen the dim while busy */
-json-render[data-jr-busy] .jr-root { opacity: 0.5; }
+json-render[data-jr-busy] .jr-root {
+  opacity: 0.5;
+}
 
 /* Hide the spinner overlay if you prefer the dim alone */
-json-render[data-jr-busy] .jr-btn:not(.loading)::after { display: none; }
+json-render[data-jr-busy] .jr-btn:not(.loading)::after {
+  display: none;
+}
 
 /* Highlight a specific in-flight action */
-json-render[data-jr-busy-action='approve'] .jr-btn { border-color: var(--jr-success); }
+json-render[data-jr-busy-action='approve'] .jr-btn {
+  border-color: var(--jr-success);
+}
 ```
 
 ## Theming
@@ -317,10 +433,10 @@ Override CSS custom properties to customize the visual appearance:
 
 ```css
 :root {
-  --jr-accent: #3b82f6;      /* Primary accent color */
-  --jr-bg: #1a1a2e;           /* Background */
-  --jr-surface: #16213e;      /* Surface elements */
-  --jr-text: #e4e4e7;         /* Primary text */
-  --jr-radius: 12px;          /* Border radius */
+  --jr-accent: #3b82f6; /* Primary accent color */
+  --jr-bg: #1a1a2e; /* Background */
+  --jr-surface: #16213e; /* Surface elements */
+  --jr-text: #e4e4e7; /* Primary text */
+  --jr-radius: 12px; /* Border radius */
 }
 ```

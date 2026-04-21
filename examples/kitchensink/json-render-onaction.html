@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      JSON Render onaction IDL property - hyper-element Kitchen Sink
+    </title>
+    <script src="test-loader.js"></script>
+    <link rel="stylesheet" href="../../src/json-render/json-render.css" />
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+        max-width: 70rem;
+        margin: 0 auto;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      code {
+        background: #f5f5f5;
+        padding: 0.1em 0.3em;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JSON Render <code>onaction</code> IDL property</h1>
+    <p>
+      Verifies the React-style <code>onaction</code> property on
+      <code>&lt;json-render&gt;</code>: assigning a function registers a single
+      <code>jr-action</code> listener, reassigning replaces the previous
+      listener without stacking, assigning <code>null</code>
+      removes it, assigning any other non-function value throws a
+      <code>TypeError</code>, declarative <code>onaction=${fn}</code>
+      written in a hyper-element template must wire through the same setter, the
+      auto-busy lock must continue to fire independently, and disconnecting the
+      element must clean up any active listener.
+    </p>
+
+    <section data-test="onaction-set-function" data-test-result="pending">
+      <h2>AC #1 — Assigning a function fires on jr-action</h2>
+      <p>
+        <code>element.onaction = fn</code> must register a single
+        <code>jr-action</code> listener. Dispatching the event must invoke
+        <code>fn</code> with the CustomEvent, and the event's
+        <code>detail</code> payload must be reachable.
+      </p>
+      <div id="onaction-mount-1"></div>
+    </section>
+
+    <section data-test="onaction-reassign-replaces" data-test-result="pending">
+      <h2>AC #2 — Reassigning replaces, never stacks</h2>
+      <p>
+        Assigning a second function must remove the prior listener atomically
+        before registering the new one. After a single dispatch, the second
+        function must have fired exactly once and the first must never have
+        fired.
+      </p>
+      <div id="onaction-mount-2"></div>
+    </section>
+
+    <section data-test="onaction-null-removes" data-test-result="pending">
+      <h2>AC #3 — Assigning null removes the listener</h2>
+      <p>
+        After <code>element.onaction = null</code>, dispatching
+        <code>jr-action</code> must not invoke the previously registered
+        handler. Reading <code>element.onaction</code> must return
+        <code>null</code>.
+      </p>
+      <div id="onaction-mount-3"></div>
+    </section>
+
+    <section
+      data-test="onaction-non-function-throws"
+      data-test-result="pending"
+    >
+      <h2>AC #4 — Non-function, non-null values throw TypeError</h2>
+      <p>
+        Strict semantics (chosen over native <code>onclick</code>-style silent
+        coercion): assigning a string, number, object, or boolean must throw
+        <code>TypeError</code>. Any previously registered handler must be left
+        intact — a failed assignment must not clear state as a side effect.
+      </p>
+      <div id="onaction-mount-4"></div>
+    </section>
+
+    <section
+      data-test="onaction-same-identity-idempotent"
+      data-test-result="pending"
+    >
+      <h2>AC #5 — Reassigning the same function is idempotent</h2>
+      <p>
+        Setting <code>element.onaction</code> to a function that is already the
+        active handler must be a no-op. Only one handler must fire on dispatch.
+      </p>
+      <div id="onaction-mount-5"></div>
+    </section>
+
+    <section data-test="onaction-declarative" data-test-result="pending">
+      <h2>AC #6 — Declarative <code>onaction=${fn}</code> in a template</h2>
+      <p>
+        Inside a hyper-element template, the attribute
+        <code>onaction=${fn}</code> is routed through hyper-element's
+        <code>directFor</code> path, which assigns the property via
+        <code>node.onaction = fn</code>. That must land in our setter and wire
+        up the <code>jr-action</code> listener just like the imperative form.
+      </p>
+      <div id="onaction-mount-6"></div>
+    </section>
+
+    <section data-test="onaction-autobusy-coexists" data-test-result="pending">
+      <h2>AC #7 — Auto-busy lock still fires when onaction is set</h2>
+      <p>
+        The host's capture-phase <code>jr-action</code> listener (installed in
+        <code>setup()</code>) is independent from <code>onaction</code>. Both
+        must fire: the busy marker must be stamped, and
+        <code>onaction</code> must still observe the event.
+      </p>
+      <div id="onaction-mount-7"></div>
+    </section>
+
+    <section data-test="onaction-disconnect-cleanup" data-test-result="pending">
+      <h2>AC #8 — Disconnect removes the active listener</h2>
+      <p>
+        Removing the element from the DOM must trigger its teardown. After
+        reconnection with no new assignment, the previously registered
+        <code>onaction</code> handler must not fire on subsequent dispatches —
+        i.e. the listener does not leak across connect/disconnect cycles.
+      </p>
+      <div id="onaction-mount-8"></div>
+    </section>
+
+    <section
+      data-test="onaction-template-identity-swap"
+      data-test-result="pending"
+    >
+      <h2>AC #9 — <code>@jr-action</code> swap does not duplicate listeners</h2>
+      <p>
+        Passing a fresh arrow through
+        <code>@jr-action=${(e) =&gt; ...}</code> across successive renders must
+        swap (not stack) the listener. After N renders with N distinct closures,
+        a single dispatch must invoke only the most recent closure, and exactly
+        once.
+      </p>
+      <div id="onaction-mount-9"></div>
+    </section>
+
+    <section
+      data-test="onaction-event-identity-stable"
+      data-test-result="pending"
+    >
+      <h2>AC #10 — Same-reference rebind does not accumulate listeners</h2>
+      <p>
+        Observable outcome guaranteed by the combination of
+        <code>Hole.update()</code>'s <code>value !== prev</code> skip
+        (<code>src/render/hole.js</code>) and the
+        <code>prev === value</code> early-return added to
+        <code>event()</code> (<code>src/render/update.js</code>): passing the
+        same function reference across many renders must produce exactly one
+        live listener. Dispatching the target event must invoke the handler
+        exactly once — never zero (the listener survived), never more than one
+        (duplicates stacked).
+      </p>
+      <div id="onaction-mount-10"></div>
+    </section>
+
+    <section
+      data-test="onaction-plain-dom-preconnect"
+      data-test-result="pending"
+    >
+      <h2>AC #11 — Plain-DOM pre-connect assignment is hoovered by setup()</h2>
+      <p>
+        When a consumer does
+        <code>jr.onaction = fn</code> <em>before</em> appending the element (no
+        hyper-element template involved), the assignment lands as a plain
+        expando. On connection, <code>setup()</code>
+        captures the expando value, defines the accessor descriptor, then
+        re-applies the value through the accessor. The listener must be wired
+        correctly by the time the first
+        <code>jr-action</code> event fires.
+      </p>
+      <div id="onaction-mount-11"></div>
+    </section>
+
+    <section data-test="onaction-non-enumerable" data-test-result="pending">
+      <h2>AC #12 — <code>onaction</code> is a non-enumerable accessor</h2>
+      <p>
+        Native <code>on*</code> handlers on DOM elements are non-enumerable:
+        they do not show up in <code>Object.keys(el)</code> or
+        <code>for…in</code>. Our accessor must match that shape so serialization
+        paths (JSON.stringify, Object.keys-driven introspection) do not surface
+        the handler as a field. The property descriptor must also be
+        configurable so teardown can delete it on disconnect.
+      </p>
+      <div id="onaction-mount-12"></div>
+    </section>
+
+    <section
+      data-test="onaction-capture-before-bubble"
+      data-test-result="pending"
+    >
+      <h2>
+        AC #13 — Capture-phase busy listener runs before
+        <code>onaction</code>
+      </h2>
+      <p>
+        The auto-busy listener installed by <code>setup()</code> is
+        capture-phase, while <code>onaction</code> is bubble-phase (via
+        <code>addEventListener</code> with no third argument). The DOM event
+        model guarantees capture runs before bubble, so by the time the
+        consumer's <code>onaction</code> handler observes the event,
+        <code>data-jr-busy</code> is already stamped on the host — consumers can
+        rely on "lock engaged before my code runs."
+      </p>
+      <div id="onaction-mount-13"></div>
+    </section>
+
+    <section
+      data-test="onaction-preconnect-typo-logs"
+      data-test-result="pending"
+    >
+      <h2>
+        AC #14 — Pre-connect typo logs a console error but does not corrupt the
+        element
+      </h2>
+      <p>
+        Strict-typing policy is applied at both assignment sites, but with
+        different surfacing to match browser constraints: post-connect
+        assignments (AC #4) throw <code>TypeError</code> synchronously from the
+        setter; pre-connect typos cannot throw out of
+        <code>appendChild</code> (the spec requires the insertion to continue),
+        and throwing out of <code>setup()</code> would abort the rest of the
+        setup hook and leave the element without a render pipeline. The chosen
+        policy: the setter's throw is caught at the narrow re-apply site in
+        <code>setup()</code> and logged via <code>console.error</code> with the
+        original TypeError message. The element then renders normally and
+        <code>jr.onaction</code> round-trips to <code>null</code>
+        (no listener wired). This preserves loud-surfacing for typos while
+        keeping the UI intact.
+      </p>
+      <div id="onaction-mount-14"></div>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+
+    <script type="module">
+      // ─────────────────────────────────────────────────────────────────
+      // onaction test orchestrator.
+      //
+      // Every AC mounts its own <json-render> in an isolated container
+      // so a failure in one scenario cannot contaminate the next. The
+      // orchestrator is async because hyper-element renders inside a
+      // microtask after a textContent mutation — assertions that
+      // depend on a render must cross a microtask boundary first via
+      // nextRender().
+      // ─────────────────────────────────────────────────────────────────
+
+      function setResult(name, result, reason) {
+        const section = document.querySelector('[data-test="' + name + '"]');
+        if (!section) return;
+        section.dataset.testResult = result;
+        if (result === 'fail' && reason) {
+          console.error('[' + name + '] ' + reason);
+        }
+      }
+
+      // Wait for the loader to expose hyperElement and the
+      // <json-render> custom element to be registered. The loader
+      // picks between source and bundle modes via the URL hash, so
+      // we poll rather than assume sync readiness.
+      function waitForReady(timeoutMs) {
+        return new Promise((resolve, reject) => {
+          const deadline = Date.now() + timeoutMs;
+          (function poll() {
+            if (
+              typeof window.hyperElement === 'function' &&
+              customElements.get('json-render')
+            ) {
+              resolve();
+              return;
+            }
+            if (Date.now() > deadline) {
+              reject(new Error('hyperElement / <json-render> never ready'));
+              return;
+            }
+            setTimeout(poll, 25);
+          })();
+        });
+      }
+
+      // Double-rAF crossing ensures we land after the render microtask
+      // AND after any follow-up attribute updates (e.g. busy markers).
+      function nextRender() {
+        return new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve))
+        );
+      }
+
+      // Minimal interactive spec — a single Button whose press action
+      // bubbles jr-action up to the host. All ACs that need a real
+      // dispatch path (rather than a synthetic event) reuse this spec.
+      const INTERACTIVE_SPEC = {
+        root: 'btn',
+        elements: {
+          btn: {
+            type: 'Button',
+            props: { label: 'Go', variant: 'primary' },
+            on: { press: { action: 'go', params: { v: 1 } } },
+          },
+        },
+      };
+
+      // Synthesize a bubbling, composed jr-action event with the same
+      // shape used by the built-in dispatchAction helper. Keeping the
+      // shape in sync with components.js's dispatcher ensures the
+      // listener contract is exercised realistically.
+      function fireAction(target, detail) {
+        target.dispatchEvent(
+          new CustomEvent('jr-action', {
+            bubbles: true,
+            composed: true,
+            detail: detail || { action: 'go', params: {} },
+          })
+        );
+      }
+
+      async function runAll() {
+        // ── AC #1 ──────────────────────────────────────────────
+        try {
+          const mount = document.querySelector('#onaction-mount-1');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          // Track invocations via a closure-captured array instead of
+          // a counter so we can additionally assert on the received
+          // event shape (detail.action) rather than just the count.
+          const received = [];
+          jr.onaction = (e) => received.push(e.detail.action);
+          fireAction(jr, { action: 'approve', params: {} });
+          if (received.length !== 1 || received[0] !== 'approve') {
+            throw new Error(
+              'onaction did not fire once with the expected detail; ' +
+                'received=' +
+                JSON.stringify(received)
+            );
+          }
+          if (typeof jr.onaction !== 'function') {
+            throw new Error('onaction getter did not return the function');
+          }
+          setResult('onaction-set-function', 'pass');
+        } catch (err) {
+          setResult('onaction-set-function', 'fail', err.message);
+        }
+
+        // ── AC #2 ──────────────────────────────────────────────
+        try {
+          const mount = document.querySelector('#onaction-mount-2');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          let firstCount = 0;
+          let secondCount = 0;
+          const first = () => firstCount++;
+          const second = () => secondCount++;
+          jr.onaction = first;
+          jr.onaction = second;
+          fireAction(jr);
+          if (firstCount !== 0) {
+            throw new Error(
+              'first handler still fired after reassignment; firstCount=' +
+                firstCount
+            );
+          }
+          if (secondCount !== 1) {
+            throw new Error(
+              'second handler did not fire exactly once; secondCount=' +
+                secondCount
+            );
+          }
+          setResult('onaction-reassign-replaces', 'pass');
+        } catch (err) {
+          setResult('onaction-reassign-replaces', 'fail', err.message);
+        }
+
+        // ── AC #3 ──────────────────────────────────────────────
+        try {
+          const mount = document.querySelector('#onaction-mount-3');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          let fires = 0;
+          jr.onaction = () => fires++;
+          jr.onaction = null;
+          fireAction(jr);
+          if (fires !== 0) {
+            throw new Error(
+              'handler fired after onaction was cleared; fires=' + fires
+            );
+          }
+          if (jr.onaction !== null) {
+            throw new Error(
+              'onaction getter did not round-trip null; got=' +
+                JSON.stringify(jr.onaction)
+            );
+          }
+          setResult('onaction-null-removes', 'pass');
+        } catch (err) {
+          setResult('onaction-null-removes', 'fail', err.message);
+        }
+
+        // ── AC #4 ──────────────────────────────────────────────
+        try {
+          const mount = document.querySelector('#onaction-mount-4');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          let fires = 0;
+          const goodHandler = () => fires++;
+          jr.onaction = goodHandler;
+          // Each rejection path is exercised independently so a single
+          // missed throw is visible in the failure reason.
+          const badValues = ['string', 42, {}, true, Symbol('x')];
+          for (const bad of badValues) {
+            let threw = false;
+            try {
+              jr.onaction = bad;
+            } catch (e) {
+              threw = e instanceof TypeError;
+            }
+            if (!threw) {
+              throw new Error(
+                'non-function value did not throw TypeError: ' + String(bad)
+              );
+            }
+          }
+          // The good handler installed before the rejections must
+          // still be wired up — a failed assignment must not clear
+          // existing state as a side effect.
+          fireAction(jr);
+          if (fires !== 1) {
+            throw new Error(
+              'pre-existing handler was wiped by a failed assignment; ' +
+                'fires=' +
+                fires
+            );
+          }
+          if (jr.onaction !== goodHandler) {
+            throw new Error(
+              'onaction getter did not preserve the original handler'
+            );
+          }
+          setResult('onaction-non-function-throws', 'pass');
+        } catch (err) {
+          setResult('onaction-non-function-throws', 'fail', err.message);
+        }
+
+        // ── AC #5 ──────────────────────────────────────────────
+        try {
+          const mount = document.querySelector('#onaction-mount-5');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          let count = 0;
+          const stable = () => count++;
+          jr.onaction = stable;
+          jr.onaction = stable;
+          jr.onaction = stable;
+          fireAction(jr);
+          if (count !== 1) {
+            throw new Error(
+              'same-identity reassignment produced duplicate fires; count=' +
+                count
+            );
+          }
+          setResult('onaction-same-identity-idempotent', 'pass');
+        } catch (err) {
+          setResult('onaction-same-identity-idempotent', 'fail', err.message);
+        }
+
+        // ── AC #6 ──────────────────────────────────────────────
+        try {
+          const mount = document.querySelector('#onaction-mount-6');
+          // Use the template engine's html + dom helpers to
+          // materialize a <json-render> with the onaction attribute
+          // binding already applied. We intentionally avoid `bind`
+          // here because its update path interleaves with
+          // <json-render>'s own MutationObserver-driven render
+          // pipeline (which replaces the element's children on every
+          // spec update) and obscures the narrow thing we want to
+          // assert: hyper-element's `directFor('onaction')` path
+          // landed in our setter.
+          let received = null;
+          const handler = (e) => {
+            received = e.detail.action;
+          };
+          const hole = window.html`<json-render onaction=${handler}></json-render>`;
+          mount.appendChild(window.dom(hole));
+          const jr = mount.querySelector('json-render');
+          if (!jr) {
+            throw new Error('html/dom did not produce a <json-render> element');
+          }
+          // Provide a spec body after the element is mounted so the
+          // custom element's MutationObserver fires render() — the
+          // onaction attribute binding is already active by this
+          // point, which is what we want to verify.
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          await nextRender();
+          if (jr.onaction !== handler) {
+            throw new Error(
+              'declarative onaction=${fn} did not route through setter; ' +
+                'getter returned ' +
+                String(jr.onaction)
+            );
+          }
+          fireAction(jr, { action: 'confirm', params: {} });
+          if (received !== 'confirm') {
+            throw new Error(
+              'declarative onaction did not receive dispatch; received=' +
+                JSON.stringify(received)
+            );
+          }
+          setResult('onaction-declarative', 'pass');
+        } catch (err) {
+          setResult('onaction-declarative', 'fail', err.message);
+        }
+
+        // ── AC #7 ──────────────────────────────────────────────
+        try {
+          const mount = document.querySelector('#onaction-mount-7');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          let sawEvent = false;
+          jr.onaction = () => {
+            sawEvent = true;
+          };
+          fireAction(jr, { action: 'approve', params: {} });
+          if (!sawEvent) {
+            throw new Error('onaction did not observe event');
+          }
+          if (jr.getAttribute('data-jr-busy') !== 'true') {
+            throw new Error(
+              'auto-busy marker was not set when onaction is installed'
+            );
+          }
+          if (jr.getAttribute('data-jr-busy-action') !== 'approve') {
+            throw new Error(
+              'auto-busy action name not propagated with onaction installed'
+            );
+          }
+          setResult('onaction-autobusy-coexists', 'pass');
+        } catch (err) {
+          setResult('onaction-autobusy-coexists', 'fail', err.message);
+        }
+
+        // ── AC #8 ──────────────────────────────────────────────
+        try {
+          const mount = document.querySelector('#onaction-mount-8');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          let fires = 0;
+          const handler = () => fires++;
+          jr.onaction = handler;
+          // Disconnect the element — hyper-element's disconnectedCallback
+          // must call the teardown function returned from setup(), which
+          // removes the active onaction listener and deletes the
+          // property descriptor so a reconnection starts clean.
+          mount.removeChild(jr);
+          await nextRender();
+          // Reconnect and fire a dispatch. The previously registered
+          // handler must NOT fire — reconnection invokes setup() again
+          // which defines a fresh property descriptor with no handler
+          // installed (the closure-local activeOnAction resets to null).
+          mount.appendChild(jr);
+          await nextRender();
+          fireAction(jr);
+          if (fires !== 0) {
+            throw new Error(
+              'stale handler fired after disconnect/reconnect; fires=' + fires
+            );
+          }
+          setResult('onaction-disconnect-cleanup', 'pass');
+        } catch (err) {
+          setResult('onaction-disconnect-cleanup', 'fail', err.message);
+        }
+
+        // ── AC #9 ──────────────────────────────────────────────
+        // Exercise hyper-element's @-prefixed event-binding path on
+        // a plain leaf element (a <div> listening for `click`). We
+        // deliberately avoid driving this through <json-render> so
+        // the assertion targets the render engine's event() factory
+        // in isolation — json-render's own MutationObserver-driven
+        // child replacement complicates `bind`'s in-place update
+        // path. Using `click` on a <div> is a direct, side-effect-
+        // free proxy for the same code path that wires jr-action.
+        try {
+          const mount = document.querySelector('#onaction-mount-9');
+          const bindRoot = document.createElement('div');
+          mount.appendChild(bindRoot);
+          const bind = window.bind(bindRoot);
+          let lastHandlerFires = 0;
+          // Render three times with a fresh arrow each render. Each
+          // fresh arrow has distinct identity, so event() must
+          // remove the prior listener and add the new one on every
+          // call. Only the most-recent closure should observe the
+          // dispatch — stacked listeners would cause multiple fires.
+          bind`<div data-probe="x" @click=${() => {}}></div>`;
+          bind`<div data-probe="x" @click=${() => {}}></div>`;
+          bind`<div data-probe="x" @click=${() => {
+            lastHandlerFires++;
+          }}></div>`;
+          const probe = bindRoot.querySelector('div[data-probe="x"]');
+          if (!probe) {
+            throw new Error('template did not produce probe <div>');
+          }
+          probe.dispatchEvent(new Event('click'));
+          if (lastHandlerFires !== 1) {
+            throw new Error(
+              '@click rebind did not swap listeners cleanly; ' +
+                'lastHandlerFires=' +
+                lastHandlerFires
+            );
+          }
+          setResult('onaction-template-identity-swap', 'pass');
+        } catch (err) {
+          setResult('onaction-template-identity-swap', 'fail', err.message);
+        }
+
+        // ── AC #10 ─────────────────────────────────────────────
+        // Observable "no accumulation" contract: rebinding the same
+        // function reference across N renders must produce exactly
+        // one live listener. The Hole-level `value !== prev` skip
+        // in hole.js short-circuits most of this for bind-driven
+        // updates, but the `prev === value` guard added to event()
+        // remains as a defensive redundancy for code paths that
+        // bypass Hole.update() (direct invocation of the update
+        // function, alternative renderers). We assert the net
+        // observable outcome here rather than instrumenting a
+        // particular layer.
+        try {
+          const mount = document.querySelector('#onaction-mount-10');
+          const bindRoot = document.createElement('div');
+          mount.appendChild(bindRoot);
+          const bind = window.bind(bindRoot);
+          let fires = 0;
+          const stable = () => {
+            fires++;
+          };
+          // Five renders with the same stable handler identity. If
+          // any layer stacked the listener, the dispatch would fire
+          // more than once; if any layer dropped it, the dispatch
+          // would fire zero times.
+          bind`<div data-probe="y" @click=${stable}></div>`;
+          bind`<div data-probe="y" @click=${stable}></div>`;
+          bind`<div data-probe="y" @click=${stable}></div>`;
+          bind`<div data-probe="y" @click=${stable}></div>`;
+          bind`<div data-probe="y" @click=${stable}></div>`;
+          const probe = bindRoot.querySelector('div[data-probe="y"]');
+          if (!probe) {
+            throw new Error('template did not produce probe <div>');
+          }
+          probe.dispatchEvent(new Event('click'));
+          if (fires !== 1) {
+            throw new Error(
+              'stable handler did not fire exactly once; fires=' + fires
+            );
+          }
+          setResult('onaction-event-identity-stable', 'pass');
+        } catch (err) {
+          setResult('onaction-event-identity-stable', 'fail', err.message);
+        }
+
+        // ── AC #11 ─────────────────────────────────────────────
+        // Plain-DOM pre-connect: assignment lands as a regular
+        // expando because setup() has not yet installed the
+        // accessor descriptor. The hoover in setup() must detect
+        // and re-apply the value through the setter so the
+        // listener is actually wired by the time events fire.
+        try {
+          const mount = document.querySelector('#onaction-mount-11');
+          const jr = document.createElement('json-render');
+          // Pre-connect assignment — the element is detached and has
+          // no accessor descriptor yet, so this is a plain expando.
+          let fires = 0;
+          const handler = () => fires++;
+          jr.onaction = handler;
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          // Now connect — setup() runs, hoovers the expando,
+          // re-applies through the setter, listener is wired.
+          mount.appendChild(jr);
+          await nextRender();
+          fireAction(jr);
+          if (fires !== 1) {
+            throw new Error(
+              'pre-connect expando was not hoovered; fires=' + fires
+            );
+          }
+          if (jr.onaction !== handler) {
+            throw new Error(
+              'onaction getter did not round-trip the pre-connect handler'
+            );
+          }
+          setResult('onaction-plain-dom-preconnect', 'pass');
+        } catch (err) {
+          setResult('onaction-plain-dom-preconnect', 'fail', err.message);
+        }
+
+        // ── AC #12 ─────────────────────────────────────────────
+        // Non-enumerable accessor: native on* handlers are hidden
+        // from Object.keys / for-in. Our accessor must mirror that
+        // shape AND remain configurable (teardown deletes it).
+        try {
+          const mount = document.querySelector('#onaction-mount-12');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          const descriptor = Object.getOwnPropertyDescriptor(jr, 'onaction');
+          if (!descriptor) {
+            throw new Error('onaction property descriptor missing');
+          }
+          if (descriptor.enumerable !== false) {
+            throw new Error(
+              'onaction must be non-enumerable; got enumerable=' +
+                descriptor.enumerable
+            );
+          }
+          if (descriptor.configurable !== true) {
+            throw new Error(
+              'onaction must be configurable for teardown; got configurable=' +
+                descriptor.configurable
+            );
+          }
+          if (typeof descriptor.get !== 'function') {
+            throw new Error(
+              'onaction descriptor must be an accessor (no getter)'
+            );
+          }
+          if (typeof descriptor.set !== 'function') {
+            throw new Error(
+              'onaction descriptor must be an accessor (no setter)'
+            );
+          }
+          // Cross-check: Object.keys must not include 'onaction'.
+          if (Object.keys(jr).indexOf('onaction') !== -1) {
+            throw new Error('onaction unexpectedly appears in Object.keys()');
+          }
+          setResult('onaction-non-enumerable', 'pass');
+        } catch (err) {
+          setResult('onaction-non-enumerable', 'fail', err.message);
+        }
+
+        // ── AC #13 ─────────────────────────────────────────────
+        // Capture-phase busy listener MUST run before bubble-phase
+        // onaction handler. We verify this by reading
+        // data-jr-busy INSIDE the onaction handler and asserting
+        // it is already stamped — only possible if the capture
+        // listener has already run by that point in the dispatch.
+        try {
+          const mount = document.querySelector('#onaction-mount-13');
+          const jr = document.createElement('json-render');
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          mount.appendChild(jr);
+          await nextRender();
+          let busyAtOnactionTime = null;
+          let busyActionAtOnactionTime = null;
+          jr.onaction = () => {
+            // Snapshot the attribute state at the moment the
+            // bubble-phase handler sees the event. If capture-phase
+            // has run first (as DOM guarantees), these will be set.
+            busyAtOnactionTime = jr.getAttribute('data-jr-busy');
+            busyActionAtOnactionTime = jr.getAttribute('data-jr-busy-action');
+          };
+          fireAction(jr, { action: 'approve', params: {} });
+          if (busyAtOnactionTime !== 'true') {
+            throw new Error(
+              'capture-phase listener did not run before onaction; ' +
+                'data-jr-busy at onaction-time=' +
+                JSON.stringify(busyAtOnactionTime)
+            );
+          }
+          if (busyActionAtOnactionTime !== 'approve') {
+            throw new Error(
+              'data-jr-busy-action not propagated before onaction; ' +
+                'got=' +
+                JSON.stringify(busyActionAtOnactionTime)
+            );
+          }
+          setResult('onaction-capture-before-bubble', 'pass');
+        } catch (err) {
+          setResult('onaction-capture-before-bubble', 'fail', err.message);
+        }
+
+        // ── AC #14 ─────────────────────────────────────────────
+        // Pre-connect typo: setter throws in setup()'s re-apply
+        // path, is caught, logged via console.error, and setup()
+        // completes normally. Observable contract:
+        //   - A console.error is logged containing the TypeError
+        //     message prefix (so tooling that watches stderr-like
+        //     channels surfaces the typo).
+        //   - The element renders normally (render() pipeline was
+        //     not corrupted because setup() completed).
+        //   - jr.onaction === null (no listener was wired; the
+        //     setter threw before assigning activeOnAction).
+        //   - A subsequent valid assignment works as normal —
+        //     state is not poisoned by the earlier typo.
+        try {
+          const mount = document.querySelector('#onaction-mount-14');
+          const jr = document.createElement('json-render');
+          jr.onaction = 'not-a-function';
+          jr.textContent = JSON.stringify(INTERACTIVE_SPEC);
+          // Spy on console.error to catch the pre-connect rejection
+          // without polluting the test runner's stderr channel.
+          const consoleCalls = [];
+          const origError = console.error;
+          console.error = function (...args) {
+            consoleCalls.push(args.map(String).join(' '));
+          };
+          try {
+            mount.appendChild(jr);
+            await nextRender();
+          } finally {
+            console.error = origError;
+          }
+          // At least one console.error must carry the documented
+          // message prefix so consumers grepping their logs find it.
+          const matching = consoleCalls.find(
+            (line) =>
+              line.indexOf('ignoring invalid pre-connect onaction value') !==
+                -1 && line.indexOf('onaction must be a function or null') !== -1
+          );
+          if (!matching) {
+            throw new Error(
+              'expected console.error with the documented message ' +
+                'prefix; calls=' +
+                JSON.stringify(consoleCalls)
+            );
+          }
+          // Render pipeline must not be corrupted — the Button
+          // from INTERACTIVE_SPEC should be present in the
+          // rendered tree.
+          const button = jr.querySelector('button.jr-btn');
+          if (!button) {
+            throw new Error(
+              'render pipeline corrupted by pre-connect typo; ' +
+                'Button did not render'
+            );
+          }
+          // Getter round-trips to null: no listener was wired.
+          if (jr.onaction !== null) {
+            throw new Error(
+              'after failed pre-connect apply, onaction must be null; ' +
+                'got=' +
+                String(jr.onaction)
+            );
+          }
+          // A subsequent valid assignment must work — the earlier
+          // typo must not leave the setter in a poisoned state.
+          let fires = 0;
+          jr.onaction = () => fires++;
+          fireAction(jr);
+          if (fires !== 1) {
+            throw new Error(
+              'valid assignment after a pre-connect typo did not wire ' +
+                'a fresh listener; fires=' +
+                fires
+            );
+          }
+          setResult('onaction-preconnect-typo-logs', 'pass');
+        } catch (err) {
+          setResult('onaction-preconnect-typo-logs', 'fail', err.message);
+        }
+      }
+
+      waitForReady(5000)
+        .then(runAll)
+        .catch((err) => {
+          console.error('onaction orchestrator failed to start:', err);
+          for (const name of [
+            'onaction-set-function',
+            'onaction-reassign-replaces',
+            'onaction-null-removes',
+            'onaction-non-function-throws',
+            'onaction-same-identity-idempotent',
+            'onaction-declarative',
+            'onaction-autobusy-coexists',
+            'onaction-disconnect-cleanup',
+            'onaction-template-identity-swap',
+            'onaction-event-identity-stable',
+            'onaction-plain-dom-preconnect',
+            'onaction-non-enumerable',
+            'onaction-capture-before-bubble',
+            'onaction-preconnect-typo-logs',
+          ]) {
+            setResult(
+              name,
+              'fail',
+              'orchestrator never started: ' + err.message
+            );
+          }
+        });
+    </script>
+  </body>
+</html>
