@@ -13,29 +13,14 @@ const pkg = require('../package.json');
 const srcDir = path.join(__dirname, '..', 'src');
 const buildDir = path.join(__dirname, '..', 'build');
 
-const sharedFiles = [
-  'core/constants.js', 'core/manager.js', 'utils/makeid.js', 'utils/escape.js',
-  'render/constants.js', 'render/nodes.js', 'render/keyed.js', 'render/parser.js',
-  'signals/index.js', 'attributes/parseAttribute.js',
-  'template/processAdvancedTemplate.js', 'html/parseEachBlocks.js',
-];
+// prettier-ignore
+const sharedFiles = ['core/constants.js', 'core/manager.js', 'utils/makeid.js', 'utils/escape.js', 'render/constants.js', 'render/nodes.js', 'render/keyed.js', 'render/parser-helpers.js', 'render/parser.js', 'signals/index.js', 'attributes/parseAttribute.js', 'styled/serializer.js', 'styled/normalize.js', 'styled/artifact-ids.js', 'styled/artifact-colors.js', 'styled/artifact-tags.js', 'styled/artifact-rules.js', 'styled/artifact-direct.js', 'styled/artifact-compose.js', 'styled/artifact.js', 'styled/style-host.js', 'styled/define-styled.js', 'template/processAdvancedTemplate.js', 'html/parseEachBlocks.js'];
 
-const browserFiles = [
-  'render/creator.js', 'render/resolve.js', 'render/diff.js',
-  'render/persistent-fragment.js', 'render/update.js', 'render/hole.js', 'render/index.js',
-  'styled/parser-hooks.js', 'styled/registry.js', 'styled/resolution.js', 'styled/apply.js', 'styled/handler.js',
-  'template/buildTemplate.js', 'attributes/dataset.js', 'attributes/attachAttrs.js',
-  'html/createHtml.js',
-  'ssr/pathResolver.js', 'ssr/buffer.js', 'ssr/devIndicator.js',
-  'ssr/capture.js', 'ssr/replay.js', 'ssr/index.js',
-  'lifecycle/onNext.js', 'lifecycle/observer.js', 'lifecycle/processFragmentResult.js', 'lifecycle/connectedCallback.js',
-  'hyperElement.js', 'functional.js', 'withOptions.js',
-  'json-render/validator.js', 'json-render/catalog-metadata.js', 'json-render/checklist-state.js', 'json-render/components.js', 'json-render/registry.js', 'json-render/catalog.js', 'json-render/renderer.js', 'json-render/bridge.js', 'json-render/index.js', 'json-render/element.js',
-];
+// prettier-ignore
+const browserFiles = ['render/creator.js', 'render/resolve.js', 'render/diff.js', 'render/persistent-fragment.js', 'render/comment.js', 'render/update.js', 'render/hole.js', 'render/index.js', 'styled/parser-hooks.js', 'styled/registry.js', 'styled/resolution.js', 'styled/apply.js', 'styled/handler.js', 'template/buildTemplate.js', 'attributes/dataset.js', 'attributes/attachAttrs.js', 'html/createHtml.js', 'ssr/pathResolver.js', 'ssr/buffer.js', 'ssr/devIndicator.js', 'ssr/capture.js', 'ssr/replay.js', 'ssr/index.js', 'lifecycle/onNext.js', 'lifecycle/observer.js', 'lifecycle/processFragmentResult.js', 'lifecycle/connectedCallback.js', 'hyperElement.js', 'functional.js', 'withOptions.js', 'json-render/validator.js', 'json-render/catalog-metadata.js', 'json-render/checklist-state.js', 'json-render/component-helpers.js', 'json-render/components.js', 'json-render/registry.js', 'json-render/catalog.js', 'json-render/renderer.js', 'json-render/bridge.js', 'json-render/index.js', 'json-render/element.js'];
 
-const ssrServerFiles = [
-  'ssr/string-update.js', 'ssr/string-render.js', 'ssr/ssr-html.js', 'ssr/render-element.js',
-];
+// prettier-ignore
+const ssrServerFiles = ['ssr/styled-update.js', 'ssr/string-update.js', 'ssr/styled-render.js', 'ssr/string-render.js', 'ssr/ssr-html.js', 'ssr/render-element.js'];
 
 /**
  * Reads a file and strips ES module import/export statements.
@@ -45,14 +30,20 @@ const ssrServerFiles = [
  */
 function processFile(filePath, browserOnly = false) {
   let content = fs.readFileSync(filePath, 'utf8');
-  content = content.replace(/^import\s+\{[\s\S]*?\}\s+from\s+['"].*?['"];?\s*$/gm, '');
+  content = content.replace(
+    /^import\s+\{[\s\S]*?\}\s+from\s+['"].*?['"];?\s*$/gm,
+    ''
+  );
   content = content.replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '');
   content = content.replace(/^import\s+['"].*?['"];?\s*$/gm, '');
   content = content.replace(
     /^export\s+(?:async\s+)?(?:const|let|var|function|class)\s+/gm,
     (m) => m.replace(/^export\s+/, '')
   );
-  content = content.replace(/^export\s+\{[\s\S]*?\}(?:\s+from\s+['"].*?['"])?;?\s*$/gm, '');
+  content = content.replace(
+    /^export\s+\{[\s\S]*?\}(?:\s+from\s+['"].*?['"])?;?\s*$/gm,
+    ''
+  );
   content = content.replace(/^export\s+default\s+/gm, '');
   content = content.replace(/\/\*\*[\s\S]*?\*\//g, '');
   content = content.replace(/^\s*\/\/.*$/gm, '');
@@ -67,31 +58,36 @@ function processFile(filePath, browserOnly = false) {
  * @returns {{ content: string, mappings: Array }} Bundle content and source mappings
  */
 function createBundle() {
-  const parts = [], mappings = [];
+  const parts = [],
+    mappings = [];
   let currentLine = 1;
   function addPart(content, sourceFile = null) {
     if (sourceFile) {
-      mappings.push({ file: `src/${sourceFile}`, startLine: currentLine, lineCount: content.split('\n').length });
+      mappings.push({
+        file: `src/${sourceFile}`,
+        startLine: currentLine,
+        lineCount: content.split('\n').length,
+      });
     }
     parts.push(content);
     currentLine += content.split('\n').length;
   }
 
-  // UMD wrapper with environment detection
-  // Note: c8 ignore comments exclude unreachable UMD branches from coverage
+  /*
+   * UMD wrapper with environment detection. The AMD branch is retained for
+   * package compatibility even though browser E2E covers the global path.
+   */
   addPart(`// hyper-element v${pkg.version} - universal bundle (server + client)
 (function (root, factory) {
   var isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
   var isNode = typeof process !== 'undefined' && process.versions && process.versions.node;
 
   if (typeof module === 'object' && module.exports) {
-    // CommonJS
     module.exports = factory(isBrowser);
   /* AMD is not tested */
   } else if (typeof define === 'function' && define.amd) {
     define(function() { return factory(isBrowser); });
   } else {
-    // Browser global (covered by browser tests)
     var exports = factory(isBrowser);
     if (isBrowser) {
       root.hyperElement = exports.default;
@@ -102,6 +98,7 @@ function createBundle() {
       root.batch = exports.batch;
       root.untracked = exports.untracked;
       root.withOptions = exports.withOptions;
+      root.defineStyled = exports.defineStyled;
       root.html = exports.html;
       root.bind = exports.bind;
       root.dom = exports.dom;
@@ -121,13 +118,26 @@ function createBundle() {
   function addFiles(files, indent, browserOnly) {
     for (const file of files) {
       const filePath = path.join(srcDir, file);
-      if (!fs.existsSync(filePath)) { console.warn(`Warning: ${file} not found`); continue; }
+      if (!fs.existsSync(filePath)) {
+        console.warn(`Warning: ${file} not found`);
+        continue;
+      }
       let content = processFile(filePath, browserOnly);
       if (browserOnly) {
-        content = content.replace(/^class\s+(\w+)(\s+extends\s+\w+)?\s*\{/gm, '$1 = class$2 {');
+        content = content.replace(
+          /^class\s+(\w+)(\s+extends\s+\w+)?\s*\{/gm,
+          '$1 = class$2 {'
+        );
         content = content.replace(/^function\s+(\w+)\s*\(/gm, '$1 = function(');
       }
-      addPart(`\n${indent}// ${file}\n` + content.split('\n').map(l => l ? indent + l : '').join('\n'), file);
+      addPart(
+        `\n${indent}// ${file}\n` +
+          content
+            .split('\n')
+            .map((l) => (l ? indent + l : ''))
+            .join('\n'),
+        file
+      );
     }
   }
 
@@ -135,9 +145,11 @@ function createBundle() {
   addPart(`
   var hyperElement, createFunctionalElement, configureSSR, withOptions;
   var createFragment, resolve, diff, diffFragment, PersistentFragment, nodes;
-  var update, Hole, render, dom, createHtml, isKeyed, html, bind, wire;
+  var update, Hole, render, dom, createHtml, isKeyed, isTemplateHole, html, bind, wire;
   var setRenderingInstance, getRenderingInstance, registerStyled, unregisterStyled, getStyledEntry;
   var resolveStylesWithEntry, resolveStyles, applyStylesToNode, resolveColors, isNestedSyntax, styledStyleHandler;
+  var getStyledNodeState, applyInlineDiff, applyClassDiff, applyStyledArtifactToNode;
+  var getInstanceForNode, applyStyledNode, styledCssHandler, isKnownVariant, isReservedAttr, styledAttributeHandler;
   var STYLED_SUFFIX;
   var buildTemplate, addDataset, getDataset, attachAttrs, processFragmentResult;
   var pathResolver, ssrBuffer, showDevIndicator, hideDevIndicator;
@@ -151,7 +163,7 @@ function createBundle() {
   var getKnownTypes;
   var CATALOG, entry;
   var fingerprintItems, getChecklistState;
-  var dispatchAction, renderCard, renderRow, renderColumn, renderButton, renderText, renderAlert, renderProgress, renderDivider, renderCodeBlock, renderImage, renderChecklist, renderTextField;
+  var propText, dispatchAction, renderCard, renderRow, renderColumn, renderButton, renderText, renderAlert, renderProgress, renderDivider, renderCodeBlock, renderImage, renderChecklist, renderTextField;
 `);
   addPart(`\n  if (isBrowser) {`);
   addFiles(browserFiles, '    ', true);
@@ -179,6 +191,7 @@ function createBundle() {
     hyperElementProxy.configureSSR = configureSSR;
     return { default: hyperElementProxy, hyperElement: hyperElementProxy, configureSSR: configureSSR,
       signal: signal, computed: computed, effect: effect, batch: batch, untracked: untracked, withOptions: withOptions,
+      defineStyled: defineStyled,
       renderSpec: renderSpec, registerComponent: registerComponent, validateSpec: validateSpec,
       listComponentTypes: listComponentTypes, BUILT_IN_COMPONENTS: BUILT_IN_COMPONENTS,
       getCatalog: getCatalog,
@@ -207,7 +220,6 @@ function generateSourceMap(mappings, bundleFile) {
   const generator = new SourceMapGenerator({ file: bundleFile });
 
   for (const mapping of mappings) {
-    // Add mapping for each line in the section
     for (let i = 0; i < mapping.lineCount; i++) {
       generator.addMapping({
         generated: { line: mapping.startLine + i, column: 0 },
@@ -227,21 +239,17 @@ async function build() {
   try {
     const esbuild = require('esbuild');
 
-    // Ensure build directory exists
     if (!fs.existsSync(buildDir)) {
       fs.mkdirSync(buildDir, { recursive: true });
     }
 
     const { content: bundleContent, mappings } = createBundle();
 
-    // Write unminified bundle for tests (coverage collection needs it)
     const unminifiedPath = path.join(buildDir, 'hyperElement.bundle.js');
     const unminifiedMapPath = path.join(buildDir, 'hyperElement.bundle.js.map');
 
-    // Write unminified bundle (no source map reference - so v8-to-istanbul reports on bundle)
     fs.writeFileSync(unminifiedPath, bundleContent);
 
-    // Generate and write source map for unminified bundle (useful for debugging)
     const sourceMap = generateSourceMap(mappings, 'hyperElement.bundle.js');
     fs.writeFileSync(unminifiedMapPath, sourceMap);
 
@@ -249,7 +257,6 @@ async function build() {
       `Built: build/hyperElement.bundle.js (${mappings.length} source files combined)`
     );
 
-    // Minify
     await esbuild.build({
       entryPoints: [unminifiedPath],
       outfile: path.join(buildDir, 'hyperElement.min.js'),
@@ -268,5 +275,4 @@ async function build() {
   }
 }
 
-// Run build
 build();

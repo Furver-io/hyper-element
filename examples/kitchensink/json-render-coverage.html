@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -31,13 +31,17 @@
   <body>
     <h1>json-render Coverage Specs</h1>
     <p>
-      Programmatic test suite designed strictly to exercise edge cases, branch fallbacks, 
-      error emissions, and missing attributes across the <code>json-render</code> core validators and renderers. 
+      Programmatic test suite designed strictly to exercise edge cases, branch
+      fallbacks, error emissions, and missing attributes across the
+      <code>json-render</code> core validators and renderers.
     </p>
 
     <section data-test="validator-errors" data-test-result="pending">
       <h2>Validator Errors</h2>
-      <p>Intentionally triggers registration errors and schema validation failures to ensure they are handled gracefully.</p>
+      <p>
+        Intentionally triggers registration errors and schema validation
+        failures to ensure they are handled gracefully.
+      </p>
       <pre><code>// Hit registerComponent errors
 try { window.registerComponent('', () => {}); } catch(e) { }
 try { window.registerComponent('Valid', null); } catch(e) { }
@@ -76,20 +80,31 @@ window.validateSpec({
         // exercise. Read it and execute it. The "rendered output" of this
         // example is "no thrown error and no DOM mutation"; we snapshot the
         // unchanged container as the static post-condition.
-        const code = document.querySelector('[data-test="validator-errors"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="validator-errors"] pre code'
+        ).textContent;
         let checkCount = 0;
         function checkRender() {
-          const section = document.querySelector('[data-test="validator-errors"]');
+          const section = document.querySelector(
+            '[data-test="validator-errors"]'
+          );
           try {
             if (typeof window.registerComponent !== 'function') {
-              if (checkCount++ < 10) { setTimeout(checkRender, 50); return; }
+              if (checkCount++ < 10) {
+                setTimeout(checkRender, 50);
+                return;
+              }
               throw new Error('registerComponent not loaded');
             }
             eval(code);
             // Single-phase snapshot: the validator branches mutate nothing
             // observable, so the container must remain empty after execution.
             const expected = '<div id="validator-output"></div>';
-            window.assertSnapshot('validator-errors', document.getElementById('validator-output'), expected);
+            window.assertSnapshot(
+              'validator-errors',
+              document.getElementById('validator-output'),
+              expected
+            );
           } catch (e) {
             console.error(e);
             section.dataset.testResult = 'fail';
@@ -106,7 +121,9 @@ window.validateSpec({
       <div id="element-parse-output"></div>
       <script type="module">
         // Single source of truth: snippet is HTML; inject it verbatim.
-        const html = document.querySelector('[data-test="element-parse-error"] pre code').textContent;
+        const html = document.querySelector(
+          '[data-test="element-parse-error"] pre code'
+        ).textContent;
         document.getElementById('element-parse-output').innerHTML = html;
         const elem = document.getElementById('element-parse-output').firstChild;
 
@@ -115,7 +132,8 @@ window.validateSpec({
         // that user-visible error message. The original invalid JSON body is
         // consumed and replaced by the rendered error alert. Use a poll so
         // the assertion is timing stable across runs.
-        const expected = '<json-render><div class="jr-alert error">❌ Render error: Expected property name or \'}\' in JSON at position 2 (line 1 column 3)</div></json-render>';
+        const expected =
+          '<json-render><div class="jr-alert error">❌ Render error: Expected property name or \'}\' in JSON at position 2 (line 1 column 3)</div></json-render>';
         const deadline = Date.now() + 1500;
         (function awaitErr() {
           if (elem.outerHTML === expected) {
@@ -133,28 +151,44 @@ window.validateSpec({
 
     <section data-test="element-invalid-spec" data-test-result="pending">
       <h2>json-render Invalid Spec</h2>
-      <p>Tests logically complete JSON that fundamentally misses required internal root schemas.</p>
+      <p>
+        Tests logically complete JSON that fundamentally misses required
+        internal root schemas.
+      </p>
       <pre><code>&lt;json-render&gt;{"missing": "root"}&lt;/json-render&gt;</code></pre>
       <div id="element-invalid-output"></div>
       <script type="module">
         // Single source of truth: snippet is HTML; inject it verbatim.
-        const html = document.querySelector('[data-test="element-invalid-spec"] pre code').textContent;
+        const html = document.querySelector(
+          '[data-test="element-invalid-spec"] pre code'
+        ).textContent;
         document.getElementById('element-invalid-output').innerHTML = html;
-        const elemInvalid = document.getElementById('element-invalid-output').firstChild;
+        const elemInvalid = document.getElementById(
+          'element-invalid-output'
+        ).firstChild;
 
         // Single-phase render. The validator emits an inline warning that
         // becomes the entire body of the <json-render> component — the body
         // JSON is parsed, found to be missing `root`/`elements`, and
         // replaced by the warning alert.
-        const expected = '<json-render><div class="jr-alert warning">⚠️ Invalid spec: missing root or elements</div></json-render>';
+        const expected =
+          '<json-render><div class="jr-alert warning">⚠️ Invalid spec: missing root or elements</div></json-render>';
         const deadline = Date.now() + 1500;
         (function awaitErr() {
           if (elemInvalid.outerHTML === expected) {
-            window.assertSnapshot('element-invalid-spec', elemInvalid, expected);
+            window.assertSnapshot(
+              'element-invalid-spec',
+              elemInvalid,
+              expected
+            );
             return;
           }
           if (Date.now() > deadline) {
-            window.assertSnapshot('element-invalid-spec', elemInvalid, expected);
+            window.assertSnapshot(
+              'element-invalid-spec',
+              elemInvalid,
+              expected
+            );
             return;
           }
           setTimeout(awaitErr, 25);
@@ -164,7 +198,10 @@ window.validateSpec({
 
     <section data-test="interactive-actions" data-test-result="pending">
       <h2>Interactive Actions</h2>
-      <p>Triggers underlying native event callbacks (click, change, keydown) mapping perfectly cleanly into emitted <code>jr-action</code> messages.</p>
+      <p>
+        Triggers underlying native event callbacks (click, change, keydown)
+        mapping perfectly cleanly into emitted <code>jr-action</code> messages.
+      </p>
       <pre><code>const specActions = {
   root: 'main',
   elements: {
@@ -195,13 +232,19 @@ document.getElementById('interactive-output').appendChild(elem);</code></pre>
         // Single source of truth: read the snippet (which builds the spec and
         // mounts the <json-render> element) and execute it. The test then
         // drives the mounted element with synthetic events.
-        const code = document.querySelector('[data-test="interactive-actions"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="interactive-actions"] pre code'
+        ).textContent;
         eval(code);
         const elem = document.getElementById('interactive-output').firstChild;
 
         let actionsFired = 0;
         elem.addEventListener('jr-action', (e) => {
-          if (e.detail.action === 'TestClick' || e.detail.action === 'checklist_toggle' || e.detail.action === 'TestInput') {
+          if (
+            e.detail.action === 'TestClick' ||
+            e.detail.action === 'checklist_toggle' ||
+            e.detail.action === 'TestInput'
+          ) {
             actionsFired++;
           }
         });
@@ -218,9 +261,16 @@ document.getElementById('interactive-output').appendChild(elem);</code></pre>
 
         setTimeout(() => {
           const mountedHTML = elem.outerHTML;
-          const mountedOk = mountedHTML.startsWith(expectedMountedPrefix) && mountedHTML.includes('Click Me');
+          const mountedOk =
+            mountedHTML.startsWith(expectedMountedPrefix) &&
+            mountedHTML.includes('Click Me');
           if (!mountedOk) {
-            console.error('Phase Mounted mismatch (interactive-actions)\nExpected prefix: ' + expectedMountedPrefix + '\nActual: ' + mountedHTML);
+            console.error(
+              'Phase Mounted mismatch (interactive-actions)\nExpected prefix: ' +
+                expectedMountedPrefix +
+                '\nActual: ' +
+                mountedHTML
+            );
           }
 
           const root = elem.shadowRoot || elem;
@@ -236,12 +286,18 @@ document.getElementById('interactive-output').appendChild(elem);</code></pre>
           input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
 
           setTimeout(() => {
-            const section = document.querySelector('[data-test="interactive-actions"]');
+            const section = document.querySelector(
+              '[data-test="interactive-actions"]'
+            );
             const drivenOk = actionsFired === 3;
             if (!drivenOk) {
-              console.error('Phase Driven mismatch (interactive-actions): expected 3 actions, got ' + actionsFired);
+              console.error(
+                'Phase Driven mismatch (interactive-actions): expected 3 actions, got ' +
+                  actionsFired
+              );
             }
-            section.dataset.testResult = (mountedOk && drivenOk) ? 'pass' : 'fail';
+            section.dataset.testResult =
+              mountedOk && drivenOk ? 'pass' : 'fail';
           }, 50);
         }, 100);
       </script>
@@ -251,13 +307,12 @@ document.getElementById('interactive-output').appendChild(elem);</code></pre>
       <h2>Checklist Optimistic State</h2>
       <p>
         Regression coverage for three historical bugs in the built-in
-        <code>Checklist</code> component: (1) every item visually
-        rendering checked on first mount regardless of
-        <code>props.items[i].checked</code>, (2) the
-        "N/M complete" counter never updating on toggle, (3) no
-        strike-through on toggled items. All three cluster in
-        <code>renderChecklist</code> and are driven by the per-host
-        optimistic <code>checked</code> array.
+        <code>Checklist</code> component: (1) every item visually rendering
+        checked on first mount regardless of
+        <code>props.items[i].checked</code>, (2) the "N/M complete" counter
+        never updating on toggle, (3) no strike-through on toggled items. All
+        three cluster in <code>renderChecklist</code> and are driven by the
+        per-host optimistic <code>checked</code> array.
       </p>
       <pre><code>const specChecklist = {
   root: 'main',
@@ -285,9 +340,13 @@ document.getElementById('checklist-state-output').appendChild(elem);</code></pre
         // toggle-off cycle, asserting the three bug regressions each
         // step: class on <label>, ?checked attribute on the input,
         // counter text, and the jr-action payload.
-        const code = document.querySelector('[data-test="checklist-state"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="checklist-state"] pre code'
+        ).textContent;
         eval(code);
-        const elem = document.getElementById('checklist-state-output').firstChild;
+        const elem = document.getElementById(
+          'checklist-state-output'
+        ).firstChild;
 
         const firedActions = [];
         elem.addEventListener('jr-action', (e) => {
@@ -300,17 +359,20 @@ document.getElementById('checklist-state-output').appendChild(elem);</code></pre
         // visually checked when the spec declares checked:false) and
         // the counter starts at 0/3.
         setTimeout(() => {
-          const section = document.querySelector('[data-test="checklist-state"]');
+          const section = document.querySelector(
+            '[data-test="checklist-state"]'
+          );
           const labels = elem.querySelectorAll('.jr-checklist-item');
           const boxes = elem.querySelectorAll('input[type="checkbox"]');
           const counter = elem.querySelector('.jr-checklist-counter');
 
           const mountedOk =
-            labels.length === 3
-            && Array.from(labels).every((l) => !l.classList.contains('checked'))
-            && Array.from(boxes).every((b) => b.checked === false)
-            && boxes[0].hasAttribute('checked') === false
-            && counter && counter.textContent.trim() === '0/3 complete';
+            labels.length === 3 &&
+            Array.from(labels).every((l) => !l.classList.contains('checked')) &&
+            Array.from(boxes).every((b) => b.checked === false) &&
+            boxes[0].hasAttribute('checked') === false &&
+            counter &&
+            counter.textContent.trim() === '0/3 complete';
 
           if (!mountedOk) {
             console.error('checklist-state Phase 1 (mount) failed', {
@@ -331,15 +393,16 @@ document.getElementById('checklist-state-output').appendChild(elem);</code></pre
             const counter2 = elem.querySelector('.jr-checklist-counter');
 
             const toggledOnOk =
-              labels2[1].classList.contains('checked')
-              && !labels2[0].classList.contains('checked')
-              && !labels2[2].classList.contains('checked')
-              && boxes2[1].checked === true
-              && counter2 && counter2.textContent.trim() === '1/3 complete'
-              && firedActions.length >= 1
-              && firedActions[firedActions.length - 1].index === 1
-              && firedActions[firedActions.length - 1].checked === true
-              && firedActions[firedActions.length - 1].label === 'Eggs';
+              labels2[1].classList.contains('checked') &&
+              !labels2[0].classList.contains('checked') &&
+              !labels2[2].classList.contains('checked') &&
+              boxes2[1].checked === true &&
+              counter2 &&
+              counter2.textContent.trim() === '1/3 complete' &&
+              firedActions.length >= 1 &&
+              firedActions[firedActions.length - 1].index === 1 &&
+              firedActions[firedActions.length - 1].checked === true &&
+              firedActions[firedActions.length - 1].label === 'Eggs';
 
             if (!toggledOnOk) {
               console.error('checklist-state Phase 2 (toggle on) failed', {
@@ -361,12 +424,15 @@ document.getElementById('checklist-state-output').appendChild(elem);</code></pre
               const counter3 = elem.querySelector('.jr-checklist-counter');
 
               const toggledOffOk =
-                Array.from(labels3).every((l) => !l.classList.contains('checked'))
-                && Array.from(boxes3).every((b) => b.checked === false)
-                && counter3 && counter3.textContent.trim() === '0/3 complete'
-                && firedActions.length >= 2
-                && firedActions[firedActions.length - 1].index === 1
-                && firedActions[firedActions.length - 1].checked === false;
+                Array.from(labels3).every(
+                  (l) => !l.classList.contains('checked')
+                ) &&
+                Array.from(boxes3).every((b) => b.checked === false) &&
+                counter3 &&
+                counter3.textContent.trim() === '0/3 complete' &&
+                firedActions.length >= 2 &&
+                firedActions[firedActions.length - 1].index === 1 &&
+                firedActions[firedActions.length - 1].checked === false;
 
               if (!toggledOffOk) {
                 console.error('checklist-state Phase 3 (toggle off) failed', {
@@ -378,7 +444,7 @@ document.getElementById('checklist-state-output').appendChild(elem);</code></pre
               }
 
               section.dataset.testResult =
-                (mountedOk && toggledOnOk && toggledOffOk) ? 'pass' : 'fail';
+                mountedOk && toggledOnOk && toggledOffOk ? 'pass' : 'fail';
             }, 80);
           }, 80);
         }, 120);
@@ -387,12 +453,17 @@ document.getElementById('checklist-state-output').appendChild(elem);</code></pre
 
     <section data-test="render-missing-fallbacks" data-test-result="pending">
       <h2>Render Missing Fallbacks</h2>
-      <p>Tests robust renderer protections against completely missing branch paths and unknown components safely outputting default components.</p>
+      <p>
+        Tests robust renderer protections against completely missing branch
+        paths and unknown components safely outputting default components.
+      </p>
       <pre><code>&lt;json-render&gt;{"root":"a","elements":{"a":{"type":"Row","children":["b","c"]},"c":{"type":"UnknownComponent123"}}}&lt;/json-render&gt;</code></pre>
       <div id="fallbacks-output"></div>
       <script type="module">
         // Single source of truth: snippet is HTML; inject it verbatim.
-        const html = document.querySelector('[data-test="render-missing-fallbacks"] pre code').textContent;
+        const html = document.querySelector(
+          '[data-test="render-missing-fallbacks"] pre code'
+        ).textContent;
         document.getElementById('fallbacks-output').innerHTML = html;
         const elem = document.getElementById('fallbacks-output').firstChild;
 
@@ -401,13 +472,21 @@ document.getElementById('checklist-state-output').appendChild(elem);</code></pre
         // unknown component type. We poll until the assertion text is present
         // (timing stable across runs) and then snapshot the resolved DOM.
         setTimeout(() => {
-          const section = document.querySelector('[data-test="render-missing-fallbacks"]');
+          const section = document.querySelector(
+            '[data-test="render-missing-fallbacks"]'
+          );
           const root = elem.shadowRoot || elem;
           const text = root.textContent;
-          if (text.includes('[loading...]') && text.includes('[unknown: UnknownComponent123]')) {
+          if (
+            text.includes('[loading...]') &&
+            text.includes('[unknown: UnknownComponent123]')
+          ) {
             section.dataset.testResult = 'pass';
           } else {
-            console.error('render-missing-fallbacks did not produce expected fallback markers. textContent: ' + text);
+            console.error(
+              'render-missing-fallbacks did not produce expected fallback markers. textContent: ' +
+                text
+            );
             section.dataset.testResult = 'fail';
           }
         }, 100);
@@ -416,7 +495,11 @@ document.getElementById('checklist-state-output').appendChild(elem);</code></pre
 
     <section data-test="components-coverage" data-test-result="pending">
       <h2>Components Fallback Coverage</h2>
-      <p>Exercises all internal components stripped of any <code>props</code> or attributes to ensure null-safeties trigger across all default configurations.</p>
+      <p>
+        Exercises all internal components stripped of any <code>props</code> or
+        attributes to ensure null-safeties trigger across all default
+        configurations.
+      </p>
       <pre><code>const Html = { wire: () => () => 'wired' };
 const types = ['Alert', 'Button', 'Card', 'Checklist', 'CodeBlock',
   'Column', 'Divider', 'Image', 'Progress', 'Row', 'TextField', 'Text'];
@@ -434,19 +517,30 @@ for (const type of types) {
         // built-in component renderer with empty/missing props) and execute
         // it. The "rendered output" of this coverage test is "no exception
         // and no DOM mutation"; we snapshot the unchanged container.
-        const code = document.querySelector('[data-test="components-coverage"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="components-coverage"] pre code'
+        ).textContent;
         let checkRenderCount = 0;
         function checkComponentRender() {
-          const section = document.querySelector('[data-test="components-coverage"]');
+          const section = document.querySelector(
+            '[data-test="components-coverage"]'
+          );
           try {
             if (!window.BUILT_IN_COMPONENTS) {
-              if (checkRenderCount++ < 10) { setTimeout(checkComponentRender, 50); return; }
+              if (checkRenderCount++ < 10) {
+                setTimeout(checkComponentRender, 50);
+                return;
+              }
               throw new Error('BUILT_IN_COMPONENTS not loaded');
             }
             eval(code);
             const expected = '<div id="components-output"></div>';
-            window.assertSnapshot('components-coverage', document.getElementById('components-output'), expected);
-          } catch(e) {
+            window.assertSnapshot(
+              'components-coverage',
+              document.getElementById('components-output'),
+              expected
+            );
+          } catch (e) {
             console.error(e);
             section.dataset.testResult = 'fail';
           }
@@ -460,9 +554,9 @@ for (const type of types) {
       <p>
         When a spec sets <code>root</code> to a key that does not exist in
         <code>elements</code>, the core renderer (<code>renderSpecTree</code>)
-        throws. The <code>&lt;json-render&gt;</code> component catches the
-        throw and renders an inline error alert. This exercises the throw
-        branch in <code>src/json-render/renderer.js</code>.
+        throws. The <code>&lt;json-render&gt;</code> component catches the throw
+        and renders an inline error alert. This exercises the throw branch in
+        <code>src/json-render/renderer.js</code>.
       </p>
       <pre><code>&lt;json-render id="missing-root-target"&gt;{"root":"ghost","elements":{"real":{"type":"Text","props":{"content":"present but unreachable"}}}}&lt;/json-render&gt;</code></pre>
       <div id="missing-root-output"></div>
@@ -471,10 +565,13 @@ for (const type of types) {
         // the resolved error alert. The renderer throws synchronously inside
         // the <json-render> render method; the catch path returns an error
         // alert template; the snapshot pins that resolved DOM.
-        const html = document.querySelector('[data-test="renderspec-missing-root"] pre code').textContent;
+        const html = document.querySelector(
+          '[data-test="renderspec-missing-root"] pre code'
+        ).textContent;
         document.getElementById('missing-root-output').innerHTML = html;
         const elem = document.getElementById('missing-root-target');
-        const expected = '<json-render id="missing-root-target"><div class="jr-alert error">❌ Render error: Spec error: root "ghost" not found in elements</div></json-render>';
+        const expected =
+          '<json-render id="missing-root-target"><div class="jr-alert error">❌ Render error: Spec error: root "ghost" not found in elements</div></json-render>';
         const deadline = Date.now() + 1500;
         (function awaitErr() {
           if (elem.outerHTML === expected) {
@@ -529,22 +626,29 @@ section.dataset.testResult =
         // Single source of truth: snippet IS the program. The script just
         // reads + evals it. The snippet uses the public listComponentTypes()
         // API + window.registerComponent and sets the section result directly.
-        const code = document.querySelector('[data-test="list-component-types"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="list-component-types"] pre code'
+        ).textContent;
         // Wait for window.listComponentTypes to be defined (test-loader.js
         // exposes it as a global; in source mode this is async).
         let tries = 0;
         function awaitGlobal() {
           if (typeof window.listComponentTypes === 'function') {
-            try { eval(code); }
-            catch (e) {
+            try {
+              eval(code);
+            } catch (e) {
               console.error('list-component-types eval failed:', e);
-              document.querySelector('[data-test="list-component-types"]').dataset.testResult = 'fail';
+              document.querySelector(
+                '[data-test="list-component-types"]'
+              ).dataset.testResult = 'fail';
             }
             return;
           }
           if (tries++ > 40) {
             console.error('window.listComponentTypes not defined after 2s');
-            document.querySelector('[data-test="list-component-types"]').dataset.testResult = 'fail';
+            document.querySelector(
+              '[data-test="list-component-types"]'
+            ).dataset.testResult = 'fail';
             return;
           }
           setTimeout(awaitGlobal, 50);
@@ -556,11 +660,10 @@ section.dataset.testResult =
     <section data-test="json-render-shimmer-loading" data-test-result="pending">
       <h2>&lt;json-render&gt; shimmer placeholder for empty body</h2>
       <p>
-        When <code>&lt;json-render&gt;</code> is mounted with an empty body
-        (no JSON content), it shows a shimmer placeholder so the
-        streaming-spec workflow can render before the full payload arrives.
-        This exercises the empty-spec branch in
-        <code>src/json-render/element.js</code>.
+        When <code>&lt;json-render&gt;</code> is mounted with an empty body (no
+        JSON content), it shows a shimmer placeholder so the streaming-spec
+        workflow can render before the full payload arrives. This exercises the
+        empty-spec branch in <code>src/json-render/element.js</code>.
       </p>
       <pre><code>&lt;json-render id="shimmer-target"&gt;&lt;/json-render&gt;</code></pre>
       <div id="shimmer-output"></div>
@@ -568,7 +671,9 @@ section.dataset.testResult =
         // Single source of truth: snippet is HTML; inject verbatim. The
         // shimmer markup is generated by <json-render> itself when the body
         // is empty (no JSON content at all).
-        const html = document.querySelector('[data-test="json-render-shimmer-loading"] pre code').textContent;
+        const html = document.querySelector(
+          '[data-test="json-render-shimmer-loading"] pre code'
+        ).textContent;
         document.getElementById('shimmer-output').innerHTML = html;
         const elem = document.getElementById('shimmer-target');
         // The shimmer template literal in element.js spans multiple lines.
@@ -582,15 +687,26 @@ section.dataset.testResult =
         // content (e.g. "Loading UI...") is left untouched because it never
         // sits between two tag delimiters.
         const collapseTagWhitespace = (s) => s.replace(/>\s+</g, '><');
-        const expected = '<json-render id="shimmer-target"><div class="jr-shimmer" data-loading="true"><div class="jr-card" style="opacity:0.4;animation:pulse 1.5s ease-in-out infinite"><div class="jr-text muted">Loading UI...</div></div></div></json-render>';
+        const expected =
+          '<json-render id="shimmer-target"><div class="jr-shimmer" data-loading="true"><div class="jr-card" style="opacity:0.4;animation:pulse 1.5s ease-in-out infinite"><div class="jr-text muted">Loading UI...</div></div></div></json-render>';
         const deadline = Date.now() + 1500;
         (function awaitShimmer() {
           if (collapseTagWhitespace(elem.outerHTML) === expected) {
-            window.assertSnapshot('json-render-shimmer-loading', elem, expected, collapseTagWhitespace);
+            window.assertSnapshot(
+              'json-render-shimmer-loading',
+              elem,
+              expected,
+              collapseTagWhitespace
+            );
             return;
           }
           if (Date.now() > deadline) {
-            window.assertSnapshot('json-render-shimmer-loading', elem, expected, collapseTagWhitespace);
+            window.assertSnapshot(
+              'json-render-shimmer-loading',
+              elem,
+              expected,
+              collapseTagWhitespace
+            );
             return;
           }
           setTimeout(awaitShimmer, 25);
@@ -598,5 +714,48 @@ section.dataset.testResult =
       </script>
     </section>
 
+    <section data-test="json-render-boolean-display" data-test-result="pending">
+      <h2>json-render boolean display coercion</h2>
+      <p>
+        Schema-invalid display props are coerced safely instead of leaking
+        object-like strings into rendered UI.
+      </p>
+      <div id="boolean-display-output"></div>
+      <script type="module">
+        const spec = {
+          root: 'main',
+          elements: {
+            main: { type: 'Column', children: ['bool', 'fallback'] },
+            bool: { type: 'Button', props: { label: true } },
+            fallback: { type: 'Button', props: { label: { text: 'Object' } } },
+          },
+        };
+        const elem = document.createElement('json-render');
+        elem.textContent = JSON.stringify(spec);
+        document.getElementById('boolean-display-output').appendChild(elem);
+        const deadline = Date.now() + 1500;
+        const expected =
+          '<json-render><div class="jr-root"><div class="jr-column" style=""><button disabled="false" class="jr-btn">true</button><button disabled="false" class="jr-btn">Button</button><!--◦--></div></div></json-render>';
+        (function awaitBooleanText() {
+          if (elem.textContent.includes('true')) {
+            window.assertSnapshot(
+              'json-render-boolean-display',
+              elem,
+              expected
+            );
+            return;
+          }
+          if (Date.now() > deadline) {
+            window.assertSnapshot(
+              'json-render-boolean-display',
+              elem,
+              expected
+            );
+            return;
+          }
+          setTimeout(awaitBooleanText, 25);
+        })();
+      </script>
+    </section>
   </body>
 </html>

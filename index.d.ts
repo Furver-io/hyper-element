@@ -134,6 +134,92 @@ export type SetupFunction = (
 export type MethodFunction = (ctx: ElementContext, ...args: any[]) => any;
 
 /**
+ * Primitive value accepted in +styled declaration objects.
+ */
+export type StyleValue = string | number | null | undefined;
+
+/**
+ * CSS declaration map used by inline-only styles and generated CSS rules.
+ */
+export interface StyleDeclarations {
+  [property: string]: StyleValue;
+}
+
+/**
+ * Selector-capable style data. Keys may be selectors such as `:hover`,
+ * `& .title`, selector lists, or supported at-rules.
+ */
+export interface SelectorStyles {
+  [selector: string]: StyleDeclarations;
+}
+
+/**
+ * Style definition for one tag. `base` enables variant syntax; selector keys
+ * are scoped by +styled and emitted through the renderer-owned style host.
+ */
+export interface TagStyleDefinition {
+  base?: StyleDeclarations;
+  [variantOrSelector: string]: StyleDeclarations | SelectorStyles | undefined;
+}
+
+/**
+ * Top-level styled declaration keyed by tag name or shared tag groups such as
+ * `'h2, span'`.
+ */
+export interface StyledBaseDefinition {
+  [tagNameOrGroup: string]: StyleDeclarations | TagStyleDefinition;
+}
+
+/**
+ * Optional dynamic style logic for +styled tags.
+ */
+export interface StyledLogicDefinition {
+  [tagName: string]: (
+    styleValue: unknown,
+    ctx: ElementContext,
+    store: unknown
+  ) =>
+    | StyleDeclarations
+    | (StyleDeclarations & SelectorStyles)
+    | null
+    | undefined;
+}
+
+/**
+ * css=${...} selector override object consumed only by +styled nodes.
+ */
+export type CssOverride = SelectorStyles;
+
+/**
+ * Full and inline style callable exposed by defineStyled().
+ */
+export interface StyledCallable {
+  (flags?: Record<string, boolean>): StyleDeclarations & SelectorStyles;
+  inline(flags?: Record<string, boolean>): StyleDeclarations;
+}
+
+/**
+ * defineStyled() output. It remains compatible with the historical styled
+ * tuple while exposing non-enumerable tag callables at runtime.
+ */
+export interface DefinedStyled extends Array<
+  StyledBaseDefinition | StyledLogicDefinition | undefined
+> {
+  [tagName: string]:
+    | StyledCallable
+    | StyledBaseDefinition
+    | StyledLogicDefinition
+    | undefined;
+}
+
+/**
+ * Public styled config accepted by functional definitions and SSR rendering.
+ */
+export type StyledDefinition =
+  | [StyledBaseDefinition, StyledLogicDefinition?]
+  | DefinedStyled;
+
+/**
  * SSR hydration lifecycle hook for functional components.
  * Called before buffered events are replayed.
  */
@@ -210,6 +296,8 @@ export interface FunctionalDefinition {
   onBeforeHydrate?: OnBeforeHydrateFunction;
   /** SSR hydration hook - called after replay completes */
   onAfterHydrate?: OnAfterHydrateFunction;
+  /** +styled declarations used by `<tag+styled>` template elements */
+  styled?: StyledDefinition;
   /**
    * json-render bridge: when present, the generated custom element is
    * auto-registered into the shared json-render component registry
@@ -234,6 +322,7 @@ export interface FunctionalDefinition {
     | OnBeforeHydrateFunction
     | OnAfterHydrateFunction
     | MethodFunction
+    | StyledDefinition
     | string
     | JrCatalog
     | undefined;
@@ -414,6 +503,17 @@ declare global {
 export { hyperElement };
 export default hyperElement;
 
+/**
+ * Creates a reusable +styled definition with direct tag callables.
+ *
+ * @param styles - Base styled definition keyed by tag name or shared groups.
+ * @param logic - Optional dynamic style logic functions.
+ */
+export function defineStyled(
+  styles: StyledBaseDefinition,
+  logic?: StyledLogicDefinition
+): DefinedStyled;
+
 // ============================================================================
 // Signals API - Fine-grained reactivity primitives
 // ============================================================================
@@ -591,6 +691,10 @@ export interface RenderElementOptions<T = any> {
   shadowDOM?: boolean;
   /** Fragment functions for the component */
   fragments?: Record<string, (data: any) => any>;
+  /** +styled declarations used by SSR for `<tag+styled>` template elements */
+  styled?: StyledDefinition;
+  /** Color palette used by +styled declarations */
+  colors?: Record<string, string>;
   /** Render function (Html, ctx) => void */
   render: (Html: HtmlFunction, ctx: ElementContext) => void;
 }

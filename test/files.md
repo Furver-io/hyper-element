@@ -36,4 +36,4 @@ Coverage merging and reporting. Combines V8 coverage from Playwright browser tes
 
 ### `styled.test.mjs`
 
-+styled system integration tests. Contains 40+ tests covering base styles, shared selectors, prop flags, logic functions, color palettes, SSR rendering, and edge cases for the inline styling system.
++styled system integration tests. Contains 40+ tests covering base styles, shared selectors, prop flags, logic functions, color palettes, selector-capable generated CSS, `css=${...}` overrides, `defineStyled()`, SSR style hosts, and edge cases for the styling system.

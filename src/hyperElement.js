@@ -7,7 +7,7 @@ import { manager } from './core/manager.js';
 import { createdCallback } from './lifecycle/connectedCallback.js';
 import { attachAttrs } from './attributes/attachAttrs.js';
 import { getDataset, addDataset } from './attributes/dataset.js';
-import { unregisterStyled } from './styled/index.js';
+import { cleanupStyleRoot, unregisterStyled } from './styled/index.js';
 
 /**
  * Context object available as `this` in render() and setup() methods.
@@ -106,6 +106,7 @@ export class hyperElement extends HTMLElement {
     const ref = manager[this.identifier];
     ref.teardown && ref.teardown();
     // Cleanup styled registry entry
+    cleanupStyleRoot(this);
     unregisterStyled(this);
   }
 

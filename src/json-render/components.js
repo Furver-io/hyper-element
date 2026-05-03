@@ -33,36 +33,14 @@
  */
 
 import { getChecklistState } from './checklist-state.js';
+import { dispatchAction, propText } from './component-helpers.js';
 
-/**
- * Dispatch a jr-action CustomEvent from the host element.
- * All interactive components use this helper for consistent
- * event shape. The event bubbles and is composed so it crosses
- * shadow DOM boundaries.
- *
- * @param {HTMLElement} hostEl - The element to dispatch from
- * @param {string} action - Action name (e.g. "approve", "reject")
- * @param {Object} params - Action parameters payload
+/*
+ * Component render functions.
+ * Each function follows `(Html, def, key, kids, hostEl) => HtmlTemplate`.
+ * The shared parameters are documented here because every renderer below uses
+ * the same public json-render spec contract and Html.wire identity strategy.
  */
-function dispatchAction(hostEl, action, params) {
-  hostEl.dispatchEvent(
-    new CustomEvent('jr-action', {
-      bubbles: true,
-      composed: true,
-      detail: { action, params: params || {} },
-    })
-  );
-}
-
-// ── Component render functions ────────────────────────────────
-// Each function follows the same signature:
-//   (Html, def, key, kids, hostEl) => HtmlTemplate
-//
-// - Html: hyper-element's tagged template function with .wire()
-// - def: the element definition { type, props, children, on }
-// - key: unique key for Html.wire() identity
-// - kids: array of pre-rendered child DOM nodes
-// - hostEl: host element for jr-action event dispatch
 
 /**
  * Card — container with optional title, description, and body.
@@ -74,10 +52,12 @@ function dispatchAction(hostEl, action, params) {
  * @returns {Object} Html wire template result
  */
 function renderCard(Html, def, key, kids) {
+  const title = propText(def.props?.title, '');
+  const desc = propText(def.props?.description, '');
   return Html.wire(def, ':' + key)`
     <div class="jr-card">
-      ${def.props?.title ? Html.wire(def, ':t')`<div class="jr-card-title">${def.props.title}</div>` : ''}
-      ${def.props?.description ? Html.wire(def, ':d')`<div class="jr-card-desc">${def.props.description}</div>` : ''}
+      ${title ? Html.wire(def, ':t')`<div class="jr-card-title">${title}</div>` : ''}
+      ${desc ? Html.wire(def, ':d')`<div class="jr-card-desc">${desc}</div>` : ''}
       <div class="jr-card-body">${kids}</div>
     </div>`;
 }
@@ -123,12 +103,17 @@ function renderColumn(Html, def, key, kids) {
  */
 function renderButton(Html, def, key, kids, hostEl) {
   const variant = def.props?.variant || '';
-  const label = def.props?.label || 'Button';
+  const label =
+    typeof def.props?.label === 'string'
+      ? def.props.label || 'Button'
+      : def.props?.label == null
+        ? 'Button'
+        : propText(def.props?.label, 'Button');
   const disabled = def.props?.disabled || false;
   const loading = def.props?.loading || false;
   const actionData = def.on?.press || {};
 
-  // Build CSS class list — loading adds spinner via CSS ::after pseudo-element
+  /* Build CSS class list; loading adds spinner via CSS ::after. */
   const classes = `jr-btn ${variant} ${loading ? 'loading' : ''}`.trim();
 
   return Html.wire(def, ':' + key)`
@@ -149,7 +134,7 @@ function renderButton(Html, def, key, kids, hostEl) {
  */
 function renderText(Html, def, key) {
   return Html.wire(def, ':' + key)`
-    <div class="${`jr-text ${def.props?.variant || ''}`.trim()}">${def.props?.content || ''}</div>`;
+    <div class="${`jr-text ${def.props?.variant || ''}`.trim()}">${propText(def.props?.content, '')}</div>`;
 }
 
 /**
@@ -161,12 +146,12 @@ function renderText(Html, def, key) {
  * @returns {Object} Html wire template result
  */
 function renderAlert(Html, def, key) {
-  // Icon prefix per variant for quick visual identification
+  /* Icon prefix per variant for quick visual identification. */
   const icons = { info: 'ℹ️ ', success: '✅ ', warning: '⚠️ ', error: '❌ ' };
   const variant = def.props?.variant || 'info';
   const icon = icons[variant] || '';
   return Html.wire(def, ':' + key)`
-    <div class="${`jr-alert ${variant}`}">${icon}${def.props?.message || ''}</div>`;
+    <div class="${`jr-alert ${variant}`}">${icon}${propText(def.props?.message, '')}</div>`;
 }
 
 /**
@@ -178,11 +163,12 @@ function renderAlert(Html, def, key) {
  * @returns {Object} Html wire template result
  */
 function renderProgress(Html, def, key) {
-  // Clamp value to 0–100 range for visual correctness
+  /* Clamp value to 0-100 range for visual correctness. */
   const val = Math.min(100, Math.max(0, parseInt(def.props?.value || '0', 10)));
+  const progressLabel = propText(def.props?.label, '');
   return Html.wire(def, ':' + key)`
     <div>
-      ${def.props?.label ? Html.wire(def, ':pl')`<div class="jr-progress-label">${def.props.label} — ${val}%</div>` : ''}
+      ${progressLabel ? Html.wire(def, ':pl')`<div class="jr-progress-label">${progressLabel} — ${val}%</div>` : ''}
       <div class="jr-progress-bar"><div class="jr-progress-fill" style="width:${val}%"></div></div>
     </div>`;
 }
@@ -211,8 +197,10 @@ function renderCodeBlock(Html, def, key) {
   const code = def.props?.code || '';
   const showLines = def.props?.showLineNumbers || false;
 
-  // Build line number gutter when showLineNumbers is enabled.
-  // Each line gets a numbered <span> for alignment with the code.
+  /*
+   * Build the line-number gutter when enabled; each line gets a numbered span
+   * so code text and gutter rows remain aligned.
+   */
   const lines = code.split('\n');
   const lineGutter = showLines
     ? Html.wire(def, ':lg')`<div class="jr-codeblock-lines">${lines
@@ -220,10 +208,11 @@ function renderCodeBlock(Html, def, key) {
         .join('\n')}</div>`
     : '';
 
+  const language = propText(def.props?.language, 'code') || 'code';
   return Html.wire(def, ':' + key)`
     <div class="jr-codeblock">
       <div class="jr-codeblock-header">
-        <span>${def.props?.language || 'code'}</span>
+        <span>${language}</span>
         <button class="jr-codeblock-copy" onclick=${(e) => {
           // Copy code to clipboard. navigator.clipboard requires
           // secure context (localhost or HTTPS) — gracefully no-op
@@ -261,7 +250,7 @@ function renderCodeBlock(Html, def, key) {
  * @returns {Object} Html wire template result
  */
 function renderImage(Html, def, key) {
-  // Support optional width/height constraints via inline style
+  /* Support optional width/height constraints via inline style. */
   const style = [
     def.props?.width ? `max-width:${def.props.width}px` : '',
     def.props?.height ? `max-height:${def.props.height}px` : '',
@@ -269,7 +258,7 @@ function renderImage(Html, def, key) {
     .filter(Boolean)
     .join(';');
   return Html.wire(def, ':' + key)`
-    <img class="jr-image" src="${def.props?.src || ''}" alt="${def.props?.alt || ''}" style="${style}" />`;
+    <img class="jr-image" src="${propText(def.props?.src, '')}" alt="${propText(def.props?.alt, '')}" style="${style}" />`;
 }
 
 /**
@@ -319,10 +308,11 @@ function renderChecklist(Html, def, key, kids, hostEl) {
   // project from this single source.
   const checked = getChecklistState(hostEl, key, items);
   const doneCount = checked.filter(Boolean).length;
+  const checklistHeader = propText(def.props?.label, '');
 
   return Html.wire(def, ':' + key)`
     <div class="jr-checklist">
-      ${def.props?.label ? Html.wire(def, ':cl')`<div class="jr-checklist-label">${def.props.label}</div>` : ''}
+      ${checklistHeader ? Html.wire(def, ':cl')`<div class="jr-checklist-label">${checklistHeader}</div>` : ''}
       ${items.map(
         (item, i) =>
           Html.wire(
@@ -347,7 +337,7 @@ function renderChecklist(Html, def, key, kids, hostEl) {
               if (hostEl && typeof hostEl.render === 'function') {
                 hostEl.render();
               }
-            }} /><span>${item.label}</span>
+            }} /><span>${propText(item?.label, '')}</span>
         </label>`
       )}
       ${items.length > 0 ? Html.wire(def, ':cc')`<div class="jr-checklist-counter">${doneCount}/${items.length} complete</div>` : ''}
@@ -369,11 +359,14 @@ function renderTextField(Html, def, key, kids, hostEl) {
   const submitData = def.on?.submit || {};
   const maxLen = def.props?.maxLength;
 
+  const tfLabel = propText(def.props?.label, '');
+  const tfPlaceholder = propText(def.props?.placeholder, '');
+
   return Html.wire(def, ':' + key)`
     <div>
-      ${def.props?.label ? Html.wire(def, ':tl')`<div class="jr-text muted">${def.props.label}</div>` : ''}
+      ${tfLabel ? Html.wire(def, ':tl')`<div class="jr-text muted">${tfLabel}</div>` : ''}
       <input type="text" class="jr-textfield"
-        placeholder="${def.props?.placeholder || ''}"
+        placeholder="${tfPlaceholder}"
         maxlength=${maxLen || ''}
         onkeydown=${(e) => {
           if (e.key === 'Enter') {

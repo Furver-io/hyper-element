@@ -24,7 +24,12 @@ import {
   TEXT_TYPE,
 } from '../render/constants.js';
 import { escapeHtml } from '../utils/escape.js';
-import { resolveStylesWithEntry } from '../styled/resolution.js';
+import {
+  stringStyledAttribute,
+  stringStyledCss,
+  stringStyledStyle,
+  styleObjectToString,
+} from './styled-update.js';
 
 /**
  * Current SSR rendering context.
@@ -50,23 +55,6 @@ export function getSSRContext() {
 }
 
 /**
- * Converts a style object to a CSS string.
- * @param {Object} styleObj - Style object with camelCase or kebab-case keys
- * @returns {string} CSS string like "color: red; font-size: 12px"
- */
-function styleObjectToString(styleObj) {
-  if (!styleObj || typeof styleObj !== 'object') return '';
-  return Object.entries(styleObj)
-    .filter(([, value]) => value != null)
-    .map(([prop, value]) => {
-      // Convert camelCase to kebab-case
-      const kebabProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
-      return `${kebabProp}: ${value}`;
-    })
-    .join('; ');
-}
-
-/**
  * Creates an SSR attribute handler.
  * Returns the value to be set on the attribute.
  * @param {string} _name - Attribute name (unused, for API compatibility)
@@ -88,39 +76,6 @@ const stringStyle = (value) => {
     return styleObjectToString(value);
   }
   return escapeHtml(String(value));
-};
-
-/**
- * SSR styled style handler factory.
- * Resolves styles using the styled system (base → shared → prop flags → logic → colors).
- * @param {string} tagName - The element's tag name
- * @param {Array|null} propFlags - Static prop flags from parsing
- * @returns {Function} Style handler that resolves styles
- */
-const stringStyledStyle = (tagName, propFlags) => (value) => {
-  const context = getSSRContext();
-  if (!context || !context.styled) {
-    // No styled config - fall back to regular style handling
-    return stringStyle(value);
-  }
-
-  // Build entry for resolveStylesWithEntry
-  const entry = {
-    styled: context.styled,
-    ctx: { attrs: context.attrs, store: context.store },
-    store: context.store,
-    colors: context.colors || null,
-  };
-
-  // Convert static prop flags to active flags format
-  const activeFlags = propFlags
-    ? propFlags.map((f) => ({ name: f.name, active: true }))
-    : [];
-
-  const resolved = resolveStylesWithEntry(entry, tagName, value, activeFlags);
-  if (!resolved) return null;
-
-  return styleObjectToString(resolved);
 };
 
 /**
@@ -320,12 +275,33 @@ export function ssrUpdate(node, type, path, name, hint) {
             if (node.isStyled) {
               return [
                 path,
-                stringStyledStyle(node.name, node.propFlags),
+                stringStyledStyle(node.name, node.propFlags, stringStyle),
                 ATTRIBUTE,
                 'style',
               ];
             }
             return [path, stringStyle, ATTRIBUTE, 'style'];
+          }
+          if (name === 'css' && node.isStyled) {
+            return [
+              path,
+              stringStyledCss(node.name, node.propFlags),
+              ATTRIBUTE,
+              'css',
+            ];
+          }
+          if (node.isStyled) {
+            return [
+              path,
+              stringStyledAttribute(
+                name,
+                node.name,
+                getSSRContext(),
+                stringAttribute(name)
+              ),
+              ATTRIBUTE,
+              name,
+            ];
           }
           return [path, stringAttribute(name), ATTRIBUTE, name];
         }

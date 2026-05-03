@@ -4,7 +4,6 @@
  */
 
 import {
-  ELEMENT,
   ATTRIBUTE_TYPE,
   ATTRIBUTE_TEMPLATE_TYPE,
   TEXT_TYPE,
@@ -12,9 +11,9 @@ import {
   TEXT_ELEMENTS,
   VOID_ELEMENTS,
   children,
-  props,
 } from './constants.js';
 import { Comment, Text, Element, Fragment } from './nodes.js';
+import { append, parent, path, prop } from './parser-helpers.js';
 
 const NUL = '\x00';
 const DOUBLE_QUOTED_NUL = `"${NUL}"`;
@@ -23,60 +22,6 @@ const SINGLE_QUOTED_NUL = `'${NUL}'`;
 const NEXT = /\x00|<[^><\s]+/g;
 const ATTRS = /([^\s/>=]+)(?:=(\x00|(?:(['"])[\s\S]*?\3)))?/g;
 /* eslint-enable no-control-regex */
-
-/**
- * Appends a child node to a parent.
- * @param {import('./nodes.js').Node} node - Parent node
- * @param {import('./nodes.js').Node} child - Child to append
- * @returns {import('./nodes.js').Node} The appended child
- */
-const append = (node, child) => {
-  if (node.children === children) node.children = [];
-  node.children.push(child);
-  child.parent = node;
-  return child;
-};
-
-/**
- * Sets a property on a node.
- * @param {import('./nodes.js').Node} node - Node to modify
- * @param {string} name - Property name
- * @param {unknown} value - Property value
- */
-const prop = (node, name, value) => {
-  if (node.props === props) node.props = {};
-  node.props[name] = value;
-};
-
-/**
- * Computes the path from a node to the root.
- * @param {import('./nodes.js').Node} node
- * @returns {number[]}
- */
-const path = (node) => {
-  const insideout = [];
-  while (node.parent) {
-    if (node.type === ELEMENT && node.name === 'template') {
-      insideout.push(-1);
-    }
-    insideout.push(node.parent.children.indexOf(node));
-    node = node.parent;
-  }
-  return insideout;
-};
-
-/**
- * Gets the parent node, skipping ignored auto-inserted nodes.
- * @param {import('./nodes.js').Node} node
- * @param {Set<import('./nodes.js').Node>} ignore
- * @returns {import('./nodes.js').Node}
- */
-const parent = (node, ignore) => {
-  do {
-    node = node.parent;
-  } while (ignore.has(node));
-  return node;
-};
 
 /**
  * Creates a parser with custom update handler.
@@ -92,7 +37,7 @@ export function createParser(update) {
    * @returns {[import('./nodes.js').Node, unknown[]]}
    */
   return (template, holes, xml) => {
-    // Only trim leading whitespace, preserve trailing for proper spacing
+    /* Only trim leading whitespace; trailing whitespace preserves spacing. */
     const content = template.join(NUL).replace(/^\s+/, '');
     const ignore = new Set();
     const values = [];
@@ -101,6 +46,7 @@ export function createParser(update) {
     let skip = 0;
     let hole = 0;
     let resolvedPath = children;
+    const deferredStyledUpdates = [];
 
     for (const match of content.matchAll(NEXT)) {
       if (skip > 0) {
@@ -145,7 +91,7 @@ export function createParser(update) {
         const name = chunk.slice(1);
         let tag = name;
 
-        // Detect +styled suffix
+        /* Detect +styled suffix. */
         const STYLED_SUFFIX = '+styled';
         let isStyled = false;
 
@@ -194,6 +140,9 @@ export function createParser(update) {
               // Mark dynamic style attribute to prevent auto-creation for +styled
               if (actualAttrName === 'style') {
                 node.hasDynamicStyle = true;
+              }
+              if (actualAttrName === 'css') {
+                node.hasDynamicCss = true;
               }
               dot = false;
               skip++;
@@ -248,19 +197,29 @@ export function createParser(update) {
           resolvedPath = children;
         }
 
-        // For +styled elements without an explicit style attribute,
-        // create a style handler to apply base styles
+        /*
+         * For +styled elements without an explicit style/css attribute,
+         * create a style handler to apply base styles.
+         */
         if (
           node.isStyled &&
           !node.props.style &&
           node.props.style !== '' &&
-          !node.hasDynamicStyle
+          !node.hasDynamicStyle &&
+          !node.hasDynamicCss
         ) {
           const p =
             resolvedPath === children
               ? (resolvedPath = path(node))
               : resolvedPath;
-          values.push(update(node, ATTRIBUTE_TYPE, p, 'style', null));
+          /*
+           * Auto-created +styled handlers do not correspond to template holes.
+           * Deferring them until after all real interpolations keeps update
+           * indexes aligned with the values array for later attributes.
+           */
+          deferredStyledUpdates.push(
+            update(node, ATTRIBUTE_TYPE, p, 'style', null)
+          );
         }
 
         pos = j + 1;
@@ -293,6 +252,6 @@ export function createParser(update) {
       append(node, new Text(content.slice(pos)));
     }
 
-    return [node, values];
+    return [node, values.concat(deferredStyledUpdates)];
   };
 }

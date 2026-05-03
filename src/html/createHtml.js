@@ -73,8 +73,17 @@ export function createHtml(shadow) {
         }
         const val = args[index + 1];
 
+        // Child custom elements need sharedAttrs for every non-string value so
+        // attachAttrs can recover booleans, numbers, objects, and callbacks with
+        // their original types. Boolean `?attr=${...}` toggles are the exception:
+        // those belong to the render core and must receive the primitive value
+        // directly so `false` removes the boolean attribute instead of becoming a
+        // truthy placeholder string.
         if (val != null && typeof val !== 'string') {
           const attrName = item.split(/\s/).pop().slice(0, -1);
+          if (attrName[0] === '?') {
+            return;
+          }
           if ('on' === attrName.substring(0, 2)) {
             throw new Error(
               `'on' is reserve for native elements. Change: "${attrName}" for "${localName}" to something else`

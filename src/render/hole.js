@@ -8,6 +8,25 @@ import { ARRAY, COMMENT, EVENT, KEY, children } from './constants.js';
 import { PersistentFragment, diffFragment } from './persistent-fragment.js';
 
 /**
+ * Detects a template Hole in a way that still works if two copies of
+ * hyper-element are bundled (e.g. `value instanceof Hole` is false) or
+ * if the value is a duck-typed hole-like object. Used whenever we must
+ * special-case comment-slot nested templates so we call {@link dom}
+ * instead of stringifying a plain object to `"[object Object]"`.
+ * @param {unknown} v
+ * @returns {boolean}
+ */
+export function isTemplateHole(v) {
+  return (
+    v != null &&
+    typeof v === 'object' &&
+    Array.isArray(/** @type {Hole} */ (v).t) &&
+    Array.isArray(/** @type {Hole} */ (v).v) &&
+    typeof (/** @type {Hole} */ (v).valueOf) === 'function'
+  );
+}
+
+/**
  * Converts a Hole to a DOM node.
  * @param {Hole} hole
  * @returns {Node}
@@ -117,15 +136,15 @@ export class Hole {
             if (value.length) {
               update(
                 node,
-                value[0] instanceof Hole ? holed(children, value) : value
+                isTemplateHole(value[0]) ? holed(children, value) : value
               );
             }
           }
         }
         // Handle nested Holes
-        else if (type & COMMENT && value instanceof Hole) {
+        else if (type & COMMENT && isTemplateHole(value)) {
           commit = false;
-          update(node, dom(value));
+          update(node, dom(/** @type {Hole} */ (value)));
         }
 
         if (commit) {
@@ -179,14 +198,15 @@ export class Hole {
       if (type === KEY) continue;
 
       // Handle auto-created handlers (e.g., +styled) with no corresponding value
-      let value = length < values.length ? values[length] : undefined;
+      const autoCreated = length >= values.length;
+      let value = autoCreated ? undefined : values[length];
       let change = value;
 
       // Handle arrays
       if (type & ARRAY) {
         if (type & COMMENT) {
           if (value.length) {
-            if (value[0] instanceof Hole) {
+            if (isTemplateHole(value[0])) {
               change = holed(prev, value);
             }
           }
@@ -196,13 +216,21 @@ export class Hole {
       }
       // Handle nested Holes
       else if (type & COMMENT) {
-        if (prev instanceof Hole) {
-          value = getHole(prev, value);
+        if (isTemplateHole(value) && isTemplateHole(prev)) {
+          value = getHole(
+            /** @type {Hole} */ (prev),
+            /** @type {Hole} */ (value)
+          );
           change = value.n;
+        } else if (isTemplateHole(value) && !isTemplateHole(prev)) {
+          // e.g. `''` → nested Hole when a conditional (edit bar) mounts.
+          // Without this, the raw Hole object reaches replaceComment and
+          // the browser stringifies to "[object Object]".
+          change = dom(/** @type {Hole} */ (value));
         }
       }
 
-      if (value !== prev) {
+      if (autoCreated || value !== prev) {
         entry[2] = value;
         update(entry[3], change);
       }

@@ -21,8 +21,16 @@ wraps the result. Uses `Html.wire()` for efficient keyed DOM reuse.
 All 12 built-in component render functions: Card, Row, Column, Button,
 Text, Alert, Progress, Divider, CodeBlock, Image, Checklist, TextField.
 Each follows the signature `(Html, def, key, kids, hostEl) => template`.
-Interactive components dispatch `jr-action` CustomEvents via `dispatchAction()`.
+Interactive components dispatch `jr-action` CustomEvents via helpers from
+`component-helpers.js`.
 Exports `BUILT_IN_COMPONENTS` map pairing render functions with catalog metadata.
+
+### `component-helpers.js`
+
+Shared helpers for built-in component renderers. `propText()` keeps display
+coercion consistent for schema-invalid values, and `dispatchAction()` emits the
+standard bubbling/composed `jr-action` event shape used by interactive
+components.
 
 **Checklist local state:** The per-spec optimistic boolean array is
 owned by `checklist-state.js` (see below). `components.js` imports

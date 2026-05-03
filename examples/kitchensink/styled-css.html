@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>+styled Selector CSS - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        color: rgb(20, 20, 20);
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        border: 1px solid #ddd;
+        margin: 1rem 0;
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>+styled Selector CSS</h1>
+
+    <section data-test="selector-inline-preserved" data-test-result="pending">
+      <h2>Inline-only styles stay inline</h2>
+      <div id="selector-inline-preserved-output"></div>
+    </section>
+
+    <section data-test="selector-focus-css" data-test-result="pending">
+      <h2>Selector styles use generated CSS</h2>
+      <div id="selector-focus-css-output"></div>
+    </section>
+
+    <section data-test="selector-media-css" data-test-result="pending">
+      <h2>Supported at-rules are scoped</h2>
+      <div id="selector-media-css-output"></div>
+    </section>
+
+    <section
+      data-test="selector-css-override-change"
+      data-test-result="pending"
+    >
+      <h2>css overrides update without stale rules</h2>
+      <div id="selector-css-override-change-output"></div>
+    </section>
+
+    <section data-test="selector-define-styled" data-test-result="pending">
+      <h2>defineStyled full and inline callables</h2>
+      <div id="selector-define-styled-output"></div>
+    </section>
+
+    <section data-test="selector-list-scoping" data-test-result="pending">
+      <h2>Selector lists are scoped per selector</h2>
+      <div id="selector-list-scoping-output"></div>
+    </section>
+
+    <section data-test="selector-inline-diff" data-test-result="pending">
+      <h2>Managed inline styles are diffed</h2>
+      <div id="selector-inline-diff-output"></div>
+    </section>
+
+    <section data-test="selector-one-style-host" data-test-result="pending">
+      <h2>Multiple nodes share one root style host</h2>
+      <div id="selector-one-style-host-output"></div>
+    </section>
+
+    <section data-test="selector-host-cleanup" data-test-result="pending">
+      <h2>Style host is removed when selector nodes disappear</h2>
+      <div id="selector-host-cleanup-output"></div>
+    </section>
+
+    <section data-test="selector-child-toggle" data-test-result="pending">
+      <h2>Child boolean toggles keep primitive false</h2>
+      <div id="selector-child-toggle-output"></div>
+    </section>
+
+    <section data-test="selector-nested-hole" data-test-result="pending">
+      <h2>Nested template holes mount after empty content</h2>
+      <div id="selector-nested-hole-output"></div>
+    </section>
+
+    <script type="module">
+      await new Promise((resolve) => {
+        if (window.hyperElement) resolve();
+        else
+          window.addEventListener('hyper-element-loaded', resolve, {
+            once: true,
+          });
+      });
+
+      const nextFrame = () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve))
+        );
+
+      function setResult(name, pass, detail = '') {
+        const section = document.querySelector(`[data-test="${name}"]`);
+        section.dataset.testResult = pass ? 'pass' : 'fail';
+        if (!pass) console.error(`${name} failed: ${detail}`);
+      }
+
+      function mount(name, element) {
+        document.getElementById(`${name}-output`).appendChild(element);
+      }
+
+      hyperElement('styled-css-inline-preserved', {
+        styled: [{ article: { padding: '12px', color: 'black' } }],
+        render: (Html, ctx) =>
+          Html`<article+styled title=${ctx.attrs.label}>Content</article>`,
+      });
+      const inlineOnly = document.createElement('styled-css-inline-preserved');
+      inlineOnly.setAttribute('label', 'Inline title');
+      mount('selector-inline-preserved', inlineOnly);
+
+      hyperElement('styled-css-focus', {
+        styled: [
+          {
+            article: {
+              base: { color: 'black', outline: '0' },
+              ':focus': {
+                color: 'rgb(0, 0, 255)',
+                outline: '2px solid rgb(0, 0, 255)',
+              },
+            },
+          },
+        ],
+        render: (Html) =>
+          Html`<article+styled tabindex="0">Focusable</article>`,
+      });
+      const focusEl = document.createElement('styled-css-focus');
+      mount('selector-focus-css', focusEl);
+
+      hyperElement('styled-css-media', {
+        styled: [
+          {
+            article: {
+              base: { padding: '12px', display: 'block' },
+              '@media (min-width: 1px)': { padding: '8px' },
+              '@supports (display: grid)': { display: 'grid' },
+              '@container (min-width: 1px)': { margin: '0' },
+            },
+          },
+        ],
+        render: (Html) => Html`<article+styled>Media</article>`,
+      });
+      const mediaEl = document.createElement('styled-css-media');
+      mount('selector-media-css', mediaEl);
+
+      hyperElement('styled-css-override-change', {
+        styled: [
+          {
+            article: {
+              base: { color: 'black' },
+              ':focus': { color: 'rgb(0, 0, 255)' },
+            },
+          },
+        ],
+        render: (Html, ctx) => Html`
+          <article+styled
+            tabindex="0"
+            css=${ctx.attrs.override ? { ':focus': { color: ctx.attrs.override } } : null}
+          >Override</article>
+        `,
+      });
+      const overrideEl = document.createElement('styled-css-override-change');
+      overrideEl.setAttribute('override', 'rgb(0, 128, 0)');
+      mount('selector-css-override-change', overrideEl);
+
+      const definedStyles = defineStyled({
+        article: {
+          base: { padding: '12px', color: 'black' },
+          error: { color: 'rgb(255, 0, 0)' },
+          ':focus': { color: 'rgb(0, 0, 255)' },
+        },
+      });
+      hyperElement('styled-css-define', {
+        styled: definedStyles,
+        render: (Html) => Html`
+          <article+styled error=${true} tabindex="0">Full</article>
+          <p style=${definedStyles.article.inline({ error: true })}>Inline</p>
+        `,
+      });
+      const defineEl = document.createElement('styled-css-define');
+      mount('selector-define-styled', defineEl);
+
+      hyperElement('styled-css-selector-list', {
+        styled: [
+          {
+            article: {
+              base: { padding: '12px' },
+              ' .title, .subtitle, body': { color: 'rgb(255, 0, 0)' },
+            },
+          },
+        ],
+        render: (Html) => Html`
+          <article+styled>
+            <h2 class="title">Title</h2>
+            <p class="subtitle">Subtitle</p>
+          </article>
+        `,
+      });
+      const listEl = document.createElement('styled-css-selector-list');
+      mount('selector-list-scoping', listEl);
+
+      hyperElement('styled-css-inline-diff', {
+        styled: [{ article: { base: { color: 'black' } } }],
+        render: (Html, ctx) => Html`
+          <article+styled
+            style=${
+              ctx.attrs.mode === 'fade'
+                ? { opacity: '0.5' }
+                : { transform: 'scale(1)' }
+            }
+          >Diff</article>
+        `,
+      });
+      const diffEl = document.createElement('styled-css-inline-diff');
+      diffEl.setAttribute('mode', 'fade');
+      mount('selector-inline-diff', diffEl);
+
+      hyperElement('styled-css-host', {
+        styled: [
+          {
+            article: { base: { padding: '12px' }, ':focus': { color: 'blue' } },
+            button: {
+              base: { color: 'white', backgroundColor: 'black' },
+              ':focus': { backgroundColor: 'blue' },
+            },
+          },
+        ],
+        render: (Html) => Html`
+          <label for="host-button">Action</label>
+          <article+styled>
+            <button+styled id="host-button">Go</button>
+          </article>
+        `,
+      });
+      const hostEl = document.createElement('styled-css-host');
+      mount('selector-one-style-host', hostEl);
+
+      hyperElement('styled-css-toggle-host', {
+        styled: [
+          {
+            article: {
+              base: { color: 'black' },
+              ':focus': { color: 'blue' },
+            },
+          },
+        ],
+        render: (Html, ctx) =>
+          ctx.attrs.show
+            ? Html`<article+styled tabindex="0">Visible</article>`
+            : Html`<p>No card</p>`,
+      });
+      const cleanupEl = document.createElement('styled-css-toggle-host');
+      cleanupEl.setAttribute('show', 'true');
+      mount('selector-host-cleanup', cleanupEl);
+
+      hyperElement('styled-css-toggle-child', {
+        render: (Html, ctx) => Html`
+          <button ?disabled=${ctx.attrs.disabled}>Toggle Child</button>
+        `,
+      });
+      hyperElement('styled-css-toggle-parent', {
+        render: (Html) => Html`
+          <styled-css-toggle-child ?disabled=${false}></styled-css-toggle-child>
+        `,
+      });
+      const toggleParent = document.createElement('styled-css-toggle-parent');
+      mount('selector-child-toggle', toggleParent);
+
+      hyperElement('styled-css-nested-hole', {
+        render: (Html, ctx) => Html`
+          <div>${ctx.attrs.show ? Html`<span id="nested-hole">Nested</span>` : ''}</div>
+        `,
+      });
+      const nestedHole = document.createElement('styled-css-nested-hole');
+      mount('selector-nested-hole', nestedHole);
+      const directNestedHost = document.createElement('div');
+      const renderDirectNested = bind(directNestedHost);
+      let directShow = false;
+      function drawDirectNested() {
+        renderDirectNested`${directShow ? html`<span id="direct-nested-hole">Direct</span>` : ''}`;
+      }
+      drawDirectNested();
+
+      await nextFrame();
+
+      const inlineArticle = inlineOnly.querySelector('article');
+      setResult(
+        'selector-inline-preserved',
+        inlineArticle.style.padding === '12px' &&
+          inlineArticle.style.color === 'black' &&
+          inlineOnly.querySelectorAll('style[data-hyper-styled-root]')
+            .length === 0 &&
+          inlineArticle.className === '' &&
+          inlineArticle.getAttribute('title') === 'Inline title',
+        inlineOnly.outerHTML
+      );
+
+      const focusArticle = focusEl.querySelector('article');
+      focusArticle.focus();
+      await nextFrame();
+      const focusStyle = focusEl.querySelector('style[data-hyper-styled-root]');
+      setResult(
+        'selector-focus-css',
+        focusArticle.getAttribute('style') == null &&
+          focusArticle.className.includes('he-s-') &&
+          focusStyle.textContent.includes(':focus') &&
+          getComputedStyle(focusArticle).color === 'rgb(0, 0, 255)',
+        focusEl.outerHTML
+      );
+
+      const mediaArticle = mediaEl.querySelector('article');
+      const mediaStyle = mediaEl.querySelector('style[data-hyper-styled-root]');
+      setResult(
+        'selector-media-css',
+        mediaStyle.textContent.includes('@media (min-width: 1px)') &&
+          mediaStyle.textContent.includes('@supports (display: grid)') &&
+          mediaStyle.textContent.includes('@container (min-width: 1px)') &&
+          getComputedStyle(mediaArticle).paddingTop === '8px',
+        mediaEl.outerHTML
+      );
+
+      const overrideArticle = overrideEl.querySelector('article');
+      overrideArticle.focus();
+      await nextFrame();
+      const greenApplied =
+        getComputedStyle(overrideArticle).color === 'rgb(0, 128, 0)';
+      overrideEl.setAttribute('override', 'rgb(128, 0, 128)');
+      await nextFrame();
+      overrideArticle.focus();
+      await nextFrame();
+      const overrideStyle = overrideEl.querySelector(
+        'style[data-hyper-styled-root]'
+      ).textContent;
+      setResult(
+        'selector-css-override-change',
+        greenApplied &&
+          getComputedStyle(overrideArticle).color === 'rgb(128, 0, 128)' &&
+          overrideStyle.includes('rgb(128, 0, 128)') &&
+          !overrideStyle.includes('rgb(0, 128, 0)') &&
+          !overrideArticle.hasAttribute('css'),
+        overrideEl.outerHTML
+      );
+
+      const defineArticle = defineEl.querySelector('article');
+      const defineInline = defineEl.querySelector('p');
+      const fullObject = definedStyles.article({ error: true });
+      const inlineObject = definedStyles.article.inline({ error: true });
+      setResult(
+        'selector-define-styled',
+        fullObject[':focus'] &&
+          !inlineObject[':focus'] &&
+          defineArticle.className.includes('he-v-') &&
+          defineInline.style.color === 'rgb(255, 0, 0)',
+        defineEl.outerHTML
+      );
+
+      const listStyle = listEl.querySelector(
+        'style[data-hyper-styled-root]'
+      ).textContent;
+      setResult(
+        'selector-list-scoping',
+        listStyle.includes(' .title,\n') &&
+          listStyle.includes(' .subtitle,\n') &&
+          !listStyle.includes(', .subtitle') &&
+          getComputedStyle(document.body).color !== 'rgb(255, 0, 0)',
+        listEl.outerHTML
+      );
+
+      const diffArticle = diffEl.querySelector('article');
+      diffArticle.style.backgroundColor = 'yellow';
+      diffEl.setAttribute('mode', 'scale');
+      await nextFrame();
+      setResult(
+        'selector-inline-diff',
+        diffArticle.style.opacity === '' &&
+          diffArticle.style.transform === 'scale(1)' &&
+          diffArticle.style.backgroundColor === 'yellow',
+        diffEl.outerHTML
+      );
+
+      const hostStyles = hostEl.querySelectorAll(
+        'style[data-hyper-styled-root]'
+      );
+      hostEl.insertBefore(hostStyles[0], hostEl.firstChild);
+      hostEl.setAttribute('data-rerender', '1');
+      await nextFrame();
+      const restoredHost = hostEl.querySelector(
+        'style[data-hyper-styled-root]'
+      );
+      setResult(
+        'selector-one-style-host',
+        hostStyles.length === 1 &&
+          hostEl.lastElementChild === restoredHost &&
+          !hostEl.querySelector('article style[data-hyper-styled-root]') &&
+          hostEl.querySelector('label + article'),
+        hostEl.outerHTML
+      );
+
+      cleanupEl.removeAttribute('show');
+      await nextFrame();
+      setResult(
+        'selector-host-cleanup',
+        cleanupEl.querySelector('p') &&
+          cleanupEl.querySelectorAll('style[data-hyper-styled-root]').length ===
+            0,
+        cleanupEl.outerHTML
+      );
+
+      const childButton = toggleParent.querySelector('button');
+      setResult(
+        'selector-child-toggle',
+        childButton && !childButton.hasAttribute('disabled'),
+        toggleParent.outerHTML
+      );
+
+      nestedHole.setAttribute('show', 'true');
+      directShow = true;
+      drawDirectNested();
+      await nextFrame();
+      setResult(
+        'selector-nested-hole',
+        nestedHole.querySelector('#nested-hole')?.textContent === 'Nested' &&
+          directNestedHost.querySelector('#direct-nested-hole')?.textContent ===
+            'Direct',
+        nestedHole.outerHTML + directNestedHost.outerHTML
+      );
+    </script>
+  </body>
+</html>

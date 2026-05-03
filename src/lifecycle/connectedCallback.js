@@ -15,7 +15,12 @@ import {
   markTagRegistered,
   initSSR,
 } from '../ssr/index.js';
-import { registerStyled, setRenderingInstance } from '../styled/index.js';
+import {
+  beginStyleRender,
+  commitStyleRender,
+  registerStyled,
+  setRenderingInstance,
+} from '../styled/index.js';
 
 /**
  * Core initialization callback, called when element is connected to DOM.
@@ -165,9 +170,11 @@ export function createdCallback() {
 
     // Set rendering context for +styled handlers (needed during first render
     // when nodes are in a detached DocumentFragment)
+    beginStyleRender(this);
     setRenderingInstance(this);
     render.call(that, ref.Html, ...data);
     setRenderingInstance(null);
+    commitStyleRender(this);
 
     // Clear any pending mutations caused by our render to prevent infinite loops
     // Then immediately re-enable observation for external changes

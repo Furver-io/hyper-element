@@ -5,6 +5,7 @@
 
 import { createSSRHtml } from './ssr-html.js';
 import { escapeHtml } from '../utils/escape.js';
+import { createSSRStyleHost } from '../styled/style-host.js';
 
 /**
  * Serializes attributes to an HTML attribute string.
@@ -73,6 +74,7 @@ export async function renderElement(tagName, options = {}) {
     // Element-like properties for compatibility
     tagName: tagName.toUpperCase(),
     localName: tagName.toLowerCase(),
+    __styledRules: new Map(),
   };
 
   // Create SSR Html function with context
@@ -115,12 +117,16 @@ export async function renderElement(tagName, options = {}) {
   const attrString = serializeAttributes(attrs);
 
   // Build final HTML
+  const styleHost = createSSRStyleHost(
+    tagName,
+    Array.from(context.__styledRules.values())
+  );
   if (shadowDOM) {
     // Declarative Shadow DOM format
-    return `<${tagName}${attrString}><template shadowrootmode="open">${content}</template></${tagName}>`;
+    return `<${tagName}${attrString}><template shadowrootmode="open">${content}${styleHost}</template></${tagName}>`;
   }
 
-  return `<${tagName}${attrString}>${content}</${tagName}>`;
+  return `<${tagName}${attrString}>${content}${styleHost}</${tagName}>`;
 }
 
 /**

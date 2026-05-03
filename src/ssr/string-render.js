@@ -6,6 +6,7 @@
 import { createParser } from '../render/parser.js';
 import { Comment, Text, Element, Fragment } from '../render/nodes.js';
 import { ssrUpdate } from './string-update.js';
+import { applySSRStyledNode } from './styled-render.js';
 import {
   ATTRIBUTE,
   ATTRIBUTE_TEMPLATE,
@@ -135,7 +136,7 @@ function applyUpdates(tree, updates, values) {
       case ATTRIBUTE: {
         // Set attribute value
         if (node instanceof Element && attrName) {
-          const rendered = handler(value);
+          const rendered = handler(value, node);
           if (rendered == null) {
             delete node.props[attrName];
           } else {
@@ -236,6 +237,7 @@ function nodeToString(node) {
     return node.toString();
   }
   if (node instanceof Element) {
+    applySSRStyledNode(node);
     const { xml, name, props: p, children: c } = node;
     // children is always an array (initialized in constructor)
     const length = c.length;

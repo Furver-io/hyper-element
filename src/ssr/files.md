@@ -9,6 +9,8 @@ src/ssr/
 ├── ssr-html.js        # Html template factory
 ├── string-render.js   # Core string rendering
 ├── string-update.js   # SSR update handlers
+├── styled-render.js   # Final +styled artifact application
+├── styled-update.js   # +styled SSR update handlers
 ├── index.js           # Client hydration init
 ├── buffer.js          # Event buffer
 ├── capture.js         # Event capture
@@ -38,6 +40,14 @@ Core string-based rendering logic. Parses templates, creates virtual nodes, and 
 ### `string-update.js`
 
 SSR-compatible update handlers that mirror render/update.js. Returns values/strings instead of mutating DOM nodes.
+
+### `styled-render.js`
+
+Applies selector-capable +styled artifacts to SSR parser nodes just before serialization. Merges generated classes, consumes css/variant attributes, and registers root style-host rules.
+
+### `styled-update.js`
+
+Records SSR `style`, `css`, and dynamic variant inputs for +styled nodes so `styled-render.js` can resolve one shared browser/SSR artifact at serialization time.
 
 ### `index.js`
 

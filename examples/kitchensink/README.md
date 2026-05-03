@@ -54,6 +54,7 @@ This directory serves two purposes:
 ### Styling
 
 - [styled.html](styled.html) - `+styled` system: base styles, prop flags, logic functions
+- [styled-css.html](styled-css.html) - `+styled` selector CSS: generated scoped rules, `css=${...}` overrides, `defineStyled()`, selector-list scoping, and root-owned style hosts
 
 ### Composition
 
@@ -213,11 +214,18 @@ script only reads the snippet, evals it, and asserts.
 document.getElementById('my-test-output').innerHTML = '&lt;my-elem&gt;&lt;/my-elem&gt;';</code></pre>
       <div id="my-test-output"></div>
       <script type="module">
-        const code = document.querySelector('[data-test="my-test"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="my-test"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="my-test-output"><my-elem><div>Hello!</div></my-elem></div>';
+        const expected =
+          '<div id="my-test-output"><my-elem><div>Hello!</div></my-elem></div>';
         requestAnimationFrame(() => {
-          window.assertSnapshot('my-test', document.getElementById('my-test-output'), expected);
+          window.assertSnapshot(
+            'my-test',
+            document.getElementById('my-test-output'),
+            expected
+          );
         });
       </script>
     </section>

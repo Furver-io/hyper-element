@@ -10,6 +10,7 @@ import { createFunctionalElement } from './functional.js';
 import { signal, computed, effect, batch, untracked } from './signals/index.js';
 import { configureSSR } from './ssr/index.js';
 import { withOptions } from './withOptions.js';
+import { defineStyled } from './styled/index.js';
 import {
   renderSpec,
   registerComponent,
@@ -82,6 +83,7 @@ export {
   batch,
   untracked,
   configureSSR,
+  defineStyled,
   renderSpec,
   registerComponent,
   validateSpec,

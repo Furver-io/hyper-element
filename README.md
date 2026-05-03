@@ -1158,6 +1158,37 @@ render(Html) {
 
 **Live Example of [styling](https://codepen.io/codemeasandwich/pen/RmQVKY)**
 
+## Selector Styles with `+styled`
+
+`+styled` can consume style objects with selector keys. Inline-only objects stay inline; selector-capable objects receive generated scoped classes and one renderer-owned style host at the component root so selectors such as `:hover`, `:focus`, `@media`, and nested child selectors can participate in normal CSS cascade.
+
+```js
+import hyperElement, { defineStyled } from 'hyper-element';
+
+const cardStyles = defineStyled({
+  article: {
+    base: { padding: '12px', color: 'black' },
+    error: { color: 'red' },
+    ':hover': { color: 'blue' },
+    ' .title': { fontWeight: 'bold' },
+  },
+});
+
+hyperElement('demo-card', {
+  styled: cardStyles,
+  render: (Html, ctx) => Html`
+    <article+styled
+      error=${ctx.attrs.error}
+      css=${{ ':hover': { color: ctx.attrs.hoverColor || 'green' } }}
+    >
+      <h2 class="title">Title</h2>
+    </article>
+  `,
+});
+```
+
+Use `cardStyles.article({ error: true })` for full selector-capable data on `+styled` elements, and `cardStyles.article.inline({ error: true })` when passing styles to a normal native `style=${...}` attribute.
+
 ## List with State-Based Styling
 
 Combine list rendering with dynamic inline styles driven by component state:
