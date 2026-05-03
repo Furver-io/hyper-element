@@ -64,6 +64,16 @@
       <div id="selector-one-style-host-output"></div>
     </section>
 
+    <section data-test="selector-style-nonce" data-test-result="pending">
+      <h2>Generated style hosts receive configured nonce</h2>
+      <div id="selector-style-nonce-output"></div>
+    </section>
+
+    <section data-test="selector-reserved-attrs" data-test-result="pending">
+      <h2>Reserved attributes are not consumed as variants</h2>
+      <div id="selector-reserved-attrs-output"></div>
+    </section>
+
     <section data-test="selector-host-cleanup" data-test-result="pending">
       <h2>Style host is removed when selector nodes disappear</h2>
       <div id="selector-host-cleanup-output"></div>
@@ -102,6 +112,8 @@
       function mount(name, element) {
         document.getElementById(`${name}-output`).appendChild(element);
       }
+
+      configureSSR({ styleNonce: 'styled-css-browser-nonce' });
 
       hyperElement('styled-css-inline-preserved', {
         styled: [{ article: { padding: '12px', color: 'black' } }],
@@ -237,6 +249,43 @@
       });
       const hostEl = document.createElement('styled-css-host');
       mount('selector-one-style-host', hostEl);
+
+      hyperElement('styled-css-nonce', {
+        styled: [
+          {
+            article: {
+              base: { color: 'black' },
+              ':focus': { color: 'blue' },
+            },
+          },
+        ],
+        render: (Html) => Html`<article+styled tabindex="0">Nonce</article>`,
+      });
+      const nonceEl = document.createElement('styled-css-nonce');
+      mount('selector-style-nonce', nonceEl);
+
+      hyperElement('styled-css-reserved-attrs', {
+        styled: [
+          {
+            button: {
+              base: { color: 'black' },
+              disabled: { color: 'red' },
+              ':focus': { color: 'blue' },
+            },
+            article: {
+              base: { color: 'black' },
+              selected: { color: 'green' },
+              ':focus': { color: 'blue' },
+            },
+          },
+        ],
+        render: (Html) => Html`
+          <button+styled disabled=${true} href="/safe">Reserved</button>
+          <article+styled selected=${true}>Variant</article>
+        `,
+      });
+      const reservedEl = document.createElement('styled-css-reserved-attrs');
+      mount('selector-reserved-attrs', reservedEl);
 
       hyperElement('styled-css-toggle-host', {
         styled: [
@@ -397,6 +446,32 @@
           !hostEl.querySelector('article style[data-hyper-styled-root]') &&
           hostEl.querySelector('label + article'),
         hostEl.outerHTML
+      );
+
+      const nonceStyle = nonceEl.querySelector('style[data-hyper-styled-root]');
+      const nonceApplied = nonceStyle.nonce === 'styled-css-browser-nonce';
+      configureSSR({ styleNonce: null });
+      nonceEl.setAttribute('data-rerender', 'clear-nonce');
+      await nextFrame();
+      const clearedNonce = nonceEl.querySelector(
+        'style[data-hyper-styled-root]'
+      ).nonce;
+      setResult(
+        'selector-style-nonce',
+        nonceApplied && clearedNonce === '',
+        nonceEl.outerHTML
+      );
+
+      const reservedButton = reservedEl.querySelector('button');
+      const reservedArticle = reservedEl.querySelector('article');
+      setResult(
+        'selector-reserved-attrs',
+        reservedButton.hasAttribute('disabled') &&
+          reservedButton.getAttribute('href') === '/safe' &&
+          !reservedButton.className.includes('he-v-') &&
+          reservedArticle.className.includes('he-v-') &&
+          !reservedArticle.hasAttribute('selected'),
+        reservedEl.outerHTML
       );
 
       cleanupEl.removeAttribute('show');

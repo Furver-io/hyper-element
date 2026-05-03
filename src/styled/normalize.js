@@ -136,6 +136,26 @@ export function splitDeclarationAndSelectorKeys(styleObject, options = {}) {
 }
 
 /**
+ * Splits `css=${...}` override input while enforcing its selector-only
+ * contract. Declaration keys are ignored because `css` exists to override
+ * selector CSS without creating a second inline-style pathway.
+ *
+ * @param {Record<string, unknown>} styleObject - Raw css override object.
+ * @returns {{declarations: Object, selectorRules: Array, hasSelectorCss: boolean}}
+ */
+export function splitCssOverrideKeys(styleObject) {
+  const split = splitDeclarationAndSelectorKeys(styleObject);
+  for (const key of Object.keys(split.declarations)) {
+    warnOnce(`+styled css override declaration "${key}" was ignored.`);
+  }
+  return {
+    declarations: {},
+    selectorRules: split.selectorRules,
+    hasSelectorCss: split.hasSelectorCss,
+  };
+}
+
+/**
  * Normalizes a single tag or shared-group style definition. Nested syntax is
  * detected by the historical `base` key; otherwise declarations live directly
  * alongside selector keys.

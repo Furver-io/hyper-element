@@ -16,6 +16,7 @@ let defineStyled;
 let normalizeStyledDefinition;
 let normalizeTagStyle;
 let splitDeclarationAndSelectorKeys;
+let splitCssOverrideKeys;
 
 if (process.env.SSR_COVERAGE) {
   // Import from source files for coverage collection
@@ -27,6 +28,7 @@ if (process.env.SSR_COVERAGE) {
   normalizeTagStyle = styledModule.normalizeTagStyle;
   splitDeclarationAndSelectorKeys =
     styledModule.splitDeclarationAndSelectorKeys;
+  splitCssOverrideKeys = styledModule.splitCssOverrideKeys;
   console.log('Styled tests: Using SOURCE files (coverage mode)');
 } else {
   // Import from bundle to verify bundled output
@@ -37,6 +39,7 @@ if (process.env.SSR_COVERAGE) {
   normalizeStyledDefinition = null;
   normalizeTagStyle = null;
   splitDeclarationAndSelectorKeys = null;
+  splitCssOverrideKeys = null;
   console.log('Styled tests: Using BUNDLE (verification mode)');
 }
 
@@ -909,6 +912,98 @@ test('TC7.18: SSR generated classes preserve user classes', async () => {
   );
 });
 
+test('TC7.19: SSR style hosts serialize configured CSP nonce', async () => {
+  const html = await renderElement('ssr-style-nonce-selector', {
+    attrs: {},
+    styleNonce: () => 'nonce-&"<token>',
+    styled: [
+      {
+        article: {
+          base: { color: 'black' },
+          ':hover': { color: 'blue' },
+        },
+      },
+    ],
+    render: (Html) => Html`<article+styled>Content</article>`,
+  });
+
+  assert.ok(
+    html.includes('nonce="nonce-&amp;&quot;&lt;token&gt;"'),
+    'Should serialize escaped CSP nonce on SSR style host'
+  );
+  assert.ok(html.includes(':hover'), 'Nonce output should keep CSS rules');
+});
+
+test('TC7.20: SSR reserved attrs pass through and selected article variant works', async () => {
+  const html = await renderElement('ssr-reserved-attrs-selector', {
+    attrs: {},
+    styled: [
+      {
+        button: {
+          base: { color: 'black' },
+          disabled: { color: 'red' },
+          ':focus': { color: 'blue' },
+        },
+        article: {
+          base: { color: 'black' },
+          selected: { color: 'green' },
+          ':focus': { color: 'blue' },
+        },
+      },
+    ],
+    render: (Html) => Html`
+      <button+styled disabled=${true} href=${'/safe'}>Reserved</button>
+      <article+styled selected=${true}>Variant</article>
+    `,
+  });
+
+  assert.ok(
+    html.includes('disabled="true"'),
+    'Reserved disabled attr should remain on styled button'
+  );
+  assert.ok(
+    html.includes('href="/safe"'),
+    'Reserved href attr should remain on styled button'
+  );
+  assert.ok(
+    !/<button[^>]*he-v-/.test(html),
+    'Reserved disabled attr should not activate button variant'
+  );
+  assert.ok(
+    /<article[^>]*he-v-/.test(html),
+    'Non-native selected attr should still activate article variant'
+  );
+  assert.ok(
+    !/<article[^>]*\sselected(?:=|\s|>)/.test(html),
+    'Consumed article variant attr should not remain in SSR output'
+  );
+});
+
+test('TC7.21: SSR css override ignores declaration keys', async () => {
+  const html = await renderElement('ssr-css-declaration-ignore', {
+    attrs: {},
+    styled: [
+      {
+        article: {
+          base: { color: 'black' },
+          ':hover': { color: 'blue' },
+        },
+      },
+    ],
+    render: (Html) => Html`
+      <article+styled
+        css=${{ color: 'red', ':hover': { color: 'green' } }}
+      >Content</article>
+    `,
+  });
+
+  assert.ok(html.includes('color: green'), 'Selector override should remain');
+  assert.ok(
+    !html.includes('color: red'),
+    'css declaration key should be ignored rather than emitted'
+  );
+});
+
 // ============================================================================
 // Edge Cases Tests (10 documented cases)
 // ============================================================================
@@ -1179,6 +1274,14 @@ test('SSR Coverage: public styled normalizers handle invalid input', async () =>
   assert.strictEqual(definition.tags.size, 0);
   assert.deepStrictEqual(definition.sharedGroups, []);
   assert.strictEqual(definition.logic, null);
+
+  const cssSplit = splitCssOverrideKeys({
+    color: 'red',
+    ':hover': { color: 'green' },
+  });
+  assert.deepStrictEqual(cssSplit.declarations, {});
+  assert.strictEqual(cssSplit.selectorRules.length, 1);
+  assert.strictEqual(cssSplit.hasSelectorCss, true);
 });
 
 // Run tests if this is the main module

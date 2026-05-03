@@ -1861,6 +1861,7 @@ import { configureSSR } from 'hyper-element';
 configureSSR({
   events: ['click', 'input', 'change', 'submit'], // Events to capture
   devMode: true, // Show visual indicator during capture (dev only)
+  styleNonce: 'request-nonce', // Optional CSP nonce for generated +styled style hosts
 });
 ```
 
@@ -1947,6 +1948,20 @@ configureSSR({
 
   // Show orange "SSR Capture Active" badge (development only)
   devMode: false,
+
+  // Optional CSP nonce for browser-created +styled style hosts
+  styleNonce: 'request-nonce',
+});
+```
+
+Server rendering can also put the same nonce on selector-capable `+styled`
+style hosts for strict CSP deployments:
+
+```js
+const html = await renderElement('secure-card', {
+  styleNonce: 'request-nonce',
+  styled: [{ article: { color: 'black', ':hover': { color: 'blue' } } }],
+  render: (Html) => Html`<article+styled>Secure</article>`,
 });
 ```
 

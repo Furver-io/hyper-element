@@ -14,7 +14,7 @@ const srcDir = path.join(__dirname, '..', 'src');
 const buildDir = path.join(__dirname, '..', 'build');
 
 // prettier-ignore
-const sharedFiles = ['core/constants.js', 'core/manager.js', 'utils/makeid.js', 'utils/escape.js', 'render/constants.js', 'render/nodes.js', 'render/keyed.js', 'render/parser-helpers.js', 'render/parser.js', 'signals/index.js', 'attributes/parseAttribute.js', 'styled/serializer.js', 'styled/normalize.js', 'styled/artifact-ids.js', 'styled/artifact-colors.js', 'styled/artifact-tags.js', 'styled/artifact-rules.js', 'styled/artifact-direct.js', 'styled/artifact-compose.js', 'styled/artifact.js', 'styled/style-host.js', 'styled/define-styled.js', 'template/processAdvancedTemplate.js', 'html/parseEachBlocks.js'];
+const sharedFiles = ['core/constants.js', 'core/manager.js', 'utils/makeid.js', 'utils/escape.js', 'render/constants.js', 'render/nodes.js', 'render/keyed.js', 'render/parser-helpers.js', 'styled/reserved.js', 'render/parser.js', 'signals/index.js', 'attributes/parseAttribute.js', 'styled/serializer.js', 'styled/normalize.js', 'styled/artifact-ids.js', 'styled/artifact-colors.js', 'styled/artifact-tags.js', 'styled/artifact-rules.js', 'styled/artifact-direct.js', 'styled/artifact-compose.js', 'styled/artifact.js', 'styled/style-host.js', 'styled/define-styled.js', 'template/processAdvancedTemplate.js', 'html/parseEachBlocks.js'];
 
 // prettier-ignore
 const browserFiles = ['render/creator.js', 'render/resolve.js', 'render/diff.js', 'render/persistent-fragment.js', 'render/comment.js', 'render/update.js', 'render/hole.js', 'render/index.js', 'styled/parser-hooks.js', 'styled/registry.js', 'styled/resolution.js', 'styled/apply.js', 'styled/handler.js', 'template/buildTemplate.js', 'attributes/dataset.js', 'attributes/attachAttrs.js', 'html/createHtml.js', 'ssr/pathResolver.js', 'ssr/buffer.js', 'ssr/devIndicator.js', 'ssr/capture.js', 'ssr/replay.js', 'ssr/index.js', 'lifecycle/onNext.js', 'lifecycle/observer.js', 'lifecycle/processFragmentResult.js', 'lifecycle/connectedCallback.js', 'hyperElement.js', 'functional.js', 'withOptions.js', 'json-render/validator.js', 'json-render/catalog-metadata.js', 'json-render/checklist-state.js', 'json-render/component-helpers.js', 'json-render/components.js', 'json-render/registry.js', 'json-render/catalog.js', 'json-render/renderer.js', 'json-render/bridge.js', 'json-render/index.js', 'json-render/element.js'];
@@ -149,7 +149,8 @@ function createBundle() {
   var setRenderingInstance, getRenderingInstance, registerStyled, unregisterStyled, getStyledEntry;
   var resolveStylesWithEntry, resolveStyles, applyStylesToNode, resolveColors, isNestedSyntax, styledStyleHandler;
   var getStyledNodeState, applyInlineDiff, applyClassDiff, applyStyledArtifactToNode;
-  var getInstanceForNode, applyStyledNode, styledCssHandler, isKnownVariant, isReservedAttr, styledAttributeHandler;
+  var isReservedStyledAttr;
+  var getInstanceForNode, applyStyledNode, styledCssHandler, isKnownVariant, styledAttributeHandler;
   var STYLED_SUFFIX;
   var buildTemplate, addDataset, getDataset, attachAttrs, processFragmentResult;
   var pathResolver, ssrBuffer, showDevIndicator, hideDevIndicator;

@@ -174,7 +174,11 @@ export function createdCallback() {
     setRenderingInstance(this);
     render.call(that, ref.Html, ...data);
     setRenderingInstance(null);
-    commitStyleRender(this);
+    if (Object.prototype.hasOwnProperty.call(ssrState.config, 'styleNonce')) {
+      commitStyleRender(this, ssrState.config.styleNonce);
+    } else {
+      commitStyleRender(this);
+    }
 
     // Clear any pending mutations caused by our render to prevent infinite loops
     // Then immediately re-enable observation for external changes

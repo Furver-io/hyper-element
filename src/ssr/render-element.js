@@ -57,6 +57,7 @@ export async function renderElement(tagName, options = {}) {
     render,
     styled,
     colors,
+    styleNonce,
   } = options;
 
   if (typeof render !== 'function') {
@@ -119,7 +120,8 @@ export async function renderElement(tagName, options = {}) {
   // Build final HTML
   const styleHost = createSSRStyleHost(
     tagName,
-    Array.from(context.__styledRules.values())
+    Array.from(context.__styledRules.values()),
+    styleNonce
   );
   if (shadowDOM) {
     // Declarative Shadow DOM format

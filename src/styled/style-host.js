@@ -9,6 +9,35 @@ import { escapeCssForStyleTag } from './serializer.js';
 const roots = new WeakMap();
 
 /**
+ * Resolves a string or lazy nonce callback into an attribute-safe token. A
+ * callback lets applications rotate CSP nonces per render while nullish values
+ * mean no nonce management should be applied.
+ *
+ * @param {string|Function|null|undefined} nonce - Nonce option.
+ * @returns {string|null} Resolved nonce token or null.
+ */
+export function resolveStyleNonce(nonce) {
+  const value = typeof nonce === 'function' ? nonce() : nonce;
+  if (value == null || value === false) return null;
+  return String(value);
+}
+
+/**
+ * Escapes the nonce for SSR attribute output. The browser path assigns the
+ * same token through DOM APIs, but SSR must protect the surrounding HTML.
+ *
+ * @param {string} value - Resolved nonce token.
+ * @returns {string} HTML attribute-safe nonce.
+ */
+function escapeAttribute(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/**
  * Gets or creates the style registry associated with a component instance.
  *
  * @param {HTMLElement} instance - Owning hyper-element instance.
@@ -72,7 +101,7 @@ function findExistingStyleElement(instance) {
  *
  * @param {HTMLElement} instance - Owning hyper-element instance/root.
  */
-export function commitStyleRender(instance) {
+export function commitStyleRender(instance, nonce) {
   if (!instance) return;
   const registry = getStyleRootRegistry(instance);
   registry.activeRules = new Map(registry.pendingRules);
@@ -92,6 +121,16 @@ export function commitStyleRender(instance) {
       'data-hyper-styled-root',
       instance.localName
     );
+  }
+
+  if (arguments.length > 1) {
+    const resolvedNonce = resolveStyleNonce(nonce);
+    if (resolvedNonce) {
+      registry.styleElement.setAttribute('nonce', resolvedNonce);
+      registry.styleElement.nonce = resolvedNonce;
+    } else {
+      registry.styleElement.removeAttribute('nonce');
+    }
   }
 
   const cssText = Array.from(registry.activeRules.values()).join('\n\n');
@@ -128,7 +167,10 @@ export function cleanupStyleRoot(instance) {
  */
 export function createSSRStyleHost(rootName, rules, nonce = null) {
   if (!rules || rules.length === 0) return '';
-  const attr = nonce ? ` nonce="${String(nonce)}"` : '';
+  const resolvedNonce = resolveStyleNonce(nonce);
+  const attr = resolvedNonce
+    ? ` nonce="${escapeAttribute(resolvedNonce)}"`
+    : '';
   const cssText = rules.map((rule) => rule.cssText).join('\n\n');
   return `<style data-hyper-styled-root="${rootName}"${attr}>${escapeCssForStyleTag(cssText)}</style>`;
 }

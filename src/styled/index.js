@@ -22,6 +22,7 @@ export {
 export {
   normalizeStyledDefinition,
   normalizeTagStyle,
+  splitCssOverrideKeys,
   splitDeclarationAndSelectorKeys,
   isSelectorKey,
   isSupportedAtRule,
@@ -42,7 +43,10 @@ export {
   cleanupStyleRoot,
   registerStyleRules,
   createSSRStyleHost,
+  resolveStyleNonce,
 } from './style-host.js';
+
+export { isReservedStyledAttr } from './reserved.js';
 
 // DOM application
 export { applyStyledArtifactToNode, getStyledNodeState } from './apply.js';

@@ -42,6 +42,7 @@ const ssrState = {
  * @param {Object} options - Configuration options
  * @param {string[]} [options.events] - Event types to capture
  * @param {boolean} [options.devMode] - Show visual indicator
+ * @param {string|Function|null} [options.styleNonce] - CSP nonce for generated style hosts
  */
 function configureSSR(options = {}) {
   if (Array.isArray(options.events)) {
@@ -54,6 +55,9 @@ function configureSSR(options = {}) {
     } else {
       hideDevIndicator();
     }
+  }
+  if ('styleNonce' in options) {
+    ssrState.config.styleNonce = options.styleNonce;
   }
 }
 

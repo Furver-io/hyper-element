@@ -14,6 +14,7 @@ import {
 } from './constants.js';
 import { Comment, Text, Element, Fragment } from './nodes.js';
 import { append, parent, path, prop } from './parser-helpers.js';
+import { isReservedStyledAttr } from '../styled/reserved.js';
 
 const NUL = '\x00';
 const DOUBLE_QUOTED_NUL = `"${NUL}"`;
@@ -179,15 +180,7 @@ export function createParser(update) {
                 const firstChar = attrName[0];
                 const isSpecialPrefix =
                   firstChar === '@' || firstChar === '?' || firstChar === '.';
-                const isReserved =
-                  attrName === 'style' ||
-                  attrName === 'class' ||
-                  attrName === 'id' ||
-                  attrName === 'role' ||
-                  attrName.startsWith('data-') ||
-                  attrName.startsWith('aria-');
-
-                if (!isSpecialPrefix && !isReserved) {
+                if (!isSpecialPrefix && !isReservedStyledAttr(attrName, tag)) {
                   if (!node.propFlags) node.propFlags = [];
                   node.propFlags.push({ name: attrName, static: true });
                 }

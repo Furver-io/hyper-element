@@ -5,6 +5,7 @@
  */
 
 import { serializeInlineDeclarations } from '../styled/serializer.js';
+import { isReservedStyledAttr } from '../styled/reserved.js';
 
 /**
  * Converts a style object to an inline CSS string for selector-free SSR paths.
@@ -63,6 +64,7 @@ export const stringStyledCss = (tagName, propFlags) => (value, node) => {
  * @returns {boolean} True when the attribute is a style variant.
  */
 function isKnownVariant(context, tagName, attrName) {
+  if (isReservedStyledAttr(attrName, tagName)) return false;
   const base = Array.isArray(context?.styled) ? context.styled[0] : null;
   const tagStyles = base?.[tagName];
   return !!(
@@ -71,28 +73,6 @@ function isKnownVariant(context, tagName, attrName) {
     tagStyles.base &&
     tagStyles[attrName] &&
     typeof tagStyles[attrName] === 'object'
-  );
-}
-
-/**
- * Keeps native/pass-through attributes out of the styled variant path.
- *
- * @param {string} attrName - Attribute name.
- * @returns {boolean} True when normal SSR attribute output should be used.
- */
-function isReservedAttr(attrName) {
-  return (
-    attrName === 'class' ||
-    attrName === 'id' ||
-    attrName === 'role' ||
-    attrName === 'slot' ||
-    attrName === 'part' ||
-    attrName === 'title' ||
-    attrName === 'style' ||
-    attrName === 'css' ||
-    attrName.startsWith('data-') ||
-    attrName.startsWith('aria-') ||
-    attrName.startsWith('on')
   );
 }
 
@@ -108,10 +88,7 @@ function isReservedAttr(attrName) {
  */
 export const stringStyledAttribute =
   (attrName, tagName, context, normalHandler) => (value, node) => {
-    if (
-      !isReservedAttr(attrName) &&
-      isKnownVariant(context, tagName, attrName)
-    ) {
+    if (isKnownVariant(context, tagName, attrName)) {
       if (node) {
         node._styledState = node._styledState || {};
         node._styledState.dynamicFlags = node._styledState.dynamicFlags || {};

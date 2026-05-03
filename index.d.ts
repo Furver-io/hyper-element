@@ -653,6 +653,8 @@ export interface SSRConfig {
   events?: string[];
   /** Show visual indicator in development mode (default: false) */
   devMode?: boolean;
+  /** CSP nonce applied to browser-created renderer-owned +styled style hosts */
+  styleNonce?: string | (() => string) | null;
 }
 
 /**
@@ -695,6 +697,8 @@ export interface RenderElementOptions<T = any> {
   styled?: StyledDefinition;
   /** Color palette used by +styled declarations */
   colors?: Record<string, string>;
+  /** CSP nonce applied to the SSR renderer-owned +styled style host */
+  styleNonce?: string | (() => string) | null;
   /** Render function (Html, ctx) => void */
   render: (Html: HtmlFunction, ctx: ElementContext) => void;
 }

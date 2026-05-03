@@ -51,7 +51,7 @@ Records SSR `style`, `css`, and dynamic variant inputs for +styled nodes so `sty
 
 ### `index.js`
 
-Client-side hydration initialization. Auto-starts event capture when the library loads. Configures SSR options and manages capture state.
+Client-side hydration initialization. Auto-starts event capture when the library loads. Configures SSR options, stores the optional browser `styleNonce` for generated `+styled` style hosts, and manages capture state.
 
 ### `buffer.js`
 

@@ -108,7 +108,7 @@ Html`
 `;
 ```
 
-Changing or removing the `css` value removes stale generated classes and rules on the next render.
+Changing or removing the `css` value removes stale generated classes and rules on the next render. Declaration keys such as `color` are ignored with a development warning; put dynamic declarations in `style=${...}` instead.
 
 ### defineStyled
 
@@ -167,4 +167,4 @@ Later sources override earlier ones for conflicting properties.
 
 The styled system supports server-side rendering through the same artifact path as browser rendering. Inline-only styles still output `style=""`; selector-capable styles output generated classes plus one root-owned style host at the end of the rendered component content. Generated CSS escapes `</style` before serialization.
 
-Generated style tags currently do not expose a dedicated CSP nonce option. Applications using strict CSP must allow the renderer-owned style host through their existing style policy.
+Strict CSP deployments can pass `styleNonce` through `renderElement()` on the server and `configureSSR()` in the browser. SSR serializes the nonce onto the renderer-owned style host, and browser render cycles apply the nonce to created or reused style hosts before updating their text.

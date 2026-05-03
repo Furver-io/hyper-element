@@ -10,6 +10,7 @@ import { getRenderingInstance, getStyledEntry } from './registry.js';
 import { applyStyledArtifactToNode, getStyledNodeState } from './apply.js';
 import { resolveStyledArtifact } from './artifact.js';
 import { registerStyleRules } from './style-host.js';
+import { isReservedStyledAttr } from './reserved.js';
 
 /**
  * Finds the owning component instance for a styled node. Rendering always
@@ -99,6 +100,7 @@ export const styledCssHandler = (tagName, propFlags) => (node, value) => {
  * @returns {boolean} True when the name is a registered variant.
  */
 function isKnownVariant(entry, tagName, attrName) {
+  if (isReservedStyledAttr(attrName, tagName)) return false;
   const base = Array.isArray(entry?.styled) ? entry.styled[0] : null;
   const tagStyles = base?.[tagName];
   return !!(
@@ -107,28 +109,6 @@ function isKnownVariant(entry, tagName, attrName) {
     tagStyles.base &&
     tagStyles[attrName] &&
     typeof tagStyles[attrName] === 'object'
-  );
-}
-
-/**
- * Filters attributes that must keep native DOM semantics even on +styled nodes.
- *
- * @param {string} attrName - Attribute name.
- * @returns {boolean} True when normal DOM handling must be preserved.
- */
-function isReservedAttr(attrName) {
-  return (
-    attrName === 'class' ||
-    attrName === 'id' ||
-    attrName === 'role' ||
-    attrName === 'slot' ||
-    attrName === 'part' ||
-    attrName === 'title' ||
-    attrName === 'style' ||
-    attrName === 'css' ||
-    attrName.startsWith('data-') ||
-    attrName.startsWith('aria-') ||
-    attrName.startsWith('on')
   );
 }
 
@@ -145,7 +125,7 @@ export function styledAttributeHandler(attrName, tagName, normalHandler) {
   return (node, value) => {
     const instance = getInstanceForNode(node);
     const entry = instance ? getStyledEntry(instance) : null;
-    if (!isReservedAttr(attrName) && isKnownVariant(entry, tagName, attrName)) {
+    if (isKnownVariant(entry, tagName, attrName)) {
       const state = getStyledNodeState(node);
       state.latestDynamicFlags[attrName] = !!value;
       applyStyledNode(node, tagName, []);

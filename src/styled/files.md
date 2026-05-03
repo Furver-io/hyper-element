@@ -17,6 +17,7 @@ src/styled/
 ├── handler.js        # Browser style handler factory
 ├── normalize.js      # Styled definition normalizer
 ├── parser-hooks.js   # Parser integration hooks
+├── reserved.js       # Reserved native/pass-through attribute classifier
 ├── registry.js       # Component instance registry
 ├── resolution.js     # Legacy inline style resolution helper (not imported by runtime)
 ├── serializer.js     # Scoped CSS serialization and selector scoping
@@ -73,6 +74,10 @@ Creates style, css, and styled-aware attribute handlers for `+styled` elements i
 
 Converts public styled definitions into a canonical shape with tag styles, shared groups, base declarations, variants, selector rules, and supported at-rules. Unsupported at-rules are ignored with a development warning.
 
+### `reserved.js`
+
+Centralizes the attribute names that must keep native DOM/SSR behavior on `+styled` nodes. Browser parsing, browser updates, and SSR updates all use the same classifier so reserved names such as `disabled`, `href`, `data-*`, and `aria-*` are not consumed as style variants.
+
 ### `parser-hooks.js`
 
 Parser integration utilities:
@@ -102,4 +107,4 @@ Serializes generated CSS declarations, scoped selectors, supported at-rules, sel
 
 ### `style-host.js`
 
-Owns the renderer-managed style host lifecycle. Browser rendering uses mark/sweep registration per render root; SSR uses the same rule text to append one style host string per rendered component root.
+Owns the renderer-managed style host lifecycle. Browser rendering uses mark/sweep registration per render root and can apply a CSP nonce from `configureSSR({ styleNonce })`; SSR uses the same rule text to append one style host string per rendered component root and can serialize `renderElement({ styleNonce })`.

@@ -6,6 +6,7 @@
 
 import {
   normalizeStyledDefinition,
+  splitCssOverrideKeys,
   splitDeclarationAndSelectorKeys,
 } from './normalize.js';
 import { HYPER_STYLED_DATA, createArtifact } from './artifact-ids.js';
@@ -157,7 +158,7 @@ export function resolveStyledArtifact(entry, tagName, input = {}) {
     input.cssOverride &&
     typeof input.cssOverride === 'object' &&
     !input.cssOverride.__unsafe
-      ? splitDeclarationAndSelectorKeys(input.cssOverride)
+      ? splitCssOverrideKeys(input.cssOverride)
       : null;
 
   const hasGeneratedCss =
