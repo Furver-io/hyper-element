@@ -84,6 +84,12 @@ export function createHtml(shadow) {
           if (attrName[0] === '?') {
             return;
           }
+          if (
+            localName === 'hyper-layout' &&
+            (attrName === 'onchange' || attrName === 'onremoved')
+          ) {
+            return;
+          }
           if ('on' === attrName.substring(0, 2)) {
             throw new Error(
               `'on' is reserve for native elements. Change: "${attrName}" for "${localName}" to something else`

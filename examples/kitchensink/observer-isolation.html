@@ -109,6 +109,7 @@ setTimeout(() => {
 }, 100);</code></pre>
       <div id="observer-childlist-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="descendant-childlist-does-not-rerender-parent"] pre code').textContent;
         eval(code);
         const expected = '<div id="observer-childlist-output"><observer-childlist-parent data-parent-renders="2"><observer-childlist-child><!--<>--><button>count=1</button>\n    <span>child=1</span>\n  <!--</>--></observer-childlist-child></observer-childlist-parent></div>';
@@ -193,6 +194,7 @@ setTimeout(() => {
 }, 100);</code></pre>
       <div id="observer-attr-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="descendant-attributes-does-not-rerender-parent"] pre code').textContent;
         eval(code);
         const expected = '<div id="observer-attr-output"><observer-attr-parent data-parent-renders="2"><observer-attr-child><!--<>--><button title="disabled" disabled="">toggle</button>\n  <!--</>--></observer-attr-child></observer-attr-parent></div>';

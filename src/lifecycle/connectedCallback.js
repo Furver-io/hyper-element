@@ -168,12 +168,17 @@ export function createdCallback() {
   this.render = (...data) => {
     ref.observe = false;
 
-    // Set rendering context for +styled handlers (needed during first render
-    // when nodes are in a detached DocumentFragment)
+    // Set rendering context for +styled handlers while the component stamps
+    // detached nodes, then always clear it even if the render path throws. A
+    // stale render instance would make later mounted-fragment updates attach
+    // selector CSS to the wrong component.
     beginStyleRender(this);
     setRenderingInstance(this);
-    render.call(that, ref.Html, ...data);
-    setRenderingInstance(null);
+    try {
+      render.call(that, ref.Html, ...data);
+    } finally {
+      setRenderingInstance(null);
+    }
     if (Object.prototype.hasOwnProperty.call(ssrState.config, 'styleNonce')) {
       commitStyleRender(this, ssrState.config.styleNonce);
     } else {

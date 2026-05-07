@@ -55,6 +55,7 @@
 document.getElementById('output-1').innerHTML = '&lt;func-counter count="42"&gt;&lt;/func-counter&gt;';</code></pre>
       <div id="output-1"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="definition-with-tag"] pre code').textContent;
         eval(code);
         const expected = '<div id="output-1"><func-counter count="42"><!--<>-->Count: 42<!--</>--></func-counter></div>';
@@ -75,6 +76,7 @@ document.getElementById('output-1').innerHTML = '&lt;func-counter count="42"&gt;
 document.getElementById('output-2').innerHTML = '&lt;func-hello name="Functional"&gt;&lt;/func-hello&gt;';</code></pre>
       <div id="output-2"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="shorthand-with-tag"] pre code').textContent;
         eval(code);
         const expected = '<div id="output-2"><func-hello name="Functional"><!--<>-->Hello, Functional!<!--</>--></func-hello></div>';
@@ -96,6 +98,7 @@ customElements.define('func-manual', ManualElem);
 document.getElementById('output-3').innerHTML = '&lt;func-manual value="works"&gt;&lt;/func-manual&gt;';</code></pre>
       <div id="output-3"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="definition-no-tag"] pre code').textContent;
         eval(code);
         const expected = '<div id="output-3"><func-manual value="works"><!--<>-->Manual: works<!--</>--></func-manual></div>';
@@ -117,6 +120,7 @@ customElements.define('func-simple', SimpleElem);
 document.getElementById('output-4').innerHTML = '&lt;func-simple msg="shorthand"&gt;&lt;/func-simple&gt;';</code></pre>
       <div id="output-4"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="shorthand-no-tag"] pre code').textContent;
         eval(code);
         const expected = '<div id="output-4"><func-simple msg="shorthand"><!--<>-->Simple: shorthand<!--</>--></func-simple></div>';
@@ -158,6 +162,7 @@ setTimeout(function () {
 }, 350);</code></pre>
       <div id="output-5"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="setup-teardown"] pre code').textContent;
 
@@ -217,6 +222,7 @@ setTimeout(function () {
 }, 50);</code></pre>
       <div id="output-6"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="methods-events"] pre code').textContent;
 
@@ -250,6 +256,7 @@ customElements.define('func-classic', ClassicElement);
 document.getElementById('output-7').innerHTML = '&lt;func-classic msg="still works"&gt;&lt;/func-classic&gt;';</code></pre>
       <div id="output-7"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="class-compat"] pre code').textContent;
         eval(code);
         const expected = '<div id="output-7"><func-classic msg="still works"><!--<>-->Classic: still works<!--</>--></func-classic></div>';
@@ -288,6 +295,7 @@ requestAnimationFrame(function () {
 });</code></pre>
       <div id="output-8"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="observed-attrs"] pre code').textContent;
 
@@ -343,6 +351,7 @@ requestAnimationFrame(function () {
 });</code></pre>
       <div id="output-9"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="setup-cleanup-verify"] pre code').textContent;
 

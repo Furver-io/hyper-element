@@ -57,6 +57,7 @@
 );</code></pre>
       <simple-template-elem template>Hello {name}!</simple-template-elem>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="simple-variable"] pre code').textContent;
         eval(code);
         const expected = '<simple-template-elem template=""><!--<>--><!--<>-->Hello Alice!<!--</>--><!--</>--></simple-template-elem>';
@@ -84,6 +85,7 @@
         >{+if show}Message: {message}{-if}</if-truthy-elem
       >
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="if-truthy"] pre code').textContent;
         eval(code);
         const expected = '<if-truthy-elem template=""><!--<>--><!--<>-->Message: VISIBLE<!--</>--><!--</>--></if-truthy-elem>';
@@ -112,6 +114,7 @@
         >Before{+if show}SHOULD_NOT_APPEAR{-if}After</if-falsy-elem
       >
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="if-falsy"] pre code').textContent;
         eval(code);
         const expected = '<if-falsy-elem template=""><!--<>--><!--<>-->BeforeAfter<!--</>--><!--</>--></if-falsy-elem>';
@@ -140,6 +143,7 @@
         >{+if active}ACTIVE{else}INACTIVE{-if}</if-else-elem
       >
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="if-else"] pre code').textContent;
         eval(code);
         const expected = '<if-else-elem template=""><!--<>--><!--<>-->INACTIVE<!--</>--><!--</>--></if-else-elem>';
@@ -166,6 +170,7 @@
 );</code></pre>
       <each-elem template>{+each items}{...},{-each}</each-elem>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="each-iteration"] pre code').textContent;
         eval(code);
         const expected = '<each-elem template=""><!--<>--><!--<>-->A,B,C,<!--</>--><!--</>--></each-elem>';
@@ -191,6 +196,7 @@
 );</code></pre>
       <each-obj-elem template>{+each users}{name} {-each}</each-obj-elem>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="each-objects"] pre code').textContent;
         eval(code);
         const expected = '<each-obj-elem template=""><!--<>--><!--<>-->Ann Bob <!--</>--><!--</>--></each-obj-elem>';
@@ -217,6 +223,7 @@
 );</code></pre>
       <unless-elem template>{+unless hidden}SHOWN{-unless}</unless-elem>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="unless"] pre code').textContent;
         eval(code);
         const expected = '<unless-elem template=""><!--<>--><!--<>-->SHOWN<!--</>--><!--</>--></unless-elem>';
@@ -242,6 +249,7 @@
 );</code></pre>
       <unless-truthy-elem template>{+unless visible}HIDDEN{-unless}</unless-truthy-elem>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="unless-truthy"] pre code').textContent;
         eval(code);
         const expected = '<unless-truthy-elem template=""><!--<>--><!--<>--><!--</>--><!--</>--></unless-truthy-elem>';

@@ -1,0 +1,1336 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hyper Layout - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      .card {
+        align-items: center;
+        background: #e0f2fe;
+        border: 1px solid #0284c7;
+        box-sizing: border-box;
+        display: flex;
+        height: 100%;
+        justify-content: center;
+        min-height: 120px;
+        width: 100%;
+      }
+      #layout-trash {
+        background: #fee2e2;
+        border: 1px solid #dc2626;
+        height: 48px;
+        margin-top: 12px;
+        width: 160px;
+      }
+      [data-hl-probe-root] {
+        height: 1px;
+        left: -10000px;
+        overflow: hidden;
+        position: absolute;
+        top: 0;
+        width: 1000px;
+      }
+      pre {
+        background: #f5f5f5;
+        box-sizing: border-box;
+        max-width: 100%;
+        padding: 1rem;
+        overflow-x: auto;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hyper Layout</h1>
+
+    <section data-test="hyper-layout-core" data-test-result="pending">
+      <h2>Hyper Layout Core Dashboard Editing</h2>
+      <pre><code>function defineWidget(tag, label) {
+  if (customElements.get(tag)) return;
+  hyperElement(tag, {
+    handleClick: (ctx) =&gt; {
+      ctx.element.dataset.clicked = 'true';
+    },
+    render: (Html, ctx) =&gt; Html`&lt;button class="card" onclick=${(event) =&gt; ctx.handleClick(event)}&gt;${ctx.attrs.label || label}&lt;/button&gt;`
+  });
+}
+
+defineWidget('revenue-widget', 'Revenue');
+defineWidget('risk-widget', 'Risk');
+defineWidget('orders-widget', 'Orders');
+defineWidget('dashboard-widget', 'Widget');
+
+hyperElement('dashboard-view', {
+  setup: (ctx, onNext) =&gt; {
+    ctx.state = {
+      editing: false,
+      nextId: 4,
+      widgets: [
+        { id: 'revenue', tag: 'dashboard-widget', label: 'Revenue' },
+        { id: 'risk', tag: 'dashboard-widget', label: 'Risk' },
+        { id: 'orders', tag: 'dashboard-widget', label: 'Orders' }
+      ],
+      positions: {
+      version: 1,
+      columns: 12,
+      items: [
+        { id: 'revenue', x: 0, y: 0, w: 4, h: 2 },
+        { id: 'risk', x: 4, y: 0, w: 4, h: 2 },
+        { id: 'orders', x: 8, y: 0, w: 4, h: 2 }
+      ]
+      }
+    };
+    ctx.renderDashboard = onNext(() =&gt; ctx.state);
+  },
+  addWidget: (ctx) =&gt; {
+    const nextId = ctx.state.nextId;
+    ctx.state.nextId += 1;
+    ctx.state.widgets = [
+      ...ctx.state.widgets,
+      { id: `added-${nextId}`, tag: 'dashboard-widget', label: `Added ${nextId}` }
+    ];
+    ctx.renderDashboard();
+  },
+  persistPositions: (ctx, _event, positions) =&gt; {
+    ctx.state.positions = positions;
+  },
+  toggleEdit: (ctx) =&gt; {
+    ctx.state.editing = !ctx.state.editing;
+    ctx.renderDashboard();
+  },
+  removeWidgets: (ctx, _event, id, positions) =&gt; {
+    if (!id) return;
+    ctx.state.widgets = ctx.state.widgets.filter((widget) =&gt; widget.id !== id);
+    ctx.state.positions = {
+      ...positions,
+      items: positions.items.filter((item) =&gt; item.id !== id)
+    };
+    ctx.renderDashboard();
+  },
+  render: (Html, ctx, state) =&gt; {
+    const items = state.widgets.map((widget) =&gt; ({
+      id: widget.id,
+      tag: widget.tag,
+      can: ['drag', 'resize']
+    }));
+    const breakpoints = [
+      { width: 500, columns: 1 },
+      { width: 900, columns: 12 }
+    ];
+    return Html`
+      &lt;div
+        data-layout-toolbar
+        style=${{ alignItems: 'center', display: 'grid', gap: '12px', gridTemplateColumns: '1fr auto 1fr', marginBottom: '8px' }}
+      &gt;
+        &lt;button
+          data-layout-edit-toggle
+          type="button"
+          style=${{ alignItems: 'center', display: 'inline-flex', gap: '6px', justifySelf: 'start', padding: '4px 8px', fontSize: '12px' }}
+          onclick=${ctx.toggleEdit}
+        &gt;
+          &lt;svg data-layout-lock-icon="closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style=${{ display: state.editing ? 'none' : 'block' }}&gt;
+            &lt;rect x="3" y="11" width="18" height="11" rx="2" ry="2"&gt;&lt;/rect&gt;
+            &lt;path d="M7 11V7a5 5 0 0 1 10 0v4"&gt;&lt;/path&gt;
+          &lt;/svg&gt;
+          &lt;svg data-layout-lock-icon="open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style=${{ display: state.editing ? 'block' : 'none' }}&gt;
+            &lt;rect x="3" y="11" width="18" height="11" rx="2" ry="2"&gt;&lt;/rect&gt;
+            &lt;path d="M7 11V7a5 5 0 0 1 9.9-1"&gt;&lt;/path&gt;
+          &lt;/svg&gt;
+          ${state.editing ? 'Stop editing layout' : 'Edit layout'}
+        &lt;/button&gt;
+        &lt;button
+          data-layout-add
+          type="button"
+          style=${{ alignItems: 'center', display: 'inline-flex', gap: '6px', justifySelf: 'center', padding: '4px 8px', fontSize: '12px' }}
+          onclick=${ctx.addWidget}
+        &gt;
+          &lt;svg data-layout-add-icon xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"&gt;
+            &lt;path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"&gt;&lt;/path&gt;
+            &lt;polyline points="3.27 6.96 12 12.01 20.73 6.96"&gt;&lt;/polyline&gt;
+            &lt;line x1="12" y1="22.08" x2="12" y2="12"&gt;&lt;/line&gt;
+          &lt;/svg&gt;
+          Add element
+        &lt;/button&gt;
+        &lt;div
+          id="dashboard-trash"
+          data-layout-trash
+          style=${{ alignItems: 'center', background: '#fee2e2', border: '1px dashed #dc2626', borderRadius: '6px', boxSizing: 'border-box', color: '#991b1b', display: 'flex', fontSize: '12px', height: '32px', justifyContent: 'center', justifySelf: 'end', width: '120px' }}
+        &gt;Trash&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;hyper-layout
+        ?edit=${state.editing}
+        items=${items}
+        positions=${state.positions}
+        breakpoints=${breakpoints}
+        cell-height="120"
+        removable="trash"
+        trash="#dashboard-trash"
+        onchange=${ctx.persistPositions}
+        onremoved=${ctx.removeWidgets}
+      &gt;
+        ${state.widgets.map((widget) =&gt; Html.wire(widget, ':widget')`
+          &lt;dashboard-widget label=${widget.label}&gt;&lt;/dashboard-widget&gt;
+        `)}
+      &lt;/hyper-layout&gt;
+    `;
+  }
+});
+
+document.getElementById('layout-output').innerHTML = '&lt;dashboard-view&gt;&lt;/dashboard-view&gt;';</code></pre>
+      <div id="layout-output"></div>
+      <script type="module">
+        await window.hyperElementReady;
+(async function () {
+  function fail(message) {
+    throw new Error(message);
+  }
+  function assert(condition, message) {
+    if (!condition) fail(message);
+  }
+  function nextFrame() {
+    return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }
+  function firePointer(target, type, x, y) {
+    target.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 8 }));
+  }
+  // Capture intentional diagnostic warnings inside the page harness so
+  // coverage still exercises the public warning paths without leaking those
+  // diagnostics into the browser console that developers inspect manually.
+  function captureWarnings(action) {
+    const warnings = [];
+    const originalWarn = console.warn;
+    console.warn = (...args) => warnings.push(args.map(String).join(' '));
+    try {
+      return { result: action(), warnings };
+    } finally {
+      console.warn = originalWarn;
+    }
+  }
+  function waitForHyperElement() {
+    if (window.hyperElement) return Promise.resolve();
+    if (window.hyperElementReady) return window.hyperElementReady;
+    return new Promise((resolve) => window.addEventListener('hyper-element-loaded', resolve, { once: true }));
+  }
+
+  const section = document.querySelector('[data-test="hyper-layout-core"]');
+  const output = document.getElementById('layout-output');
+  const probeRoot = document.createElement('div');
+  probeRoot.dataset.hlProbeRoot = '';
+  section.appendChild(probeRoot);
+  const trash = document.createElement('div');
+  trash.id = 'layout-trash';
+  trash.textContent = 'Trash';
+  trash.dataset.hlProbeTrash = '';
+  probeRoot.appendChild(trash);
+  const demoSource = section.querySelector('pre code').textContent;
+  await waitForHyperElement();
+  const hyperElement = window.hyperElement;
+  const createLayoutEngine = window.createLayoutEngine;
+  const normalizePositions = window.normalizePositions;
+  eval(demoSource);
+  await nextFrame();
+  if (!customElements.get('margin-widget')) {
+    hyperElement('margin-widget', {
+      render: (Html, ctx) => Html`<button class="card">${ctx.attrs.label || 'Margin'}</button>`
+    });
+  }
+  const events = [];
+  function mountProbe(tag, definition) {
+    if (!customElements.get(tag)) hyperElement(tag, definition);
+    const marker = `${tag}-${Math.random().toString(36).slice(2)}`;
+    probeRoot.insertAdjacentHTML('beforeend', `<${tag} data-probe="${marker}"></${tag}>`);
+    return probeRoot.querySelector(`[data-probe="${marker}"]`);
+  }
+  const demo = output.querySelector('dashboard-view');
+  const demoLayout = demo.querySelector('hyper-layout');
+  const editToggle = demo.querySelector('[data-layout-edit-toggle]');
+  const addButton = demo.querySelector('[data-layout-add]');
+  const visibleTrash = demo.querySelector('[data-layout-trash]');
+  const items = [
+    { id: 'revenue', tag: 'revenue-widget', can: ['drag', 'resize'] },
+    { id: 'risk', tag: 'risk-widget', can: ['drag', 'resize'] },
+    { id: 'orders', tag: 'orders-widget', can: ['drag', 'resize'] }
+  ];
+  const coreProbe = mountProbe('layout-core-behavior-probe', {
+    render: (Html) => Html`
+      <hyper-layout
+        items=${items}
+        positions=${{
+          version: 1,
+          columns: 12,
+          items: [
+            { id: items[0].id, x: 0, y: 0, w: 2, h: 1 },
+            { id: items[1].id, x: 2, y: 0, w: 2, h: 1, noMove: true },
+            { id: items[2].id, x: 4, y: 0, w: 2, h: 1, minW: 1, maxW: 4, noResize: true }
+          ]
+        }}
+        columns="12"
+        cell-height="120"
+      >
+        <revenue-widget></revenue-widget>
+        <risk-widget></risk-widget>
+        <orders-widget></orders-widget>
+      </hyper-layout>
+    `
+  });
+  const layout = coreProbe.querySelector('hyper-layout');
+  layout.onchange = (event, positions) => events.push(['onchange', event.detail.reason, positions.items.length]);
+  await nextFrame();
+  ['added', 'removed', 'change', 'dragstart', 'dragstop', 'resizestart', 'resizestop'].forEach((name) => {
+    layout.addEventListener(name, (event) => events.push([name, event.detail.reason || '', event.detail.positions?.items.length || 0]));
+  });
+
+  assert(typeof layout.onchange === 'function', 'onchange getter returns assigned handler');
+  assert(editToggle.textContent.trim() === 'Edit layout' && getComputedStyle(editToggle.querySelector('[data-layout-lock-icon="closed"]')).display === 'block' && getComputedStyle(editToggle.querySelector('[data-layout-lock-icon="open"]')).display === 'none' && demoLayout.edit === false, 'core demo starts static with a closed-lock edit toggle');
+  assert(addButton.textContent.trim() === 'Add element' && addButton.querySelector('[data-layout-add-icon]') && visibleTrash.textContent === 'Trash', 'core demo source renders edit, add icon, add label, and trash controls');
+  const toolbarRect = demo.querySelector('[data-layout-toolbar]').getBoundingClientRect();
+  const addRect = addButton.getBoundingClientRect();
+  const visibleTrashRect = visibleTrash.getBoundingClientRect();
+  assert(addRect.left > editToggle.getBoundingClientRect().right && visibleTrashRect.left > addRect.right && Math.abs(visibleTrashRect.top - editToggle.getBoundingClientRect().top) < toolbarRect.height, 'toolbar aligns edit, add, and trash controls in one row');
+  const visibleCountBeforeAdd = demoLayout.items.length;
+  addButton.click();
+  await nextFrame();
+  assert(demoLayout.items.length === visibleCountBeforeAdd + 1 && demoLayout.engine.get('added-4'), 'core demo add button inserts a new layout item from displayed source');
+  editToggle.click();
+  await nextFrame();
+  assert(demoLayout.edit === true && editToggle.textContent.trim() === 'Stop editing layout' && getComputedStyle(editToggle.querySelector('[data-layout-lock-icon="open"]')).display === 'block' && getComputedStyle(editToggle.querySelector('[data-layout-lock-icon="closed"]')).display === 'none', 'core demo toggle enables edit mode and shows the open lock');
+  const addedDrag = demoLayout.querySelector('[data-layout-id="added-4"] [data-hl-drag]');
+  const addedWrapper = demoLayout.querySelector('[data-layout-id="added-4"]');
+  const addedDragRect = addedDrag.getBoundingClientRect();
+  const trashDropRect = visibleTrash.getBoundingClientRect();
+  firePointer(addedDrag, 'pointerdown', addedDragRect.left + 4, addedDragRect.top + 4);
+  firePointer(document, 'pointermove', addedDragRect.left + 18, addedDragRect.top + 18);
+  assert(addedWrapper.dataset.hlRemoving !== 'true', 'core demo drag starts without destructive trash preview');
+  firePointer(document, 'pointermove', trashDropRect.left - 4, trashDropRect.top + trashDropRect.height / 2);
+  assert(addedWrapper.dataset.hlRemoving === 'true', 'trash hover marks dragged item as pending removal');
+  assert(getComputedStyle(addedWrapper).opacity === '0.5', 'trash hover lowers dragged item opacity');
+  assert(getComputedStyle(addedWrapper).transform !== 'none', 'trash hover scales dragged item down');
+  assert(getComputedStyle(addedWrapper.querySelector('[data-hl-overlay]')).color === 'rgb(220, 38, 38)', 'trash hover turns the overlay red');
+  assert(getComputedStyle(addedWrapper.querySelector('[data-hl-trash-icon]')).display === 'block' && getComputedStyle(addedWrapper.querySelector('[data-hl-move-icon]')).display === 'none', 'trash hover swaps the default move icon for a trash icon');
+  firePointer(document, 'pointermove', trashDropRect.left - 4, trashDropRect.top + trashDropRect.height / 2);
+  const scaledRemovalRect = addedWrapper.getBoundingClientRect();
+  assert(addedWrapper.dataset.hlRemoving === 'true', 'trash hover remains stable after the scaled preview is active');
+  assert(Math.min(scaledRemovalRect.right, trashDropRect.right) > Math.max(scaledRemovalRect.left, trashDropRect.left) && Math.min(scaledRemovalRect.bottom, trashDropRect.bottom) > Math.max(scaledRemovalRect.top, trashDropRect.top), 'scaled trash preview still visibly overlaps the trash target');
+  firePointer(document, 'pointerup', trashDropRect.left - 4, trashDropRect.top + trashDropRect.height / 2);
+  await nextFrame();
+  assert(demoLayout.items.length === visibleCountBeforeAdd && !demoLayout.engine.get('added-4'), 'core demo trash drop removes when the active trash preview is showing even if the pointer is outside');
+  editToggle.click();
+  await nextFrame();
+  assert(demoLayout.edit === false && editToggle.textContent.trim() === 'Edit layout' && getComputedStyle(editToggle.querySelector('[data-layout-lock-icon="closed"]')).display === 'block' && getComputedStyle(editToggle.querySelector('[data-layout-lock-icon="open"]')).display === 'none', 'core demo toggle disables edit mode and shows the closed lock');
+  assert(layout.querySelectorAll('[data-hl-item]').length === 3, 'direct children wrapped');
+  assert(layout.querySelectorAll('[data-hl-placeholder]').length === 1, 'internal snap placeholder is present');
+  assert(layout.querySelectorAll('[data-hl-content] > revenue-widget, [data-hl-content] > risk-widget, [data-hl-content] > orders-widget').length === 3, 'children preserved inside content wrappers');
+  assert(getComputedStyle(layout.querySelector('[data-hl-overlay]')).opacity === '0', 'static mode hides overlay visually');
+  layout.querySelector('revenue-widget button').click();
+  assert(layout.querySelector('revenue-widget').dataset.clicked === 'true', 'static mode preserves child click');
+  assert(layout.save().items.length === 3 && layout.save().ephemeral === false, 'controlled save is stable');
+
+  const tagWarning = captureWarnings(() => {
+    const tagProbe = mountProbe('layout-tag-warning-probe', {
+      render: (Html) => Html`
+        <hyper-layout items=${[{ id: 'warn-id', tag: 'wrong-card' }]}>
+          <revenue-widget></revenue-widget>
+        </hyper-layout>
+      `
+    });
+    tagProbe.querySelector('hyper-layout').reconcile('manual');
+  });
+  assert(tagWarning.warnings.some((warning) => warning.includes('wrong-card')), 'tag mismatch diagnostic is privately covered');
+
+  let mismatchThrew = false;
+  try {
+    const badProbe = mountProbe('layout-mismatch-probe', {
+      render: (Html) => Html`
+        <hyper-layout>
+          <revenue-widget></revenue-widget>
+          <risk-widget></risk-widget>
+        </hyper-layout>
+      `
+    });
+    const bad = badProbe.querySelector('hyper-layout');
+    bad.items = [{ id: 'only-one', tag: 'revenue-widget' }];
+    bad.reconcile('manual');
+  } catch (error) {
+    mismatchThrew = error.message.includes('items length');
+  }
+  assert(mismatchThrew, 'items and child count mismatch throws');
+
+  layout.edit = true;
+  await nextFrame();
+  const overlay = layout.querySelector('[data-hl-overlay]');
+  assert(getComputedStyle(overlay).display === 'flex', 'edit mode shows overlay');
+  assert(getComputedStyle(layout.querySelector('[data-hl-content]')).filter.includes('grayscale'), 'edit mode greys content');
+  assert(getComputedStyle(layout.querySelector(`[data-layout-id="${items[0].id}"]`)).boxShadow === 'none', 'hover/edit state has no drag shadow before active drag');
+  firePointer(overlay, 'pointerdown', 20, 20);
+  firePointer(document, 'pointerup', 20, 20);
+
+  const firstBefore = layout.engine.get(items[0].id).x;
+  const drag = layout.querySelector(`[data-layout-id="${items[0].id}"] [data-hl-drag]`);
+  firePointer(drag, 'pointerdown', 20, 20);
+  firePointer(document, 'pointermove', 130, 20);
+  const dragPlaceholder = layout.querySelector('[data-hl-placeholder]');
+  const placeholderStyle = getComputedStyle(dragPlaceholder);
+  assert(dragPlaceholder.dataset.hlPlaceholderActive === 'true', 'drag shows snap placeholder while held');
+  assert(placeholderStyle.borderStyle === 'dashed' && placeholderStyle.borderRadius !== '0px', 'snap placeholder is dashed and rounded');
+  assert(placeholderStyle.boxShadow.includes('inset'), 'snap placeholder uses an inner shadow');
+  assert(getComputedStyle(layout.querySelector(`[data-layout-id="${items[0].id}"]`)).boxShadow !== 'none', 'floating drag item has a drop shadow');
+  firePointer(document, 'pointerup', 130, 20);
+  await nextFrame();
+  assert(dragPlaceholder.dataset.hlPlaceholderActive !== 'true', 'snap placeholder hides after release');
+  assert(getComputedStyle(layout.querySelector(`[data-layout-id="${items[0].id}"]`)).boxShadow === 'none', 'drag shadow is removed after release');
+  assert(layout.engine.get(items[0].id).x > firstBefore, 'drag moved first item');
+  assert(events.some((event) => event[0] === 'dragstart') && events.some((event) => event[0] === 'dragstop'), 'drag events emitted');
+  assert(events.some((event) => event[0] === 'change' && event[1] === 'user-drag'), 'drag change emitted');
+  const firstAfterDrag = layout.engine.get(items[0].id).x;
+  layout.disable();
+  await nextFrame();
+  assert(layout.edit === false && layout.engine.get(items[0].id).x === firstAfterDrag, 'turning edit off preserves user-positioned layout state');
+  layout.enable();
+  await nextFrame();
+
+  const reorderProbe = mountProbe('layout-reorder-probe', {
+    render: (Html) => Html`
+      <hyper-layout
+        edit=${true}
+        cell-height="120"
+        items=${items}
+        positions=${{
+          columns: 12,
+          items: [
+            { id: items[0].id, x: 0, y: 0, w: 4, h: 1 },
+            { id: items[1].id, x: 4, y: 0, w: 4, h: 1 },
+            { id: items[2].id, x: 8, y: 0, w: 4, h: 1 }
+          ]
+        }}
+      >
+        <revenue-widget></revenue-widget>
+        <risk-widget></risk-widget>
+        <orders-widget></orders-widget>
+      </hyper-layout>
+    `
+  });
+  const reorderLayout = reorderProbe.querySelector('hyper-layout');
+  await nextFrame();
+  const firstRect = reorderLayout.querySelector(`[data-layout-id="${items[0].id}"]`).getBoundingClientRect();
+  const lastOverlay = reorderLayout.querySelector(`[data-layout-id="${items[2].id}"] [data-hl-overlay]`);
+  const lastRect = lastOverlay.getBoundingClientRect();
+  firePointer(lastOverlay, 'pointerdown', lastRect.left + lastRect.width / 2, lastRect.top + lastRect.height / 2);
+  firePointer(document, 'pointermove', firstRect.left + firstRect.width / 2, firstRect.top + firstRect.height / 2);
+  assert(reorderLayout.querySelector(`[data-layout-id="${items[2].id}"]`).dataset.hlFloating === 'true', 'dragged item detaches while held');
+  firePointer(document, 'pointerup', firstRect.left + firstRect.width / 2, firstRect.top + firstRect.height / 2);
+  await nextFrame();
+  assert(reorderLayout.engine.get(items[2].id).x === 0 && reorderLayout.engine.get(items[0].id).x === 4, 'dragging last over first inserts before target');
+  assert(!reorderLayout.engine.collides(reorderLayout.engine.get(items[2].id), items[2].id), 'insert reorder leaves no overlap');
+
+  const repeatReorderProbe = mountProbe('layout-repeat-reorder-probe', {
+    render: (Html) => Html`
+      <hyper-layout
+        edit=${true}
+        cell-height="120"
+        items=${[items[0], items[1]]}
+        positions=${{
+          columns: 12,
+          items: [
+            { id: items[0].id, x: 0, y: 0, w: 4, h: 1 },
+            { id: items[1].id, x: 4, y: 0, w: 4, h: 1 }
+          ]
+        }}
+      >
+        <revenue-widget></revenue-widget>
+        <risk-widget></risk-widget>
+      </hyper-layout>
+    `
+  });
+  const repeatLayout = repeatReorderProbe.querySelector('hyper-layout');
+  await nextFrame();
+  const repeatFirst = repeatLayout.querySelector(`[data-layout-id="${items[0].id}"]`).getBoundingClientRect();
+  const repeatSecond = repeatLayout.querySelector(`[data-layout-id="${items[1].id}"]`).getBoundingClientRect();
+  const repeatOverlay = repeatLayout.querySelector(`[data-layout-id="${items[0].id}"] [data-hl-overlay]`);
+  firePointer(repeatOverlay, 'pointerdown', repeatFirst.left + repeatFirst.width / 2, repeatFirst.top + repeatFirst.height / 2);
+  firePointer(document, 'pointermove', repeatSecond.left + repeatSecond.width / 2, repeatSecond.top + repeatSecond.height / 2);
+  assert(repeatLayout.engine.get(items[1].id).x === 0 && repeatLayout.engine.get(items[0].id).x === 4, 'first cover moves second once');
+  firePointer(document, 'pointermove', repeatFirst.left + repeatFirst.width / 2, repeatFirst.top + repeatFirst.height / 2);
+  assert(repeatLayout.engine.get(items[0].id).x === 0 && repeatLayout.engine.get(items[1].id).x === 4, 'same target can move again after coverage clears');
+  firePointer(document, 'pointerup', repeatFirst.left + repeatFirst.width / 2, repeatFirst.top + repeatFirst.height / 2);
+
+  const noMoveBefore = layout.engine.get(items[1].id).x;
+  const noMoveDrag = layout.querySelector(`[data-layout-id="${items[1].id}"] [data-hl-drag]`);
+  firePointer(noMoveDrag, 'pointerdown', 20, 20);
+  firePointer(document, 'pointermove', 240, 20);
+  firePointer(document, 'pointerup', 240, 20);
+  await nextFrame();
+  assert(layout.engine.get(items[1].id).x === noMoveBefore, 'noMove prevents dragging');
+
+  layout.positions = {
+    version: 1,
+    columns: 12,
+    items: [
+      { id: items[0].id, x: 0, y: 0, w: 2, h: 1 },
+      { id: items[1].id, x: 2, y: 0, w: 2, h: 1 },
+      { id: items[2].id, x: 4, y: 0, w: 2, h: 1 }
+    ]
+  };
+  await nextFrame();
+  const inferredResizeBefore = { ...layout.engine.get(items[0].id) };
+  const inferredOverlay = layout.querySelector(`[data-layout-id="${items[0].id}"] [data-hl-overlay]`);
+  const inferredRect = inferredOverlay.getBoundingClientRect();
+  firePointer(inferredOverlay, 'pointerdown', inferredRect.right - 4, inferredRect.bottom - 4);
+  firePointer(document, 'pointermove', inferredRect.right + 90, inferredRect.bottom + 30);
+  firePointer(document, 'pointerup', inferredRect.right + 90, inferredRect.bottom + 30);
+  await nextFrame();
+  assert(layout.engine.get(items[0].id).w > inferredResizeBefore.w || layout.engine.get(items[0].id).h > inferredResizeBefore.h, 'default overlay infers resize from lower-right corner');
+  const resize = layout.querySelector(`[data-layout-id="${items[0].id}"] [data-hl-resize]`);
+  firePointer(resize, 'pointerdown', 20, 20);
+  firePointer(document, 'pointermove', 140, 80);
+  firePointer(document, 'pointerup', 140, 80);
+  await nextFrame();
+  assert(layout.engine.get(items[0].id).w > 2, 'resize stretched first item');
+  assert(events.some((event) => event[0] === 'resizestart') && events.some((event) => event[0] === 'resizestop'), 'resize events emitted');
+
+  const dynamicEvents = [];
+  const dynamicProbe = mountProbe('layout-dynamic-probe', {
+    render: (Html) => Html`
+      <hyper-layout items=${items}>
+        <revenue-widget></revenue-widget>
+        <risk-widget></risk-widget>
+        <orders-widget></orders-widget>
+      </hyper-layout>
+    `
+  });
+  const dynamicLayout = dynamicProbe.querySelector('hyper-layout');
+  dynamicLayout.addEventListener('change', (event) => dynamicEvents.push(event.detail.reason));
+  dynamicLayout._observer.disconnect();
+  dynamicLayout.insertAdjacentHTML('beforeend', '<margin-widget></margin-widget>');
+  dynamicLayout.items = [...items, { id: 'margin', tag: 'margin-widget' }];
+  dynamicLayout._observer.observe(dynamicLayout, { childList: true, subtree: false });
+  await nextFrame();
+  assert(dynamicLayout.save().items.some((item) => item.id === 'margin'), 'new item auto-placed');
+  assert(dynamicEvents.includes('items-reconciled'), 'reconciliation change emitted');
+
+  dynamicLayout._observer.disconnect();
+  dynamicLayout.querySelector(`[data-layout-id="${items[2].id}"]`).remove();
+  dynamicLayout.items = [items[0], items[1], { id: 'margin', tag: 'margin-widget' }];
+  dynamicLayout._observer.observe(dynamicLayout, { childList: true, subtree: false });
+  await nextFrame();
+  assert(!dynamicLayout.save().items.some((item) => item.id === items[2].id), 'removed item omitted from positions');
+
+  layout.breakpoints = [{ width: 700, columns: 1 }, { width: 1200, columns: 6 }];
+  layout.removeAttribute('columns');
+  layout.style.width = '640px';
+  layout.reconcile('attribute');
+  await nextFrame();
+  assert(layout.save().columns === 1, 'host-width breakpoint applied');
+  layout.breakpoints = [];
+  layout.setAttribute('column-width', '200');
+  layout.style.width = '800px';
+  layout.reconcile('attribute');
+  await nextFrame();
+  assert(layout.save().columns === 4, 'column-width auto columns applied');
+
+  layout.serialize = (positions) => ({ count: positions.items.length });
+  layout.deserialize = (value) => value.items;
+  assert(layout.save().count === 3, 'custom serializer used');
+  layout.load({ items: [{ id: items[0].id, x: 0, y: 0, w: 1, h: 1 }, { id: items[1].id, x: 1, y: 0, w: 1, h: 1 }, { id: 'margin', x: 2, y: 0, w: 1, h: 1 }] });
+  assert(layout.save().count === 3, 'load uses custom deserializer');
+  assert(normalizePositions([{ id: 'standalone', x: 0, y: 0, w: 1, h: 1 }]).items[0].id === 'standalone', 'public normalizePositions works');
+  assert(normalizePositions([{ x: 0, y: 0, w: 1, h: 1 }]).items[0].id === '', 'position item id can be absent before reconciliation');
+  assert(normalizePositions({}, null, 0).columns === 12, 'position normalization falls back to twelve columns');
+  assert(normalizePositions('custom', () => [{ id: 'custom-id', x: 0, y: 0, w: 1, h: 1 }]).items[0].id === 'custom-id', 'custom deserializer works through public helper');
+  const invalidJson = captureWarnings(() => normalizePositions('{bad json'));
+  assert(invalidJson.result.items.length === 0 && invalidJson.warnings.some((warning) => warning.includes('invalid JSON')), 'invalid JSON diagnostic is privately covered');
+  if (window.location.protocol !== 'file:') {
+    const layoutModule = await import(new URL('../../src/layout/index.js', window.location.href).href);
+    assert(layoutModule.reconcilePositions([], null).positions.columns === 12, 'reconcilePositions uses default columns when called directly');
+  }
+
+  const attrProbe = mountProbe('layout-attribute-probe', {
+    render: (Html) => Html`
+      <hyper-layout style=${{ width: '360px' }}>
+        <revenue-widget></revenue-widget>
+      </hyper-layout>
+    `
+  });
+  const attrLayout = attrProbe.querySelector('hyper-layout');
+  attrLayout.setAttribute('items', JSON.stringify(['string-item-id']));
+  attrLayout.setAttribute('positions', JSON.stringify({ version: 2, columns: 3, items: [{ id: 'string-item-id', x: 'bad', y: -4, w: 9, h: 9, minW: 1, minH: 1, maxW: 2, maxH: 3, locked: true, noMove: true, noResize: true }] }));
+  attrLayout.setAttribute('columns', '3');
+  attrLayout.setAttribute('cell-height', '60');
+  attrLayout.setAttribute('margin', '0');
+  await nextFrame();
+  assert(attrLayout.save().columns === 3, 'explicit columns attribute wins');
+  assert(attrLayout.save().items[0].x === 0 && attrLayout.save().items[0].w === 2, 'attribute positions clamp invalid geometry');
+  assert(attrLayout.style.height === '180px', 'fixed cell height and zero margin are applied');
+  attrLayout.load({ items: [{ id: 'string-item-id', x: 1, y: 0, w: 1, h: 1 }] });
+  attrLayout.compact('list');
+  attrLayout.enable();
+  assert(attrLayout.edit === true, 'enable toggles edit mode');
+  attrLayout.disable();
+  assert(attrLayout.edit === false, 'disable toggles edit mode off');
+  attrLayout.engine.add({ id: 'missing-wrapper', x: 2, y: 0, w: 1, h: 1 }, false);
+  attrLayout.applyLayout();
+  attrLayout.setAttribute('removable', 'trash');
+  attrLayout.setAttribute('trash', '#layout-trash');
+  const missed = attrLayout.removeIfRequested('missing-wrapper', new PointerEvent('pointerup', { clientX: 0, clientY: 0 }));
+  assert(missed === null, 'trash removal ignores non-trash release');
+  attrLayout.removeAttribute('trash');
+  assert(attrLayout.removeIfRequested('missing-wrapper', new PointerEvent('pointerup', { clientX: 0, clientY: 0 })) === null, 'trash removal ignores missing selector');
+  attrLayout.remove();
+
+  let badItemsThrew = false;
+  try {
+    const badItemsProbe = mountProbe('layout-bad-items-probe', {
+      render: (Html) => Html`
+        <hyper-layout>
+          <revenue-widget></revenue-widget>
+        </hyper-layout>
+      `
+    });
+    const badItems = badItemsProbe.querySelector('hyper-layout');
+    badItems.items = 'not-array';
+    badItems.reconcile('manual');
+  } catch (error) {
+    badItemsThrew = error.message.includes('items must be an array');
+  }
+  assert(badItemsThrew, 'non-array items throw');
+
+  let missingIdThrew = false;
+  try {
+    const missingIdProbe = mountProbe('layout-missing-id-probe', {
+      render: (Html) => Html`
+        <hyper-layout>
+          <revenue-widget></revenue-widget>
+        </hyper-layout>
+      `
+    });
+    const missingId = missingIdProbe.querySelector('hyper-layout');
+    missingId.items = [null];
+    missingId.reconcile('manual');
+  } catch (error) {
+    missingIdThrew = error.message.includes('id is required');
+  }
+  assert(missingIdThrew, 'missing item id throws');
+
+  let duplicateIdThrew = false;
+  try {
+    const duplicateIdProbe = mountProbe('layout-duplicate-id-probe', {
+      render: (Html) => Html`
+        <hyper-layout>
+          <revenue-widget></revenue-widget>
+          <risk-widget></risk-widget>
+        </hyper-layout>
+      `
+    });
+    const duplicateId = duplicateIdProbe.querySelector('hyper-layout');
+    duplicateId.items = [{ id: 'dupe' }, { id: 'dupe' }];
+    duplicateId.reconcile('manual');
+  } catch (error) {
+    duplicateIdThrew = error.message.includes('duplicate item id');
+  }
+  assert(duplicateIdThrew, 'duplicate item id throws');
+
+  const autoResizeProbe = mountProbe('layout-auto-resize-probe', {
+    render: (Html) => Html`
+      <hyper-layout style=${{ width: '420px' }} column-width="200">
+        <revenue-widget></revenue-widget>
+      </hyper-layout>
+    `
+  });
+  const autoResize = autoResizeProbe.querySelector('hyper-layout');
+  await nextFrame();
+  assert(autoResize.currentPositions().columns === 2, 'resize observer layout starts with auto columns');
+  autoResize.style.width = '640px';
+  for (let index = 0; index < 10 && autoResize.currentPositions().columns !== 3; index += 1) {
+    await nextFrame();
+  }
+  assert(autoResize.currentPositions().columns === 3, 'resize observer responds to host width changes');
+  autoResizeProbe.remove();
+
+  const engine = createLayoutEngine({ columns: 4, maxRow: 3, float: true });
+  engine.add({ x: 0, y: 0, w: 1, h: 1 }, false);
+  assert(engine.save()[0].id === 'node-0', 'engine assigns fallback id');
+  engine.add({ id: 'default-compact', x: 3, y: 2, w: 0, h: 0 });
+  engine.add({ id: 'locked', x: 1, y: 0, w: 1, h: 1, locked: true }, false);
+  engine.add({ id: 'active', x: 0, y: 1, w: 1, h: 1 }, false);
+  engine.move('active', { x: 1, y: 0 });
+  assert(engine.get('active').y >= 1, 'locked collision pushes active node');
+  assert(engine.move('missing', { x: 0, y: 0 }) === null, 'missing move returns null');
+  engine.add({ id: 'locked-move', x: 2, y: 0, w: 1, h: 1, locked: true }, false);
+  engine.add({ id: 'no-move', x: 3, y: 0, w: 1, h: 1, noMove: true }, false);
+  assert(engine.move('locked-move', { x: 0, y: 0 }) === null, 'locked move returns null');
+  assert(engine.move('no-move', { x: 0, y: 0 }) === null, 'noMove move returns null');
+  engine.add({ id: 'no-resize', x: 0, y: 2, w: 1, h: 1, noResize: true }, false);
+  assert(engine.resize('missing', { w: 2, h: 2 }) === null, 'missing resize returns null');
+  assert(engine.resize('locked-move', { w: 2, h: 2 }) === null, 'locked resize returns null');
+  assert(engine.resize('no-resize', { w: 2, h: 2 }) === null, 'noResize resize returns null');
+  assert(engine.remove('missing') === null, 'missing remove returns null');
+  const swapEngine = createLayoutEngine({ columns: 4 });
+  swapEngine.load([{ id: 'swap-a', x: 0, y: 0, w: 1, h: 1 }, { id: 'swap-b', x: 1, y: 0, w: 1, h: 1 }]);
+  swapEngine.move('swap-a', { x: 1, y: 0 });
+  assert(swapEngine.get('swap-b').x === 0, 'same-sized touching items swap');
+  const partialSwapEngine = createLayoutEngine({ columns: 12 });
+  partialSwapEngine.load([{ id: 'partial-a', x: 0, y: 0, w: 4, h: 1 }, { id: 'partial-b', x: 4, y: 0, w: 4, h: 1 }]);
+  partialSwapEngine.move('partial-a', { x: 5, y: 0 });
+  assert(partialSwapEngine.get('partial-a').x === 4 && partialSwapEngine.get('partial-b').x === 0, 'same-sized partial overlap snaps to a true swap');
+  assert(!partialSwapEngine.collides(partialSwapEngine.get('partial-a'), 'partial-a'), 'same-sized swap leaves no stacked overlap');
+  partialSwapEngine.move('partial-a', { x: 3, y: 0 });
+  assert(!(partialSwapEngine.get('partial-a').x === 0 && partialSwapEngine.get('partial-b').x === 4), 'same-sized edge jitter does not immediately reverse swap');
+  assert(!partialSwapEngine.collides(partialSwapEngine.get('partial-a'), 'partial-a'), 'same-sized edge jitter leaves no stacked overlap');
+  const noSwapEngine = createLayoutEngine({ columns: 4 });
+  noSwapEngine.load([{ id: 'no-swap-a', x: 0, y: 0, w: 1, h: 1 }, { id: 'no-swap-b', x: 3, y: 0, w: 2, h: 1 }]);
+  noSwapEngine.move('no-swap-a', { x: 2, y: 0 });
+  assert(noSwapEngine.get('no-swap-b').y > 0, 'non-touching different-sized collision pushes');
+  const sameSizeNoTouchEngine = createLayoutEngine({ columns: 5 });
+  sameSizeNoTouchEngine.load([{ id: 'far-a', x: 0, y: 0, w: 1, h: 1 }, { id: 'far-b', x: 3, y: 0, w: 1, h: 1 }]);
+  sameSizeNoTouchEngine.move('far-a', { x: 3, y: 0 });
+  assert(sameSizeNoTouchEngine.get('far-b').y > 0, 'same-sized non-touching collision pushes instead of swapping');
+  engine.findEmpty({ id: 'too-wide', w: 99, h: 1 });
+  engine.setColumns(0);
+  engine.setColumns(2);
+  engine.compact('list');
+  assert(engine.columns === 2, 'engine setColumns rescales layout');
+
+  const freeProbe = mountProbe('layout-free-probe', {
+    render: (Html) => Html`
+      <hyper-layout style=${{ width: '300px' }}>
+        <revenue-widget></revenue-widget>
+      </hyper-layout>
+    `
+  });
+  const free = freeProbe.querySelector('hyper-layout');
+  await nextFrame();
+  assert(free.currentPositions().ephemeral === true, 'uncontrolled mode marks ephemeral positions');
+  const ephemeralSave = captureWarnings(() => free.save());
+  assert(ephemeralSave.result.ephemeral === true && ephemeralSave.warnings.some((warning) => warning.includes('ephemeral IDs')), 'ephemeral save diagnostic is privately covered');
+
+  const removableProbe = mountProbe('layout-removable-probe', {
+    setup: (ctx) => {
+      ctx.items = [{ id: 'remove-me', tag: 'revenue-widget' }];
+      ctx.positions = { items: [{ id: 'remove-me', x: 0, y: 0, w: 2, h: 1 }] };
+    },
+    render: (Html, ctx) => Html`
+      <hyper-layout
+        style=${{ width: '300px' }}
+        edit=${true}
+        removable="both"
+        trash="#layout-trash"
+        items=${ctx.items}
+        positions=${ctx.positions}
+      >
+        <revenue-widget label="remove-me"></revenue-widget>
+      </hyper-layout>
+    `
+  });
+  const removable = removableProbe.querySelector('hyper-layout');
+  const clearRemovedItems = () => {
+    removable.removeEventListener('removed', clearRemovedItems);
+    removable.items = [];
+  };
+  removable.addEventListener('removed', clearRemovedItems);
+  await nextFrame();
+  const trashRect = trash.getBoundingClientRect();
+  const removeDrag = removable.querySelector('[data-hl-drag]');
+  firePointer(removeDrag, 'pointerdown', 20, 20);
+  firePointer(document, 'pointermove', trashRect.left + 5, trashRect.top + 5);
+  firePointer(document, 'pointerup', trashRect.left + 5, trashRect.top + 5);
+  await nextFrame();
+  assert(removable.querySelectorAll('[data-hl-item]').length === 0, 'trash removal removed wrapper');
+
+  const missingTrashProbe = mountProbe('layout-missing-trash-probe', {
+    render: (Html) => Html`
+      <hyper-layout
+        style=${{ width: '300px' }}
+        removable="trash"
+        trash="#layout-trash"
+        items=${[]}
+      ></hyper-layout>
+    `
+  });
+  const missingTrashRemoval = missingTrashProbe.querySelector('hyper-layout');
+  await nextFrame();
+  const freshTrashRect = trash.getBoundingClientRect();
+  assert(missingTrashRemoval.removeIfRequested('not-present', new PointerEvent('pointerup', { clientX: freshTrashRect.left + 5, clientY: freshTrashRect.top + 5 })) === null, 'trash hit with missing node returns null');
+  missingTrashRemoval.setAttribute('removable', 'outside');
+  let missingRemovedEvents = 0;
+  missingTrashRemoval.addEventListener('removed', () => {
+    missingRemovedEvents += 1;
+  });
+  assert(missingTrashRemoval.removeIfRequested('not-present', new PointerEvent('pointerup', { clientX: -20, clientY: -20 })) === null, 'outside removal with missing node returns null');
+  const missingTrashRect = missingTrashRemoval.getBoundingClientRect();
+  assert(missingTrashRemoval.removeIfRequested('not-present', new PointerEvent('pointerup', { clientX: missingTrashRect.left + 1, clientY: missingTrashRect.bottom + 20 })) === null, 'outside removal detects pointer below host');
+  assert(missingRemovedEvents === 0, 'missing removal does not emit removed event');
+  missingTrashProbe.remove();
+
+  const responsiveProbe = mountProbe('layout-responsive-probe', {
+    setup: (ctx) => {
+      ctx.items = [{ id: 'left', tag: 'revenue-widget' }, { id: 'right', tag: 'risk-widget' }];
+      ctx.positions = { columns: 12, items: [{ id: 'left', x: 0, y: 0, w: 6, h: 1 }, { id: 'right', x: 6, y: 0, w: 6, h: 1 }] };
+    },
+    render: (Html, ctx) => Html`
+      <hyper-layout
+        style=${{ width: '720px' }}
+        columns="12"
+        items=${ctx.items}
+        positions=${ctx.positions}
+      >
+        <revenue-widget label="left"></revenue-widget>
+        <risk-widget label="right"></risk-widget>
+      </hyper-layout>
+    `
+  });
+  const responsive = responsiveProbe.querySelector('hyper-layout');
+  await nextFrame();
+  responsive.setAttribute('columns', '6');
+  await nextFrame();
+  assert(responsive.engine.get('left').w === 3 && responsive.engine.get('right').x === 3 && responsive.engine.get('right').y === 0, 'column changes preserve side-by-side proportions');
+
+  assert(events.some((event) => event[0] === 'onchange'), 'onchange received ergonomic positions argument');
+  layout.onchange = null;
+  assert(layout.onchange === null, 'onchange setter clears non-function handler');
+  layout.serialize = null;
+  layout.deserialize = null;
+  layout.breakpoints = [
+    { width: 500, columns: 1 },
+    { width: 900, columns: 12 }
+  ];
+  layout.style.width = '';
+  layout.removeAttribute('column-width');
+  layout.removeAttribute('columns');
+  layout.positions = {
+    version: 1,
+    columns: 12,
+    items: [
+      { id: items[0].id, x: 0, y: 0, w: 4, h: 2 },
+      { id: items[1].id, x: 4, y: 0, w: 4, h: 2 },
+      { id: items[2].id, x: 8, y: 0, w: 4, h: 2 }
+    ]
+  };
+  layout.disable();
+  await nextFrame();
+  assert(trash.closest('[data-hl-probe-root]') === probeRoot, 'trash removal fixture stays inside the hidden probe area');
+  assert(demoLayout.edit === false && editToggle.textContent.trim() === 'Edit layout' && getComputedStyle(editToggle.querySelector('[data-layout-lock-icon="closed"]')).display === 'block', 'visible core demo remains controlled only by displayed source');
+  assert(demoLayout.engine.get('revenue').x === 0 && demoLayout.engine.get('risk').x === 4 && demoLayout.engine.get('orders').x === 8 && !demoLayout.engine.get('added-4'), 'visible core demo keeps source-owned initial positions and source-removed item state');
+  section.dataset.testResult = 'pass';
+})().catch((error) => {
+  console.error(error);
+  document.querySelector('[data-test="hyper-layout-core"]').dataset.testResult = 'fail';
+});
+      </script>
+    </section>
+
+    <section data-test="hyper-layout-controlled-example" data-test-result="pending">
+      <h2>Controlled Hyper Layout Example</h2>
+      <pre><code>function defineWidget(tag, label) {
+  if (customElements.get(tag)) return;
+  hyperElement(tag, {
+    render: (Html, ctx) =&gt; Html`&lt;button class="card"&gt;${ctx.attrs.label || label}&lt;/button&gt;`
+  });
+}
+
+defineWidget('revenue-widget', 'Revenue');
+defineWidget('risk-widget', 'Risk');
+defineWidget('orders-widget', 'Orders');
+
+let positions = {
+  version: 1,
+  columns: 12,
+  items: [
+    { id: 'revenue', x: 0, y: 0, w: 4, h: 2 },
+    { id: 'risk', x: 4, y: 0, w: 4, h: 2 },
+    { id: 'orders', x: 8, y: 0, w: 4, h: 2 }
+  ]
+};
+
+function persistPositions(_event, nextPositions) {
+  positions = nextPositions;
+}
+
+hyperElement('controlled-dashboard', {
+  render: (Html, ctx) =&gt; {
+    const items = [
+      { id: 'revenue', tag: 'revenue-widget', can: ['drag'] },
+      { id: 'risk', tag: 'risk-widget', can: ['drag', 'resize'] },
+      { id: 'orders', tag: 'orders-widget', can: ['resize'] }
+    ];
+
+    return Html`
+      &lt;hyper-layout edit=${true} cell-height="120" items=${items} positions=${positions} onchange=${persistPositions}&gt;
+        &lt;revenue-widget&gt;&lt;/revenue-widget&gt;
+        &lt;risk-widget&gt;&lt;/risk-widget&gt;
+        &lt;orders-widget&gt;&lt;/orders-widget&gt;
+      &lt;/hyper-layout&gt;
+    `;
+  }
+});
+
+document.getElementById('controlled-layout-output').innerHTML = '&lt;controlled-dashboard&gt;&lt;/controlled-dashboard&gt;';</code></pre>
+      <div id="controlled-layout-output"></div>
+      <script type="module">
+        await window.hyperElementReady;
+(async function () {
+  function assert(condition, message) {
+    if (!condition) throw new Error(message);
+  }
+  function nextFrame() {
+    return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }
+  function firePointer(target, type, x, y) {
+    target.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 7 }));
+  }
+  function waitForHyperElement() {
+    if (window.hyperElement) return Promise.resolve();
+    if (window.hyperElementReady) return window.hyperElementReady;
+    return new Promise((resolve) => window.addEventListener('hyper-element-loaded', resolve, { once: true }));
+  }
+
+  const section = document.querySelector('[data-test="hyper-layout-controlled-example"]');
+  const host = document.getElementById('controlled-layout-output');
+  const probeRoot = document.createElement('div');
+  probeRoot.dataset.hlProbeRoot = '';
+  section.appendChild(probeRoot);
+  await waitForHyperElement();
+  const hyperElement = window.hyperElement;
+  eval(section.querySelector('pre code').textContent);
+  await nextFrame();
+
+  function defineProbeWidget(tag, label) {
+    if (customElements.get(tag)) return;
+    hyperElement(tag, {
+      render: (Html, ctx) => Html`<button class="card">${ctx.attrs.label || label}</button>`
+    });
+  }
+  defineProbeWidget('feedback-a-widget', 'Feedback A');
+  defineProbeWidget('feedback-b-widget', 'Feedback B');
+
+  const feedbackItems = [
+    { id: 'feedback-a', tag: 'feedback-a-widget' },
+    { id: 'feedback-b', tag: 'feedback-b-widget' }
+  ];
+  let feedbackPositions = {
+    items: [
+      { id: 'feedback-a', x: 0, y: 0, w: 1, h: 1 },
+      { id: 'feedback-b', x: 1, y: 0, w: 1, h: 1 }
+    ]
+  };
+  let feedbackChanges = 0;
+  let renderFeedback = () => {};
+  function handleFeedbackChange(_event, nextPositions) {
+    feedbackChanges += 1;
+    feedbackPositions = nextPositions;
+    renderFeedback();
+  }
+  if (!customElements.get('controlled-feedback-demo')) {
+    hyperElement('controlled-feedback-demo', {
+      setup: (ctx, onNext) => {
+        renderFeedback = onNext(() => ({ positions: feedbackPositions }));
+      },
+      render: (Html, ctx, store) => Html`
+        <hyper-layout
+          style=${{ width: '420px' }}
+          edit=${true}
+          items=${feedbackItems}
+          positions=${store?.positions || feedbackPositions}
+          onchange=${handleFeedbackChange}
+        >
+          <feedback-a-widget></feedback-a-widget>
+          <feedback-b-widget></feedback-b-widget>
+        </hyper-layout>
+      `
+    });
+  }
+
+  probeRoot.insertAdjacentHTML('beforeend', '<controlled-feedback-demo></controlled-feedback-demo>');
+  await nextFrame();
+
+  const demo = host.querySelector('controlled-dashboard');
+  const layout = demo.querySelector('hyper-layout');
+  const controlledChanges = [];
+  layout.addEventListener('change', (event) => controlledChanges.push(event.detail.positions));
+  // The controlled example is executable documentation, so every rendered direct child must be represented by persisted state.
+  assert(layout.save().items.length === 3, 'controlled positions include every rendered item');
+  assert(layout.engine.get('orders').x === 8, 'controlled example places orders from persisted state');
+  assert(layout.engine.get('revenue').noResize === true, 'items.can disables revenue resize');
+  assert(layout.engine.get('orders').noMove === true, 'items.can disables orders drag');
+  const revenueBefore = layout.engine.get('revenue').x;
+  firePointer(layout.querySelector('[data-layout-id="revenue"] [data-hl-drag]'), 'pointerdown', 40, 40);
+  firePointer(document, 'pointermove', 260, 40);
+  firePointer(document, 'pointerup', 260, 40);
+  await nextFrame();
+  assert(layout.engine.get('revenue').x !== revenueBefore, 'controlled drag updates positions through onchange');
+  assert(controlledChanges.some((positions) => positions.items.some((item) => item.id === 'revenue')), 'controlled parent received positions');
+
+  const feedbackDemo = probeRoot.querySelector('controlled-feedback-demo');
+  const feedback = feedbackDemo.querySelector('hyper-layout');
+  firePointer(feedback.querySelector('[data-hl-drag]'), 'pointerdown', 20, 20);
+  firePointer(document, 'pointermove', 160, 20);
+  firePointer(document, 'pointerup', 160, 20);
+  await nextFrame();
+  assert(feedbackChanges === 1, 'feeding controlled positions back does not recurse');
+  // The interaction assertion mutates the public demo, so reset it to the same stable state shown in the visible snippet.
+  layout.positions = {
+    version: 1,
+    columns: 12,
+    items: [
+      { id: 'revenue', x: 0, y: 0, w: 4, h: 2 },
+      { id: 'risk', x: 4, y: 0, w: 4, h: 2 },
+      { id: 'orders', x: 8, y: 0, w: 4, h: 2 }
+    ]
+  };
+  await nextFrame();
+  section.dataset.testResult = 'pass';
+})().catch((error) => {
+  console.error(error);
+  document.querySelector('[data-test="hyper-layout-controlled-example"]').dataset.testResult = 'fail';
+});
+      </script>
+    </section>
+
+    <section data-test="hyper-layout-uncontrolled-example" data-test-result="pending">
+      <h2>Uncontrolled Hyper Layout Example</h2>
+      <pre><code>function defineWidget(tag, label) {
+  if (customElements.get(tag)) return;
+  hyperElement(tag, {
+    render: (Html, ctx) =&gt; Html`&lt;button class="card"&gt;${ctx.attrs.label || label}&lt;/button&gt;`
+  });
+}
+
+defineWidget('revenue-widget', 'Revenue');
+defineWidget('risk-widget', 'Risk');
+
+hyperElement('uncontrolled-dashboard', {
+  render: (Html) =&gt; Html`
+    &lt;hyper-layout edit&gt;
+      &lt;revenue-widget&gt;&lt;/revenue-widget&gt;
+      &lt;risk-widget&gt;&lt;/risk-widget&gt;
+    &lt;/hyper-layout&gt;
+  `
+});
+
+document.getElementById('uncontrolled-layout-output').innerHTML = '&lt;uncontrolled-dashboard&gt;&lt;/uncontrolled-dashboard&gt;';</code></pre>
+      <div id="uncontrolled-layout-output"></div>
+      <script type="module">
+        await window.hyperElementReady;
+(async function () {
+  function assert(condition, message) {
+    if (!condition) throw new Error(message);
+  }
+  function nextFrame() {
+    return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }
+  function firePointer(target, type, x, y) {
+    target.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 10 }));
+  }
+  function waitForHyperElement() {
+    if (window.hyperElement) return Promise.resolve();
+    if (window.hyperElementReady) return window.hyperElementReady;
+    return new Promise((resolve) => window.addEventListener('hyper-element-loaded', resolve, { once: true }));
+  }
+
+  const section = document.querySelector('[data-test="hyper-layout-uncontrolled-example"]');
+  const host = document.getElementById('uncontrolled-layout-output');
+  await waitForHyperElement();
+  const hyperElement = window.hyperElement;
+  eval(section.querySelector('pre code').textContent);
+  await nextFrame();
+  const layout = host.querySelector('uncontrolled-dashboard hyper-layout');
+
+  assert(layout.currentPositions().ephemeral === true, 'uncontrolled positions are marked ephemeral');
+  assert(layout.currentPositions().items.length === 2, 'uncontrolled children are auto-placed');
+  assert(layout.edit === true, 'uncontrolled example starts in edit mode from the snippet');
+  assert(getComputedStyle(layout.querySelector('[data-hl-content]')).pointerEvents === 'none', 'edit mode blocks child events');
+  const beforeMove = layout.engine.get('ephemeral-0').x;
+  firePointer(layout.querySelector('[data-hl-drag]'), 'pointerdown', 20, 20);
+  firePointer(document, 'pointermove', 160, 20);
+  firePointer(document, 'pointerup', 160, 20);
+  await nextFrame();
+  assert(layout.engine.get('ephemeral-0').x !== beforeMove, 'uncontrolled drag changes internal layout');
+  const moved = layout.engine.get('ephemeral-0').x;
+  layout.setAttribute('margin', '12');
+  await nextFrame();
+  assert(layout.engine.get('ephemeral-0').x === moved, 'uncontrolled layout survives later reconcile');
+  layout.disable();
+  assert(layout.edit === false, 'uncontrolled layout can leave edit mode');
+  // Restore the public demo to the literal snippet state after exercising
+  // disable(), because developers use the rendered kitchen sink section as
+  // interactive documentation and `<hyper-layout edit>` must remain editable.
+  layout.enable();
+  assert(layout.edit === true, 'uncontrolled visible example remains editable');
+  section.dataset.testResult = 'pass';
+})().catch((error) => {
+  console.error(error);
+  document.querySelector('[data-test="hyper-layout-uncontrolled-example"]').dataset.testResult = 'fail';
+});
+      </script>
+    </section>
+
+    <section data-test="hyper-layout-custom-overlay-example" data-test-result="pending">
+      <h2>Custom Overlay Hyper Layout Example</h2>
+      <pre><code>function defineWidget(tag, label) {
+  if (customElements.get(tag)) return;
+  hyperElement(tag, {
+    render: (Html, ctx) =&gt; Html`&lt;button class="card"&gt;${ctx.attrs.label || label}&lt;/button&gt;`
+  });
+}
+
+defineWidget('revenue-widget', 'Revenue');
+defineWidget('risk-widget', 'Risk');
+defineWidget('orders-widget', 'Orders');
+
+hyperElement('sample-overlay', {
+  render: (Html, ctx) =&gt; {
+    const can = ctx.attrs.can || [];
+    const canDrag = can.includes('drag');
+    const canResize = can.includes('resize');
+    const itemId = ctx.attrs.item?.id || 'item';
+
+    return Html`
+      &lt;div
+        class="sample-overlay"
+        style=${{ background: 'repeating-linear-gradient(135deg, #0f172a 0 12px, #1d4ed8 12px 24px)', border: '3px solid #f59e0b', boxShadow: 'inset 0 0 0 2px rgba(255, 255, 255, 0.45), 0 10px 26px rgba(15, 23, 42, 0.32)', boxSizing: 'border-box', color: '#ffffff', display: 'grid', height: '100%', overflow: 'hidden', placeItems: 'center', position: 'relative', width: '100%' }}
+      &gt;
+      &lt;button
+        type="button"
+        data-role="drag"
+        aria-label="Move item"
+        ?hidden=${!canDrag}
+        onpointerdown=${(event) =&gt; ctx.attrs.drag(event)}
+        style=${{ background: 'rgba(255, 255, 255, 0.94)', border: '2px solid #f59e0b', borderRadius: '999px', boxShadow: '0 8px 18px rgba(15, 23, 42, 0.24)', color: '#1e40af', cursor: 'grab', display: canDrag ? 'grid' : 'none', gap: '6px', minWidth: '138px', padding: '12px 16px', placeItems: 'center', position: 'relative' }}
+      &gt;
+        &lt;svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"&gt;
+          &lt;polyline points="5 9 2 12 5 15"&gt;&lt;/polyline&gt;
+          &lt;polyline points="9 5 12 2 15 5"&gt;&lt;/polyline&gt;
+          &lt;polyline points="15 19 12 22 9 19"&gt;&lt;/polyline&gt;
+          &lt;polyline points="19 9 22 12 19 15"&gt;&lt;/polyline&gt;
+          &lt;line x1="2" y1="12" x2="22" y2="12"&gt;&lt;/line&gt;
+          &lt;line x1="12" y1="2" x2="12" y2="22"&gt;&lt;/line&gt;
+        &lt;/svg&gt;
+        &lt;span style=${{ font: '700 13px/1.1 sans-serif', letterSpacing: '0', textTransform: 'uppercase' }}&gt;
+          ${itemId} editor
+        &lt;/span&gt;
+      &lt;/button&gt;
+      &lt;div
+        aria-hidden="true"
+        style=${{ background: '#f59e0b', bottom: '10px', color: '#111827', font: '700 11px/1 sans-serif', left: '10px', letterSpacing: '0', padding: '6px 8px', position: 'absolute' }}
+      &gt;
+        ${itemId} overlay
+      &lt;/div&gt;
+      &lt;button
+        type="button"
+        data-role="resize"
+        aria-label="Resize item"
+        ?hidden=${!canResize}
+        onpointerdown=${(event) =&gt; ctx.attrs.resize(event)}
+        style=${{ background: '#f59e0b', border: '2px solid #ffffff', bottom: '8px', color: '#111827', cursor: 'nwse-resize', display: canResize ? 'grid' : 'none', height: '40px', padding: '6px', placeItems: 'center', position: 'absolute', right: '8px', width: '40px' }}
+      &gt;
+        &lt;svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"&gt;
+          &lt;line x1="7" y1="7" x2="17" y2="17"&gt;&lt;/line&gt;
+          &lt;polyline points="17 7 17 17 7 17"&gt;&lt;/polyline&gt;
+        &lt;/svg&gt;
+      &lt;/button&gt;
+      &lt;/div&gt;
+    `;
+  }
+});
+
+hyperElement('dashboard-with-overlay', {
+  render: (Html) =&gt; {
+    const items = [
+      { id: 'revenue', tag: 'revenue-widget', can: ['drag'] },
+      { id: 'risk', tag: 'risk-widget', can: ['drag', 'resize'] },
+      { id: 'orders', tag: 'orders-widget', can: ['resize'] }
+    ];
+    const positions = {
+      version: 1,
+      columns: 12,
+      items: [
+        { id: 'risk', x: 0, y: 0, w: 4, h: 2 },
+        { id: 'revenue', x: 4, y: 0, w: 4, h: 2 },
+        { id: 'orders', x: 7, y: 0, w: 3, h: 2 }
+      ]
+    };
+
+    return Html`
+      &lt;hyper-layout edit=${true} items=${items} positions=${positions} overlay="sample-overlay"&gt;
+        &lt;revenue-widget&gt;&lt;/revenue-widget&gt;
+        &lt;risk-widget&gt;&lt;/risk-widget&gt;
+        &lt;orders-widget&gt;&lt;/orders-widget&gt;
+      &lt;/hyper-layout&gt;
+    `;
+  }
+});
+
+document.getElementById('custom-overlay-layout-output').innerHTML = '&lt;dashboard-with-overlay&gt;&lt;/dashboard-with-overlay&gt;';</code></pre>
+      <div id="custom-overlay-layout-output"></div>
+      <script type="module">
+        await window.hyperElementReady;
+(async function () {
+  function assert(condition, message) {
+    if (!condition) throw new Error(message);
+  }
+  function nextFrame() {
+    return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }
+  function firePointer(target, type, x, y) {
+    target.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 9 }));
+  }
+  function waitForHyperElement() {
+    if (window.hyperElement) return Promise.resolve();
+    if (window.hyperElementReady) return window.hyperElementReady;
+    return new Promise((resolve) => window.addEventListener('hyper-element-loaded', resolve, { once: true }));
+  }
+
+  const section = document.querySelector('[data-test="hyper-layout-custom-overlay-example"]');
+  const host = document.getElementById('custom-overlay-layout-output');
+  const probeRoot = document.createElement('div');
+  probeRoot.dataset.hlProbeRoot = '';
+  section.appendChild(probeRoot);
+  await waitForHyperElement();
+  const hyperElement = window.hyperElement;
+  eval(section.querySelector('pre code').textContent);
+  await nextFrame();
+
+  function defineProbeWidget(tag, label) {
+    if (customElements.get(tag)) return;
+    hyperElement(tag, {
+      render: (Html, ctx) => Html`<button class="card">${ctx.attrs.label || label}</button>`
+    });
+  }
+  defineProbeWidget('blocked-widget', 'Blocked');
+  if (!customElements.get('blocked-overlay-layout-demo')) {
+    hyperElement('blocked-overlay-layout-demo', {
+      setup: (ctx) => {
+        ctx.items = [{ id: 'blocked', tag: 'blocked-widget', can: [] }];
+        ctx.positions = {
+          items: [{ id: 'blocked', x: 0, y: 0, w: 2, h: 1 }]
+        };
+      },
+      render: (Html, ctx) => Html`
+        <hyper-layout
+          style=${{ width: '240px' }}
+          edit=${true}
+          items=${ctx.items}
+          positions=${ctx.positions}
+        >
+          <blocked-widget></blocked-widget>
+        </hyper-layout>
+      `
+    });
+  }
+
+  probeRoot.insertAdjacentHTML('beforeend', '<blocked-overlay-layout-demo></blocked-overlay-layout-demo>');
+  await nextFrame();
+  const layout = host.querySelector('dashboard-with-overlay hyper-layout');
+
+  firePointer(layout, 'pointerdown', 1, 1);
+  const riskOverlay = layout.querySelector('[data-layout-id="risk"] sample-overlay');
+  assert(riskOverlay && riskOverlay.hasAttribute('can-drag') && riskOverlay.hasAttribute('can-resize'), 'custom overlay receives capability attributes');
+  assert(!riskOverlay.querySelector('[data-role="drag"]').hidden && !riskOverlay.querySelector('[data-role="resize"]').hidden, 'both-capability custom overlay shows drag and resize controls');
+  assert(riskOverlay.textContent.includes('risk editor') && riskOverlay.textContent.includes('risk overlay'), 'custom overlay renders developer-supplied content from ctx.attrs');
+  const riskWrapperRect = layout.querySelector('[data-layout-id="risk"]').getBoundingClientRect();
+  const riskOverlayRect = riskOverlay.getBoundingClientRect();
+  assert(Math.abs(riskOverlayRect.width - riskWrapperRect.width) < 1 && Math.abs(riskOverlayRect.height - riskWrapperRect.height) < 1, 'custom overlay stretches to the full item bounds');
+  const riskBefore = layout.engine.get('risk').x;
+  firePointer(riskOverlay.querySelector('[data-role="drag"]'), 'pointerdown', 40, 40);
+  firePointer(document, 'pointermove', 170, 40);
+  firePointer(document, 'pointerup', 170, 40);
+  await nextFrame();
+  assert(layout.engine.get('risk').x !== riskBefore, 'custom overlay callback starts drag');
+  const widthBefore = layout.engine.get('risk').w;
+  firePointer(riskOverlay.querySelector('[data-role="resize"]'), 'pointerdown', 220, 80);
+  firePointer(document, 'pointermove', 340, 130);
+  firePointer(document, 'pointerup', 340, 130);
+  await nextFrame();
+  assert(layout.engine.get('risk').w > widthBefore, 'custom overlay callback starts resize');
+  const revenueOverlay = layout.querySelector('[data-layout-id="revenue"] sample-overlay');
+  assert(revenueOverlay.textContent.includes('revenue editor') && revenueOverlay.textContent.includes('revenue overlay'), 'drag-only custom overlay renders from ctx.attrs');
+  assert(!revenueOverlay.querySelector('[data-role="drag"]').hidden && revenueOverlay.querySelector('[data-role="resize"]').hidden, 'drag-only custom overlay hides resize control');
+  const revenueBefore = layout.engine.get('revenue').x;
+  const revenueRect = revenueOverlay.getBoundingClientRect();
+  firePointer(revenueOverlay.querySelector('[data-role="drag"]'), 'pointerdown', revenueRect.left + 40, revenueRect.top + 40);
+  firePointer(document, 'pointermove', revenueRect.left + 140, revenueRect.top + 40);
+  firePointer(document, 'pointerup', revenueRect.left + 140, revenueRect.top + 40);
+  await nextFrame();
+  assert(layout.engine.get('revenue').x !== revenueBefore, 'can drag-only item infers drag from custom overlay');
+  layout.positions = {
+    version: 1,
+    columns: 12,
+    items: [
+      { id: 'risk', x: 0, y: 0, w: 4, h: 2 },
+      { id: 'revenue', x: 4, y: 0, w: 4, h: 2 },
+      { id: 'orders', x: 8, y: 0, w: 3, h: 2 }
+    ]
+  };
+  await nextFrame();
+  const inferredOverlay = layout.querySelector('[data-layout-id="risk"] sample-overlay');
+  const inferredBefore = layout.engine.get('risk').x;
+  const riskRect = inferredOverlay.getBoundingClientRect();
+  firePointer(inferredOverlay, 'pointerdown', riskRect.left + 4, riskRect.top + 4);
+  firePointer(document, 'pointermove', riskRect.left + 140, riskRect.top + 4);
+  firePointer(document, 'pointerup', riskRect.left + 140, riskRect.top + 4);
+  await nextFrame();
+  assert(layout.engine.get('risk').x !== inferredBefore, 'both-capability overlay infers drag away from resize corner');
+  const ordersBefore = { ...layout.engine.get('orders') };
+  const ordersOverlay = layout.querySelector('[data-layout-id="orders"] sample-overlay');
+  assert(ordersOverlay.textContent.includes('orders overlay'), 'resize-only custom overlay renders from ctx.attrs');
+  assert(ordersOverlay.querySelector('[data-role="drag"]').hidden && !ordersOverlay.querySelector('[data-role="resize"]').hidden, 'resize-only custom overlay hides drag control');
+  const rect = ordersOverlay.getBoundingClientRect();
+  firePointer(ordersOverlay.querySelector('[data-role="resize"]'), 'pointerdown', rect.right - 4, rect.bottom - 4);
+  firePointer(document, 'pointermove', rect.right + 240, rect.bottom + 80);
+  firePointer(document, 'pointerup', rect.right + 240, rect.bottom + 80);
+  await nextFrame();
+  const ordersAfter = layout.engine.get('orders');
+  assert(
+    ordersAfter.noMove === true &&
+      (ordersAfter.w > ordersBefore.w || ordersAfter.h > ordersBefore.h),
+    `can resize-only item accepts custom overlay resize: ${JSON.stringify(ordersAfter)}`
+  );
+  const blocked = probeRoot.querySelector('blocked-overlay-layout-demo hyper-layout');
+  const lockedBefore = { ...blocked.engine.get('blocked') };
+  const lockedOverlay = blocked.querySelector('[data-hl-overlay]');
+  firePointer(lockedOverlay, 'pointerdown', 20, 20);
+  firePointer(document, 'pointermove', 180, 20);
+  firePointer(document, 'pointerup', 180, 20);
+  await nextFrame();
+  assert(blocked.engine.get('blocked').x === lockedBefore.x && blocked.engine.get('blocked').w === lockedBefore.w, 'empty can list prevents inferred actions');
+  layout.overlay = '';
+  await nextFrame();
+  assert(layout.querySelector('[data-layout-id="risk"] hyper-layout-default-overlay'), 'clearing overlay property restores default overlay');
+  layout.overlay = 'sample-overlay';
+  layout.positions = {
+    version: 1,
+    columns: 12,
+    items: [
+      { id: 'risk', x: 0, y: 0, w: 4, h: 2 },
+      { id: 'revenue', x: 4, y: 0, w: 4, h: 2 },
+      { id: 'orders', x: 7, y: 0, w: 3, h: 2 }
+    ]
+  };
+  await nextFrame();
+  section.dataset.testResult = 'pass';
+})().catch((error) => {
+  console.error(error);
+  document.querySelector('[data-test="hyper-layout-custom-overlay-example"]').dataset.testResult = 'fail';
+});
+      </script>
+    </section>
+  </body>
+</html>

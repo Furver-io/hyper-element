@@ -79,6 +79,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="child-styles-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="style-object-child"] pre code').textContent;
 
@@ -141,12 +142,13 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="child-styles-fn-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="style-object-with-callback"] pre code').textContent;
 
         eval(code);
 
-        const expected = '<div id="child-styles-fn-output"><parent-style-fn-elem><child-style-fn-elem callback="fn-vhwdznktdzwvvjz" style="color: blue;"><span id="styled-fn-content">PASS</span></child-style-fn-elem></parent-style-fn-elem></div>';
+        const expected = '<div id="child-styles-fn-output"><parent-style-fn-elem><child-style-fn-elem callback="fn-RND" style="color: blue;"><span id="styled-fn-content">PASS</span></child-style-fn-elem></parent-style-fn-elem></div>';
 
         setTimeout(() => {
 

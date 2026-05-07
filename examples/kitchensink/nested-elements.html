@@ -72,6 +72,7 @@ document.getElementById('nested-string-attrs-output').appendChild(
 );</code></pre>
       <div id="nested-string-attrs-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         // Single source of truth — read snippet, eval, snapshot.
         const code = document.querySelector('[data-test="nested-string-attrs"] pre code').textContent;
         eval(code);
@@ -113,6 +114,7 @@ document.getElementById('nested-function-attrs-output').appendChild(
 );</code></pre>
       <div id="nested-function-attrs-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="nested-function-attrs"] pre code').textContent;
         eval(code);
 
@@ -155,6 +157,7 @@ card.setAttribute('name', 'Alice');
 document.getElementById('different-element-types-output').appendChild(card);</code></pre>
       <div id="different-element-types-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="different-element-types"] pre code').textContent;
         eval(code);
 

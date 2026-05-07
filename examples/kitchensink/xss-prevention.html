@@ -59,6 +59,7 @@ const elem1 = document.createElement('xss-string-elem');
 document.getElementById('string-escaped-output').appendChild(elem1);</code></pre>
       <div id="string-escaped-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="string-escaped"] pre code').textContent;
 
@@ -91,6 +92,7 @@ const elem2 = document.createElement('xss-raw-elem');
 document.getElementById('raw-not-escaped-output').appendChild(elem2);</code></pre>
       <div id="raw-not-escaped-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="raw-not-escaped"] pre code').textContent;
 
@@ -124,6 +126,7 @@ const elem3 = document.createElement('xss-array-elem');
 document.getElementById('array-escaped-output').appendChild(elem3);</code></pre>
       <div id="array-escaped-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="array-escaped"] pre code').textContent;
 
@@ -160,6 +163,7 @@ const elemArrayRaw = document.createElement('xss-array-raw-elem');
 document.getElementById('array-raw-output').appendChild(elemArrayRaw);</code></pre>
       <div id="array-raw-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="array-raw-not-escaped"] pre code').textContent;
 
@@ -201,6 +205,7 @@ const elem4 = document.createElement('xss-template-var-elem');
 document.getElementById('template-var-output').appendChild(elem4);</code></pre>
       <div id="template-var-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="template-var-escaped"] pre code').textContent;
 
@@ -242,6 +247,7 @@ const elem5 = document.createElement('xss-template-each-elem');
 document.getElementById('template-each-output').appendChild(elem5);</code></pre>
       <div id="template-each-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="template-each-escaped"] pre code').textContent;
 
@@ -279,6 +285,7 @@ const elem6 = document.createElement('xss-fragment-text-elem');
 document.getElementById('fragment-text-output').appendChild(elem6);</code></pre>
       <div id="fragment-text-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="fragment-text-escaped"] pre code').textContent;
 
@@ -316,6 +323,7 @@ const elem7 = document.createElement('xss-fragment-html-elem');
 document.getElementById('fragment-html-output').appendChild(elem7);</code></pre>
       <div id="fragment-html-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="fragment-html-not-escaped"] pre code').textContent;
 
@@ -354,6 +362,7 @@ const elem8 = document.createElement('xss-wire-elem');
 document.getElementById('wire-output').appendChild(elem8);</code></pre>
       <div id="wire-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="wire-still-works"] pre code').textContent;
 
@@ -386,6 +395,7 @@ const elem9 = document.createElement('xss-special-chars-elem');
 document.getElementById('special-chars-output').appendChild(elem9);</code></pre>
       <div id="special-chars-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="special-chars-escaped"] pre code').textContent;
 
@@ -418,6 +428,7 @@ const elem10 = document.createElement('xss-non-strings-elem');
 document.getElementById('non-strings-output').appendChild(elem10);</code></pre>
       <div id="non-strings-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="non-strings-unchanged"] pre code').textContent;
 

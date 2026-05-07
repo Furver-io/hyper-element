@@ -58,6 +58,7 @@
 );</code></pre>
       <content-element>hello world</content-element>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="wrapped-content"] pre code').textContent;
         eval(code);
         const expected = '<content-element><!--<>-->Transformed: HELLO WORLD<!--</>--></content-element>';

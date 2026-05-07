@@ -15,6 +15,10 @@
       "types": "./index.d.ts",
       "import": "./src/json-render/index.js"
     },
+    "./layout": {
+      "types": "./index.d.ts",
+      "import": "./src/layout/index.js"
+    },
     "./json-render/css": "./src/json-render/json-render.css",
     "./package.json": "./package.json"
   },
@@ -22,6 +26,7 @@
     "build/hyperElement.min.js",
     "build/hyperElement.min.js.map",
     "src/json-render/",
+    "src/layout/",
     "src/functional.js",
     "src/index.js",
     "index.d.ts",

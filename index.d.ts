@@ -960,3 +960,216 @@ declare module 'hyper-element/json-render' {
 
   export const registryInterface: JsonRenderRegistryInterface;
 }
+
+// ── hyper-layout subpath exports ─────────────────────────────────────
+// Runtime module: `src/layout/index.js`. Importing
+// `hyper-element/layout` registers `<hyper-layout>` as a browser
+// custom element and exposes the DOM-free engine for advanced callers.
+
+/**
+ * Parent-owned manifest entry mapped by order to one direct child.
+ * The ID should come from application data, not from DOM IDs or generated
+ * runtime references, so saved positions can be restored after reload.
+ */
+export interface HyperLayoutItem {
+  /** Opaque database/UUID/hash key used as the persistent layout identity. */
+  id: string;
+  /** Optional tag name used only for validation and debugging. */
+  tag?: string;
+  /** Optional edit capabilities; omitted means both drag and resize are allowed. */
+  can?: Array<'drag' | 'resize'> | 'drag' | 'resize';
+  /** Optional application metadata copied into the matching position item. */
+  meta?: Record<string, unknown>;
+}
+
+/**
+ * GridStack-compatible persisted item geometry.
+ * Hyper Layout keeps these fields in the wrapper-owned layout state and does
+ * not pass them down to child custom elements.
+ */
+export interface HyperLayoutPositionItem {
+  id: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  minW?: number;
+  minH?: number;
+  maxW?: number;
+  maxH?: number;
+  locked?: boolean;
+  noMove?: boolean;
+  noResize?: boolean;
+  meta?: Record<string, unknown>;
+}
+
+/**
+ * Canonical positions object emitted by `<hyper-layout>`.
+ * `ephemeral` is true when the host generated runtime IDs because no `items`
+ * manifest was supplied; that output is useful for demos but not stable
+ * persistence.
+ */
+export interface HyperLayoutPositions {
+  version: 1;
+  columns: number;
+  ephemeral?: boolean;
+  items: HyperLayoutPositionItem[];
+}
+
+/** Reason attached to Hyper Layout change events. */
+export type HyperLayoutChangeReason =
+  | 'items-reconciled'
+  | 'user-drag'
+  | 'user-resize'
+  | 'load'
+  | 'compact'
+  | 'remove';
+
+/**
+ * Detail payload used by GridStack-style Hyper Layout events.
+ * `positions` is always the authoritative engine snapshot at dispatch time.
+ */
+export interface HyperLayoutChangeDetail {
+  reason: HyperLayoutChangeReason;
+  positions: HyperLayoutPositions;
+  nodes?: HyperLayoutPositionItem[];
+  added?: string[];
+  removed?: string[];
+  orphaned?: string[];
+}
+
+/**
+ * Custom overlay `ctx.attrs` context supplied by `<hyper-layout>`.
+ * Custom overlays should read these values from `ctx.attrs`, not from DOM
+ * datasets, so they follow normal Hyper Element data-flow conventions.
+ */
+export interface HyperLayoutOverlayAttrs {
+  /** Normalized capabilities copied from the matching manifest item. */
+  can: Array<'drag' | 'resize'>;
+  /** Matching parent-owned manifest entry. */
+  item: HyperLayoutItem;
+  /** Current engine node for geometry and constraints. */
+  node: HyperLayoutPositionItem;
+  /** Begin a drag from a custom overlay control. */
+  drag(event: PointerEvent): void;
+  /** Begin a resize from a custom overlay control. */
+  resize(event: PointerEvent): void;
+}
+
+/** Optional serializer hook for custom persistence formats. */
+export type HyperLayoutSerialize = (positions: HyperLayoutPositions) => unknown;
+
+/** Optional deserializer hook for custom persistence formats. */
+export type HyperLayoutDeserialize = (
+  input: unknown
+) => HyperLayoutPositions | HyperLayoutPositionItem[];
+
+/**
+ * `<hyper-layout>` host element public surface.
+ * Rich properties such as `items`, `positions`, `breakpoints`, `serialize`,
+ * and `deserialize` can be assigned directly from Hyper Element templates.
+ */
+export interface HyperLayoutElement extends HTMLElement {
+  edit: boolean;
+  items: HyperLayoutItem[] | string[] | null;
+  positions: HyperLayoutPositions | HyperLayoutPositionItem[] | null;
+  breakpoints: Array<{ width: number; columns: number }> | null;
+  overlay: string;
+  serialize?: HyperLayoutSerialize;
+  deserialize?: HyperLayoutDeserialize;
+  onchange:
+    | ((
+        event: CustomEvent<HyperLayoutChangeDetail>,
+        positions: HyperLayoutPositions
+      ) => void)
+    | null;
+  onremoved:
+    | ((
+        event: CustomEvent<HyperLayoutChangeDetail>,
+        id: string | null,
+        positions: HyperLayoutPositions,
+        ids: string[]
+      ) => void)
+    | null;
+  save(options?: unknown): unknown;
+  load(positions: unknown, options?: unknown): void;
+  compact(mode?: 'compact' | 'list'): void;
+  enable(): void;
+  disable(): void;
+}
+
+/**
+ * DOM-free engine exposed for advanced layout tooling.
+ * The custom element uses the same engine internally; advanced callers can use
+ * it to inspect or preview layout behavior without mounting DOM wrappers.
+ */
+export interface HyperLayoutEngine {
+  columns: number;
+  maxRow: number;
+  float: boolean;
+  nodes: HyperLayoutPositionItem[];
+  load(nodes: HyperLayoutPositionItem[]): HyperLayoutEngine;
+  add(
+    node: HyperLayoutPositionItem,
+    compact?: boolean
+  ): HyperLayoutPositionItem;
+  remove(id: string): HyperLayoutPositionItem | null;
+  move(
+    id: string,
+    next: Partial<HyperLayoutPositionItem>
+  ): HyperLayoutPositionItem | null;
+  resize(
+    id: string,
+    next: Partial<HyperLayoutPositionItem>
+  ): HyperLayoutPositionItem | null;
+  compact(mode?: 'compact' | 'list'): HyperLayoutEngine;
+  setColumns(columns: number): HyperLayoutEngine;
+  save(): HyperLayoutPositionItem[];
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'hyper-layout': HyperLayoutElement;
+  }
+  interface Window {
+    hyperLayoutElement: typeof HTMLElement;
+    createLayoutEngine: (
+      options?: Record<string, unknown>
+    ) => HyperLayoutEngine;
+    normalizePositions: (
+      input: unknown,
+      deserialize?: HyperLayoutDeserialize | null,
+      columns?: number
+    ) => HyperLayoutPositions;
+  }
+}
+
+declare module 'hyper-element/layout' {
+  export const hyperLayoutElement: typeof HTMLElement;
+  export function createLayoutEngine(
+    options?: Record<string, unknown>
+  ): HyperLayoutEngine;
+  export function normalizePositions(
+    input: unknown,
+    deserialize?: HyperLayoutDeserialize | null,
+    columns?: number
+  ): HyperLayoutPositions;
+  export function parseLayoutValue<T = unknown>(
+    value: unknown,
+    fallback?: T
+  ): unknown | T;
+  export function reconcilePositions(
+    items: HyperLayoutItem[],
+    positions: unknown,
+    options?: {
+      columns?: number;
+      deserialize?: HyperLayoutDeserialize | null;
+      ephemeral?: boolean;
+    }
+  ): {
+    positions: HyperLayoutPositions;
+    added: string[];
+    removed: string[];
+    orphaned: string[];
+  };
+}

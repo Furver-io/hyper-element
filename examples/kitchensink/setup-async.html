@@ -66,6 +66,7 @@ const setupElem = document.createElement('setup-element');
 document.getElementById('setup-output').appendChild(setupElem);</code></pre>
       <div id="setup-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="setup-element"] pre code').textContent;
         eval(code);
         const expected = '<div id="setup-output"><setup-element><!--<>-->Status: loaded!<!--</>--></setup-element></div>';

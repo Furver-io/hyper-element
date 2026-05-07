@@ -59,6 +59,7 @@ document.getElementById('simple-partial-output').appendChild(
 );</code></pre>
       <div id="simple-partial-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="simple-partial"] pre code').textContent;
         eval(code);
         // Single-phase render. Pins the resolved partial-interpolated class.
@@ -89,6 +90,7 @@ document.getElementById('multiple-holes-output').appendChild(
 );</code></pre>
       <div id="multiple-holes-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="multiple-holes"] pre code').textContent;
         eval(code);
         const expected = '<div id="multiple-holes-output"><multiple-holes><div id="multiple-holes-target" class="flex items-center gap-2"></div></multiple-holes></div>';
@@ -116,6 +118,7 @@ document.getElementById('conditional-class-output').appendChild(
 );</code></pre>
       <div id="conditional-class-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="conditional-class"] pre code').textContent;
         eval(code);
         const expected = '<div id="conditional-class-output"><conditional-class><button id="conditional-class-target" class="btn active">Click</button></conditional-class></div>';
@@ -160,6 +163,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="mixed-attrs-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="mixed-attrs"] pre code').textContent;
 
@@ -215,6 +219,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="cascade-test-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="cascade-test"] pre code').textContent;
 
@@ -277,6 +282,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="update-partial-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="update-partial"] pre code').textContent;
 
@@ -315,6 +321,7 @@ document.getElementById('empty-result-output').appendChild(
 );</code></pre>
       <div id="empty-result-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="empty-result"] pre code').textContent;
         eval(code);
         // Single-phase render. The class attribute is fully removed because

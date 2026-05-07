@@ -64,6 +64,7 @@ const elem = document.createElement('nested-each-property');
 document.getElementById('output-1').appendChild(elem);</code></pre>
       <div id="output-1"></div>
       <script type="module">
+        await window.hyperElementReady;
         // Single source of truth: read the snippet and execute it. Inside
         // the <pre><code> block the template literal placeholders such as
         // ${categories} are stored as plain text — when textContent is eval'd
@@ -102,6 +103,7 @@ const elem = document.createElement('deep-nested-each');
 document.getElementById('output-2').appendChild(elem);</code></pre>
       <div id="output-2"></div>
       <script type="module">
+        await window.hyperElementReady;
         // Single source of truth: read snippet, execute it, snapshot result.
         const code = document.querySelector('[data-test="deep-nested-each"] pre code').textContent;
         eval(code);
@@ -139,6 +141,7 @@ const elem = document.createElement('nested-empty-each');
 document.getElementById('output-3').appendChild(elem);</code></pre>
       <div id="output-3"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="nested-empty-array"] pre code').textContent;
         eval(code);
 
@@ -181,6 +184,7 @@ const elem = document.createElement('nested-object-props');
 document.getElementById('output-4').appendChild(elem);</code></pre>
       <div id="output-4"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="nested-object-props"] pre code').textContent;
         eval(code);
 
@@ -217,6 +221,7 @@ const elem = document.createElement('nested-index-access');
 document.getElementById('output-5').appendChild(elem);</code></pre>
       <div id="output-5"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="nested-index-access"] pre code').textContent;
         eval(code);
 
@@ -251,6 +256,7 @@ const elem = document.createElement('multiple-blocks-after');
 document.getElementById('output-6').appendChild(elem);</code></pre>
       <div id="output-6"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="multiple-blocks-after"] pre code').textContent;
         eval(code);
 
@@ -284,6 +290,7 @@ const elem = document.createElement('depth-tracking-elem');
 document.getElementById('output-7').appendChild(elem);</code></pre>
       <div id="output-7"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="depth-tracking"] pre code').textContent;
         eval(code);
 
@@ -323,6 +330,7 @@ const elem = document.createElement('nested-dot-path');
 document.getElementById('output-8').appendChild(elem);</code></pre>
       <div id="output-8"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="nested-dot-path"] pre code').textContent;
         eval(code);
 

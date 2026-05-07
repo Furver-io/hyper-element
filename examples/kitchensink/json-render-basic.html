@@ -51,6 +51,7 @@
       <pre><code>&lt;json-render id="target-json-render"&gt;{"root":"msg","elements":{"msg":{"type":"Text","props":{"content":"Rendered from pure JSON spec!"}}}}&lt;/json-render&gt;</code></pre>
       <div id="basic-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         // Single source of truth: the snippet is HTML, so we read its raw text
         // and inject it directly into the rendered output container. There is
         // no second copy of the JSON spec or markup elsewhere.

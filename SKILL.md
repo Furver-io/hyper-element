@@ -163,6 +163,48 @@ hyperElement('parent-form', {
 });
 ```
 
+### Hyper Layout (Dashboard Editing)
+
+```js
+import 'hyper-element/layout';
+```
+
+```js
+const items = [
+  { id: 'opaque-record-id-1', tag: 'sales-card', can: ['drag'] },
+  { id: 'opaque-record-id-2', tag: 'risk-chart', can: ['drag', 'resize'] },
+];
+
+hyperElement('dashboard-view', {
+  setup: (ctx) => {
+    ctx.handleLayoutChange = (_event, positions) => {
+      console.log('Persist positions:', positions);
+    };
+  },
+  render: (Html, ctx) => Html`
+    <hyper-layout
+      edit=${ctx.attrs.edit}
+      items=${items}
+      positions=${ctx.attrs.positions}
+      onchange=${ctx.handleLayoutChange}
+    >
+      <sales-card></sales-card>
+      <risk-chart></risk-chart>
+    </hyper-layout>
+  `,
+});
+```
+
+Rules:
+
+- `items[index]` maps to the direct child at the same index.
+- `items[].id` is opaque persistent identity from application data.
+- `items[].can` controls whether the wrapper can `drag`, `resize`, both, or neither.
+- If `items` is supplied, its length must match the direct child count.
+- Only direct children receive drag/stretch behavior; descendants stay owned by their child component.
+- `overlay="custom-overlay-tag"` renders one custom edit overlay per item and receives `ctx.attrs.can`, `ctx.attrs.item`, `ctx.attrs.node`, `ctx.attrs.drag(event)`, and `ctx.attrs.resize(event)`.
+- Use nested `<hyper-layout>` elements for nested editable regions.
+
 ### Data Fetching
 
 ```js
@@ -382,4 +424,3 @@ Override `--jr-*` CSS custom properties:
   --jr-border: rgba(255,255,255,0.08);
 }
 ```
-

@@ -63,6 +63,7 @@ const elem1 = document.createElement('each-basic-elem');
 document.getElementById('basic-list-output').appendChild(elem1);</code></pre>
       <div id="basic-list-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="basic-list"] pre code').textContent;
         eval(code);
         const expected = '<div id="basic-list-output"><each-basic-elem><ul id="each-basic-result"><li>Alice</li><li>Bob</li><li>Charlie</li><!--◦--></ul></each-basic-elem></div>';
@@ -93,6 +94,7 @@ const elem2 = document.createElement('each-multi-elem');
 document.getElementById('multiple-props-output').appendChild(elem2);</code></pre>
       <div id="multiple-props-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="multiple-props"] pre code').textContent;
         eval(code);
         const expected = '<div id="multiple-props-output"><each-multi-elem><ul id="each-multi-result"><li>Alice (30)</li><li>Bob (25)</li><!--◦--></ul></each-multi-elem></div>';
@@ -123,6 +125,7 @@ const elem3 = document.createElement('each-nested-elem');
 document.getElementById('nested-props-output').appendChild(elem3);</code></pre>
       <div id="nested-props-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="nested-props"] pre code').textContent;
         eval(code);
         const expected = '<div id="nested-props-output"><each-nested-elem><ul id="each-nested-result"><li>Alice - NYC</li><li>Bob - LA</li><!--◦--></ul></each-nested-elem></div>';
@@ -150,6 +153,7 @@ const elem4 = document.createElement('each-primitive-elem');
 document.getElementById('primitive-array-output').appendChild(elem4);</code></pre>
       <div id="primitive-array-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="primitive-array"] pre code').textContent;
         eval(code);
         const expected = '<div id="primitive-array-output"><each-primitive-elem><ul id="each-primitive-result"><li>1</li><li>2</li><li>3</li><!--◦--></ul></each-primitive-elem></div>';
@@ -177,6 +181,7 @@ const elem5 = document.createElement('each-index-elem');
 document.getElementById('index-ref-output').appendChild(elem5);</code></pre>
       <div id="index-ref-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="index-ref"] pre code').textContent;
         eval(code);
         const expected = '<div id="index-ref-output"><each-index-elem><ul id="each-index-result"><li>0: First</li><li>1: Second</li><!--◦--></ul></each-index-elem></div>';
@@ -204,6 +209,7 @@ const elem6 = document.createElement('each-empty-elem');
 document.getElementById('empty-array-output').appendChild(elem6);</code></pre>
       <div id="empty-array-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="empty-array"] pre code').textContent;
         eval(code);
         const expected = '<div id="empty-array-output"><each-empty-elem><div id="each-empty-result"><span>before</span><!--◦--><span>after</span></div></each-empty-elem></div>';
@@ -232,6 +238,7 @@ const elem7 = document.createElement('each-xss-elem');
 document.getElementById('xss-prevention-output').appendChild(elem7);</code></pre>
       <div id="xss-prevention-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="xss-prevention"] pre code').textContent;
         eval(code);
         const expected = '<div id="xss-prevention-output"><each-xss-elem><ul id="each-xss-result"><li>&lt;script&gt;alert("XSS")&lt;/script&gt;</li><!--◦--></ul></each-xss-elem></div>';
@@ -281,6 +288,7 @@ requestAnimationFrame(() =&gt; {
 });</code></pre>
       <div id="dom-reuse-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="dom-reuse"] pre code').textContent;
         eval(code);
         const expected = '<div id="dom-reuse-output"><each-reuse-elem><ul id="each-reuse-result"><li>Alice Updated</li><li>Bob</li><!--◦--></ul></each-reuse-elem></div>';
@@ -316,6 +324,7 @@ const elem9 = document.createElement('each-nested-list-elem');
 document.getElementById('nested-each-output').appendChild(elem9);</code></pre>
       <div id="nested-each-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="nested-each"] pre code').textContent;
         eval(code);
         const expected = '<div id="nested-each-output"><each-nested-list-elem><div id="each-nested-list-result"><section><h3>Fruits</h3><ul><li>Apple</li><li>Banana</li><!--◦--></ul></section><section><h3>Veggies</h3><ul><li>Carrot</li><!--◦--></ul></section><!--◦--></div></each-nested-list-elem></div>';

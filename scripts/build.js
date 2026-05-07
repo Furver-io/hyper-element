@@ -7,8 +7,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { SourceMapGenerator } = require('source-map');
 const pkg = require('../package.json');
+const { writeBundleOutputs } = require('./build-helpers.js');
 
 const srcDir = path.join(__dirname, '..', 'src');
 const buildDir = path.join(__dirname, '..', 'build');
@@ -17,7 +17,7 @@ const buildDir = path.join(__dirname, '..', 'build');
 const sharedFiles = ['core/constants.js', 'core/manager.js', 'utils/makeid.js', 'utils/escape.js', 'render/constants.js', 'render/nodes.js', 'render/keyed.js', 'render/parser-helpers.js', 'styled/reserved.js', 'render/parser.js', 'signals/index.js', 'attributes/parseAttribute.js', 'styled/serializer.js', 'styled/normalize.js', 'styled/artifact-ids.js', 'styled/artifact-colors.js', 'styled/artifact-tags.js', 'styled/artifact-rules.js', 'styled/artifact-direct.js', 'styled/artifact-compose.js', 'styled/artifact.js', 'styled/style-host.js', 'styled/define-styled.js', 'template/processAdvancedTemplate.js', 'html/parseEachBlocks.js'];
 
 // prettier-ignore
-const browserFiles = ['render/creator.js', 'render/resolve.js', 'render/diff.js', 'render/persistent-fragment.js', 'render/comment.js', 'render/update.js', 'render/hole.js', 'render/index.js', 'styled/parser-hooks.js', 'styled/registry.js', 'styled/resolution.js', 'styled/apply.js', 'styled/handler.js', 'template/buildTemplate.js', 'attributes/dataset.js', 'attributes/attachAttrs.js', 'html/createHtml.js', 'ssr/pathResolver.js', 'ssr/buffer.js', 'ssr/devIndicator.js', 'ssr/capture.js', 'ssr/replay.js', 'ssr/index.js', 'lifecycle/onNext.js', 'lifecycle/observer.js', 'lifecycle/processFragmentResult.js', 'lifecycle/connectedCallback.js', 'hyperElement.js', 'functional.js', 'withOptions.js', 'json-render/validator.js', 'json-render/catalog-metadata.js', 'json-render/checklist-state.js', 'json-render/component-helpers.js', 'json-render/components.js', 'json-render/registry.js', 'json-render/catalog.js', 'json-render/renderer.js', 'json-render/bridge.js', 'json-render/index.js', 'json-render/element.js'];
+const browserFiles = ['render/creator.js', 'render/resolve.js', 'render/diff.js', 'render/persistent-fragment.js', 'render/comment.js', 'render/update.js', 'render/hole.js', 'render/index.js', 'styled/parser-hooks.js', 'styled/registry.js', 'styled/resolution.js', 'styled/apply.js', 'styled/handler.js', 'template/buildTemplate.js', 'attributes/dataset.js', 'attributes/attachAttrs.js', 'html/createHtml.js', 'ssr/pathResolver.js', 'ssr/buffer.js', 'ssr/devIndicator.js', 'ssr/capture.js', 'ssr/replay.js', 'ssr/index.js', 'lifecycle/onNext.js', 'lifecycle/observer.js', 'lifecycle/processFragmentResult.js', 'lifecycle/connectedCallback.js', 'hyperElement.js', 'functional.js', 'withOptions.js', 'layout/positions.js', 'layout/engine.js', 'layout/geometry.js', 'layout/dom.js', 'layout/styles.js', 'layout/removal.js', 'layout/interactions.js', 'layout/properties.js', 'layout/events.js', 'layout/state.js', 'layout/element.js', 'layout/index.js', 'json-render/validator.js', 'json-render/catalog-metadata.js', 'json-render/checklist-state.js', 'json-render/component-helpers.js', 'json-render/components.js', 'json-render/registry.js', 'json-render/catalog.js', 'json-render/renderer.js', 'json-render/bridge.js', 'json-render/index.js', 'json-render/element.js'];
 
 // prettier-ignore
 const ssrServerFiles = ['ssr/styled-update.js', 'ssr/string-update.js', 'ssr/styled-render.js', 'ssr/string-render.js', 'ssr/ssr-html.js', 'ssr/render-element.js'];
@@ -108,6 +108,9 @@ function createBundle() {
       root.listComponentTypes = exports.listComponentTypes;
       root.BUILT_IN_COMPONENTS = exports.BUILT_IN_COMPONENTS;
       root.getCatalog = exports.getCatalog;
+      root.hyperLayoutElement = exports.hyperLayoutElement;
+      root.createLayoutEngine = exports.createLayoutEngine;
+      root.normalizePositions = exports.normalizePositions;
     }
   }
 })(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this, function (isBrowser) {
@@ -165,6 +168,13 @@ function createBundle() {
   var CATALOG, entry;
   var fingerprintItems, getChecklistState;
   var propText, dispatchAction, renderCard, renderRow, renderColumn, renderButton, renderText, renderAlert, renderProgress, renderDivider, renderCodeBlock, renderImage, renderChecklist, renderTextField;
+  var HyperLayoutEngine, createLayoutEngine, hyperLayoutElement;
+  var parseLayoutValue, normalizeItems, normalizePositions, reconcilePositions, serializePositions, normalizePositionItem, normalizeCan, applyCapabilities, clampNumber;
+  var resolveColumns, measureGrid, nodeToPixels, deltaToMove, deltaToSize, isOutsideHost;
+  var intersects, overlapRatio, touches;
+  var layoutChildren, wrapLayoutChildren, createLayoutOverlay, syncLayoutOverlay, createDefaultOverlay, configureOverlayElement, setSharedOverlayAttr, startOverlayAction, toggleCapability, ensureLayoutStyles, REMOVAL_PREVIEW_SCALE, isOverTrash, isCoveringTrash, updateRemovalPreview, clearRemovalPreview, trashTargets, pointInRect, scaledRemovalRect, removalLayoutRect, rectsOverlap, setRemovalPreview, createLayoutInteractions, actionFromPointer, isBlocked, isResizeCorner, floatWrapper, previewDragNode, updateDragPlaceholder, hideDragPlaceholder, coveredTarget, dragTargetKey, layoutRect, rectCoverage, reconcileLayout, applyResponsiveColumns, emitReconcileEvents, pruneRemovedWrappers;
+  var defineLayoutOnChange, defineLayoutOnRemoved, defineLayoutCallback, emitLayoutEvent, commitLayoutChange, currentLayoutPositions, ensureLayoutPlaceholder;
+  var defineLayoutProperties, readSharedLayoutAttribute, readLayoutAttribute, requestLayoutReconcile;
 `);
   addPart(`\n  if (isBrowser) {`);
   addFiles(browserFiles, '    ', true);
@@ -196,6 +206,9 @@ function createBundle() {
       renderSpec: renderSpec, registerComponent: registerComponent, validateSpec: validateSpec,
       listComponentTypes: listComponentTypes, BUILT_IN_COMPONENTS: BUILT_IN_COMPONENTS,
       getCatalog: getCatalog,
+      hyperLayoutElement: hyperLayoutElement,
+      createLayoutEngine: createLayoutEngine,
+      normalizePositions: normalizePositions,
       html: html, bind: bind, dom: dom };
   } else {
     return { renderElement: renderElement, renderElements: renderElements, createRenderer: createRenderer,
@@ -212,64 +225,11 @@ function createBundle() {
 }
 
 /**
- * Generates a source map from bundle mappings.
- * @param {Array} mappings - Array of { file, startLine, lineCount }
- * @param {string} bundleFile - Output bundle filename
- * @returns {string} Source map JSON string
- */
-function generateSourceMap(mappings, bundleFile) {
-  const generator = new SourceMapGenerator({ file: bundleFile });
-
-  for (const mapping of mappings) {
-    for (let i = 0; i < mapping.lineCount; i++) {
-      generator.addMapping({
-        generated: { line: mapping.startLine + i, column: 0 },
-        source: mapping.file,
-        original: { line: i + 1, column: 0 },
-      });
-    }
-  }
-
-  return generator.toString();
-}
-
-/**
  * Builds the minified production bundle using esbuild.
  */
 async function build() {
   try {
-    const esbuild = require('esbuild');
-
-    if (!fs.existsSync(buildDir)) {
-      fs.mkdirSync(buildDir, { recursive: true });
-    }
-
-    const { content: bundleContent, mappings } = createBundle();
-
-    const unminifiedPath = path.join(buildDir, 'hyperElement.bundle.js');
-    const unminifiedMapPath = path.join(buildDir, 'hyperElement.bundle.js.map');
-
-    fs.writeFileSync(unminifiedPath, bundleContent);
-
-    const sourceMap = generateSourceMap(mappings, 'hyperElement.bundle.js');
-    fs.writeFileSync(unminifiedMapPath, sourceMap);
-
-    console.log(
-      `Built: build/hyperElement.bundle.js (${mappings.length} source files combined)`
-    );
-
-    await esbuild.build({
-      entryPoints: [unminifiedPath],
-      outfile: path.join(buildDir, 'hyperElement.min.js'),
-      minify: true,
-      sourcemap: true,
-      bundle: false,
-    });
-
-    const stats = fs.statSync(path.join(buildDir, 'hyperElement.min.js'));
-    console.log(
-      `Built: build/hyperElement.min.js (${(stats.size / 1024).toFixed(1)}kb)`
-    );
+    await writeBundleOutputs({ buildDir, createBundle });
   } catch (e) {
     console.error('Error building bundle:', e);
     process.exit(1);

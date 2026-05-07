@@ -64,6 +64,7 @@
   }
 })();</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="dev-indicator-basic"] pre code').textContent;
         eval(code);
       </script>
@@ -126,6 +127,7 @@
   }, 150);
 })();</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="dev-indicator-dcl-fallback"] pre code').textContent;
         eval(code);
       </script>

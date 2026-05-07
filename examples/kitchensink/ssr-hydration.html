@@ -83,6 +83,7 @@ setTimeout(function () {
         <button id="ssr-btn-1">Count: 0</button>
       </ssr-counter>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-basic-click"] pre code').textContent;
 
@@ -140,6 +141,7 @@ setTimeout(function () {
         <span id="ssr-echo-1"></span>
       </ssr-input>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-input-replay"] pre code').textContent;
 
@@ -200,6 +202,7 @@ setTimeout(function () {
         <button id="ssr-filter-btn-1">Clicks: 0</button>
       </ssr-filter-class>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-before-hydrate-class"] pre code').textContent;
 
@@ -246,6 +249,7 @@ setTimeout(function () {
         <button id="ssr-after-btn-1">Click</button>
       </ssr-after-class>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-after-hydrate-class"] pre code').textContent;
 
@@ -295,6 +299,7 @@ setTimeout(function () {
         <button id="ssr-func-btn">Count: 0</button>
       </ssr-func-counter>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-functional-api"] pre code').textContent;
 
@@ -357,6 +362,7 @@ setTimeout(function () {
         <button id="ssr-func-hooks-btn">Click</button>
       </ssr-func-hooks>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-functional-hooks"] pre code').textContent;
 
@@ -414,6 +420,7 @@ setTimeout(function () {
         <label>Check me</label>
       </ssr-checkbox>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-checkbox-state"] pre code').textContent;
 
@@ -467,6 +474,7 @@ setTimeout(function () {
         <div>No interaction</div>
       </ssr-no-events>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-no-events"] pre code').textContent;
 
@@ -527,6 +535,7 @@ setTimeout(function () {
         <span id="ssr-keyboard-result"></span>
       </ssr-keyboard>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-keyboard-replay"] pre code').textContent;
 
@@ -589,6 +598,7 @@ setTimeout(function () {
         <span id="ssr-mouse-result"></span>
       </ssr-mouse>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-mouse-replay"] pre code').textContent;
 
@@ -661,6 +671,7 @@ setTimeout(function () {
         <span id="ssr-multi-log"></span>
       </ssr-multi-events>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-multi-events"] pre code').textContent;
 
@@ -702,6 +713,7 @@ setTimeout(function () {
   }
 })();</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="ssr-dev-mode"] pre code').textContent;
         eval(code);
       </script>
@@ -721,6 +733,7 @@ setTimeout(function () {
   }
 })();</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="ssr-configure-events"] pre code').textContent;
         eval(code);
       </script>
@@ -779,6 +792,7 @@ setTimeout(function () {
         </div>
       </ssr-touch-test>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-touch-replay"] pre code').textContent;
 
@@ -849,6 +863,7 @@ setTimeout(function () {
         </div>
       </ssr-scroll-test>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-scroll-state"] pre code').textContent;
 
@@ -918,6 +933,7 @@ setTimeout(function () {
         <label>Check me</label>
       </ssr-checked-restore>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-checked-restore"] pre code').textContent;
 
@@ -979,6 +995,7 @@ setTimeout(function () {
         </div>
       </ssr-path-fail>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-path-failure"] pre code').textContent;
 
@@ -1037,6 +1054,7 @@ setTimeout(function () {
         <button id="ssr-invalid-btn">Click</button>
       </ssr-invalid-return>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-before-invalid"] pre code').textContent;
 
@@ -1075,6 +1093,7 @@ setTimeout(function () {
 }, 100);</code></pre>
       <div id="ssr-non-fn-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="ssr-func-non-fn-props"] pre code').textContent;
 

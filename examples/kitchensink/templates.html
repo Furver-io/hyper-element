@@ -65,6 +65,7 @@ tplElem.textContent = 'Hello {name}!';
 document.getElementById('template-output').appendChild(tplElem);</code></pre>
       <div id="template-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         // Single source of truth: read the example from the <pre><code> block
         // and execute it. The snippet itself defines the element, creates the
         // template instance with its inline {name} placeholder, and mounts it.

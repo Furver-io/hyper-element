@@ -88,6 +88,7 @@ setTimeout(() =&gt; {
 }, 300);</code></pre>
       <div id="async-array-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="async-fragment-array"] pre code').textContent;
         eval(code);
         const expected = '<div id="async-array-output"><async-array-elem><ul><!--<>--><li>Item A</li><li>Item B</li><li>Item C</li><!--</>--></ul></async-array-elem></div>';
@@ -139,6 +140,7 @@ setTimeout(() =&gt; {
 }, 300);</code></pre>
       <div id="async-string-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="async-fragment-string"] pre code').textContent;
         eval(code);
         const expected = '<div id="async-string-output"><async-string-elem><!--<>--><p>Hello World!</p><!--</>--></async-string-elem></div>';
@@ -189,6 +191,7 @@ setTimeout(() =&gt; {
 }, 300);</code></pre>
       <div id="async-plain-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="async-plain-string"] pre code').textContent;
         eval(code);
         const expected = '<div id="async-plain-output"><async-plain-elem><!--<>--><p>Static message loaded</p><!--</>--></async-plain-elem></div>';
@@ -244,6 +247,7 @@ setTimeout(() =&gt; {
 }, 150);</code></pre>
       <div id="fragment-once-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="fragment-once"] pre code').textContent;
         eval(code);
         const expected = '<div id="fragment-once-output"><once-frag-elem><span>Cached content (calls: 1)</span></once-frag-elem></div>';
@@ -304,6 +308,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="fragment-replace-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="fragment-replace"] pre code').textContent;
         eval(code);
         const expected = '<div id="fragment-replace-output"><fragment-replace-elem><div id="fragment-replace-result"><span class="frag-single">Single</span></div></fragment-replace-elem></div>';
@@ -363,6 +368,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="fragment-remove-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="fragment-remove"] pre code').textContent;
         eval(code);
         const expected = '<div id="fragment-remove-output"><fragment-remove-elem><div id="fragment-remove-result"></div></fragment-remove-elem></div>';
@@ -419,6 +425,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="raw-multi-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="raw-multi-node-replace"] pre code').textContent;
         eval(code);
         const expected = '<div id="raw-multi-output"><raw-multi-elem><div id="raw-multi-result"><!--<>--><span class="single-node">Single</span><!--</>--></div></raw-multi-elem></div>';
@@ -479,6 +486,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="raw-remove-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="raw-multi-node-remove"] pre code').textContent;
         eval(code);
         const expected = '<div id="raw-remove-output"><raw-remove-elem><div id="raw-remove-result"><!--<>--><!--</>--></div></raw-remove-elem></div>';
@@ -527,6 +535,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="fragment-remove-cleanup-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="fragment-remove-cleanup"] pre code').textContent;
         eval(code);
         const expected = '<div id="fragment-remove-cleanup-output"></div>';
@@ -583,6 +592,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="fragment-html-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="fragment-to-html"] pre code').textContent;
         eval(code);
         const expected = '<div id="fragment-html-output"><fragment-html-elem><ul><li>One</li><li>Two</li><li>Three</li></ul></fragment-html-elem></div>';
@@ -638,6 +648,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="persistent-fragment-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="persistent-fragment-rerender"] pre code').textContent;
         eval(code);
         const expected = '<div id="persistent-fragment-output"><persistent-frag-elem><!--<>--><span>A2</span><span>B2</span><span>C2</span><!--</>--></persistent-frag-elem></div>';
@@ -759,6 +770,7 @@ try {
 }</code></pre>
       <div id="pf-valueof-else-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="persistent-fragment-valueof-else"] pre code').textContent;
         const fn = new Function('return (async () => { ' + code + ' })();');
         await fn();

@@ -69,6 +69,7 @@
 })();</code></pre>
       <div id="textarea-static-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="textarea-static-content"] pre code').textContent;
         eval(code);
         const expected = '<div id="textarea-static-output"><textarea-static-elem><textarea>Static textarea content</textarea></textarea-static-elem></div>';
@@ -114,6 +115,7 @@
 })();</code></pre>
       <div id="textarea-dynamic-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="textarea-dynamic-content"] pre code').textContent;
         eval(code);
         const expected = '<div id="textarea-dynamic-output"><textarea-dynamic-elem><textarea>Dynamic textarea content via TEXT_TYPE</textarea></textarea-dynamic-elem></div>';
@@ -159,6 +161,7 @@
 })();</code></pre>
       <div id="style-dynamic-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="style-dynamic-content"] pre code').textContent;
         eval(code);
         const expected = '<div id="style-dynamic-output"><style-dynamic-elem><!--<>--><style>.styled-box { background-color: rgb(255, 0, 0); width: 50px; height: 50px; }</style>\n             <div class="styled-box"></div><!--</>--></style-dynamic-elem></div>';
@@ -205,6 +208,7 @@
 })();</code></pre>
       <div id="title-dynamic-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="title-dynamic-content"] pre code').textContent;
         eval(code);
         const expected = '<div id="title-dynamic-output"><title-dynamic-elem><svg width="100" height="50">\n               <title>Dynamic SVG Title</title>\n               <rect width="100" height="50" fill="green"></rect>\n             </svg></title-dynamic-elem></div>';
@@ -248,6 +252,7 @@
 })();</code></pre>
       <div id="svg-dynamic-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="svg-dynamic-content"] pre code').textContent;
         eval(code);
         const expected = '<div id="svg-dynamic-output"><svg-dynamic-elem><svg width="100" height="100"><circle cx="50" cy="50" fill="blue" r="25"></circle></svg></svg-dynamic-elem></div>';
@@ -297,6 +302,7 @@ setTimeout(() =&gt; {
   }, 100);
 }, 100);</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="template-content-mutation"] pre code').textContent;
         eval(code);
         const expected = '<template-mutation-elem template=""><!--<>--><!--<>-->Goodbye World!<!--</>--><!--</>--></template-mutation-elem>';
@@ -347,6 +353,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="style-null-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="style-null-remove"] pre code').textContent;
         eval(code);
         const expected = '<div id="style-null-output"><style-null-elem><div id="style-null-result">styled</div></style-null-elem></div>';
@@ -400,6 +407,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="style-prop-null-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="style-prop-null"] pre code').textContent;
         eval(code);
         const expected = '<div id="style-prop-null-output"><style-prop-null-elem><div id="style-prop-null-result" style="font-weight: bold;">styled</div></style-prop-null-elem></div>';
@@ -441,6 +449,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="style-string-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="style-string"] pre code').textContent;
         eval(code);
         const expected = '<div id="style-string-output"><style-string-elem><div id="style-string-result" style="color: blue; font-size: 20px">styled</div></style-string-elem></div>';
@@ -493,6 +502,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="text-type-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="text-type-direct"] pre code').textContent;
         eval(code);
         const expected = '<div id="text-type-output"><text-type-elem><span id="text-type-result">Updated</span></text-type-elem></div>';
@@ -559,6 +569,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="direct-dot-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="direct-dot-prop"] pre code').textContent;
         eval(code);
         const expected = '<div id="direct-dot-output"><direct-dot-elem><div id="direct-dot-result">\n          <input type="text" id="direct-input">\n          <input type="checkbox" id="direct-checkbox">\n        </div></direct-dot-elem></div>';
@@ -620,6 +631,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="ref-attr-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="ref-attribute"] pre code').textContent;
         eval(code);
         const expected = '<div id="ref-attr-output"><ref-attr-elem><div id="ref-target">Ref Target</div></ref-attr-elem></div>';

@@ -74,6 +74,7 @@ customElements.define(
 document.getElementById('object-only-attr-output').innerHTML = '&lt;parent-obj-elem&gt;&lt;/parent-obj-elem&gt;';</code></pre>
       <div id="object-only-attr-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="object-only-attr"] pre code').textContent;
         eval(code);
         const expected = '<div id="object-only-attr-output"><parent-obj-elem><child-obj-elem name="test" config="ob-RND"><span id="obj-result">PASS</span></child-obj-elem></parent-obj-elem></div>';
@@ -120,6 +121,7 @@ customElements.define(
 document.getElementById('complex-with-preceding-output').innerHTML = '&lt;parent-preceding-elem&gt;&lt;/parent-preceding-elem&gt;';</code></pre>
       <div id="complex-with-preceding-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="complex-with-preceding"] pre code').textContent;
         eval(code);
         const expected = '<div id="complex-with-preceding-output"><parent-preceding-elem><!--<>--><span>Before</span><child-preceding-elem config="ob-RND" callback="fn-RND"><span id="preceding-result">PASS</span></child-preceding-elem><!--</>--></parent-preceding-elem></div>';
@@ -157,6 +159,7 @@ customElements.define(
 document.getElementById('object-only-with-preceding-output').innerHTML = '&lt;parent-combo-elem&gt;&lt;/parent-combo-elem&gt;';</code></pre>
       <div id="object-only-with-preceding-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="object-only-with-preceding"] pre code').textContent;
         eval(code);
         const expected = '<div id="object-only-with-preceding-output"><parent-combo-elem><!--<>--><div>Header</div><child-combo-elem config="ob-RND"><span id="combo-result">PASS</span></child-combo-elem><!--</>--></parent-combo-elem></div>';
@@ -196,6 +199,7 @@ customElements.define(
 document.getElementById('boolean-attr-output').innerHTML = '&lt;parent-bool-elem&gt;&lt;/parent-bool-elem&gt;';</code></pre>
       <div id="boolean-attr-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="boolean-attr"] pre code').textContent;
         eval(code);
         const expected = '<div id="boolean-attr-output"><parent-bool-elem><child-bool-elem disabled="ob-RND" enabled="ob-RND"><span id="bool-result">PASS</span></child-bool-elem></parent-bool-elem></div>';
@@ -235,6 +239,7 @@ customElements.define(
 document.getElementById('number-attr-output').innerHTML = '&lt;parent-num-elem&gt;&lt;/parent-num-elem&gt;';</code></pre>
       <div id="number-attr-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="number-attr"] pre code').textContent;
         eval(code);
         const expected = '<div id="number-attr-output"><parent-num-elem><child-num-elem pi="ob-RND" count="ob-RND"><span id="num-result">PASS</span></child-num-elem></parent-num-elem></div>';
@@ -279,6 +284,7 @@ customElements.define(
 document.getElementById('multiline-attr-output').innerHTML = '&lt;parent-multiline-elem&gt;&lt;/parent-multiline-elem&gt;';</code></pre>
       <div id="multiline-attr-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="multiline-attr"] pre code').textContent;
         eval(code);
         const expected = '<div id="multiline-attr-output"><parent-multiline-elem><child-multiline-elem config="ob-RND" expanded="ob-RND"><span id="multiline-result">PASS</span></child-multiline-elem></parent-multiline-elem></div>';

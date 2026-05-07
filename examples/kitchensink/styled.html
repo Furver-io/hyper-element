@@ -73,6 +73,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-1"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="base-styles"] pre code').textContent;
 
@@ -119,6 +120,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-2"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="shared-selectors"] pre code').textContent;
 
@@ -174,12 +176,13 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-3"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="prop-flags"] pre code').textContent;
 
         eval(code);
 
-        const expected = '<div id="output-3"><styled-flags><!--<>--><div style="padding: 10px; border: 1px solid gray;">Normal</div>\n    <div error="" style="padding: 10px; border: 1px solid red; background-color: rgb(255, 238, 238);">Error</div>\n    <div error="" large="" style="padding: 20px; border: 1px solid red; background-color: rgb(255, 238, 238); font-size: 18px;">Error + Large</div>\n  <!--</>--></styled-flags></div>';
+        const expected = '<div id="output-3"><styled-flags><!--<>--><div style="padding: 10px; border: 1px solid gray;">Normal</div>\n    <div style="padding: 10px; border: 1px solid red; background-color: rgb(255, 238, 238);">Error</div>\n    <div style="padding: 20px; border: 1px solid red; background-color: rgb(255, 238, 238); font-size: 18px;">Error + Large</div>\n  <!--</>--></styled-flags></div>';
 
         setTimeout(() => {
 
@@ -220,6 +223,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-4"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="logic-functions"] pre code').textContent;
 
@@ -268,6 +272,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-5"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="color-palettes"] pre code').textContent;
 
@@ -313,6 +318,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-6"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="style-passthrough"] pre code').textContent;
 
@@ -357,6 +363,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-7"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="no-styles-for-tag"] pre code').textContent;
 
@@ -403,6 +410,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-8"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="mixed-elements"] pre code').textContent;
 
@@ -447,6 +455,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-9"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="logic-with-context"] pre code').textContent;
 
@@ -494,6 +503,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-10"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="color-in-compound"] pre code').textContent;
 
@@ -537,6 +547,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-11"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="withoptions-no-tag"] pre code').textContent;
 
@@ -574,6 +585,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-12"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="withoptions-shorthand"] pre code').textContent;
 
@@ -618,6 +630,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-13"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="non-string-values"] pre code').textContent;
 
@@ -659,6 +672,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-14"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="null-values"] pre code').textContent;
 
@@ -699,6 +713,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-15"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="empty-styled"] pre code').textContent;
 
@@ -750,6 +765,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-16"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="rerender-update"] pre code').textContent;
 
@@ -794,6 +810,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-17"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="direct-render-fallback"] pre code').textContent;
 
@@ -834,6 +851,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-18"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="no-styled-config"] pre code').textContent;
 
@@ -874,6 +892,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-19"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="empty-styled-array"] pre code').textContent;
 
@@ -913,6 +932,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-20"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="no-config-no-style"] pre code').textContent;
 
@@ -963,6 +983,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-21"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="conditional-prop-flag"] pre code').textContent;
 
@@ -1014,6 +1035,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-22"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="multiple-conditional-flags"] pre code').textContent;
 
@@ -1067,6 +1089,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-23"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="logic-fn-base-style"] pre code').textContent;
 
@@ -1110,6 +1133,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-24"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="fn-without-base"] pre code').textContent;
 
@@ -1165,6 +1189,7 @@ requestAnimationFrame(() => {
       </style>
       <div id="output-25"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="animate-css"] pre code').textContent;
 
@@ -1214,6 +1239,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-26"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="store-access"] pre code').textContent;
 
@@ -1269,6 +1295,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-27"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="implied-tags"] pre code').textContent;
 
@@ -1331,6 +1358,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-28"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="complex-nested"] pre code').textContent;
 
@@ -1395,6 +1423,7 @@ requestAnimationFrame(() => {
 });</code></pre>
       <div id="output-29"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="non-prop-flags"] pre code').textContent;
 

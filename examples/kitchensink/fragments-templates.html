@@ -56,6 +56,7 @@
 });</code></pre>
       <fragments-element2></fragments-element2>
       <script type="module">
+        await window.hyperElementReady;
         const section = document.querySelector('[data-test="fragment-template-basic"]');
         const code = section.querySelector('code').textContent;
         eval(code);
@@ -84,6 +85,7 @@
 });</code></pre>
       <fragments-element3></fragments-element3>
       <script type="module">
+        await window.hyperElementReady;
         const section = document.querySelector('[data-test="fragment-template-values"]');
         const code = section.querySelector('code').textContent;
         eval(code);
@@ -117,6 +119,7 @@
 });</code></pre>
       <fragments-element4></fragments-element4>
       <script type="module">
+        await window.hyperElementReady;
         const section = document.querySelector('[data-test="fragment-template-events"]');
         const code = section.querySelector('code').textContent;
         eval(code);

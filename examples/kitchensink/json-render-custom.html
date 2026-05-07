@@ -61,6 +61,7 @@ customElements.define('json-custom-wrapper', class extends hyperElement {
 document.getElementById('custom-output').innerHTML = '&lt;json-custom-wrapper&gt;&lt;/json-custom-wrapper&gt;';</code></pre>
       <div id="custom-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         // Single source of truth: read the snippet exactly as displayed and
         // execute it. The snippet itself registers the custom JSON component,
         // defines the wrapper element, and mounts it. There is no second copy.
@@ -109,6 +110,7 @@ elem.textContent = JSON.stringify({
 document.getElementById('json-render-custom-output').appendChild(elem);</code></pre>
       <div id="json-render-custom-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         // Single source of truth: the displayed snippet IS the program.
         // It registers a custom component and mounts it via <json-render>.
         const code = document.querySelector('[data-test="json-render-custom-element"] pre code').textContent;

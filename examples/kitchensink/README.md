@@ -59,12 +59,17 @@ This directory serves two purposes:
 ### Composition
 
 - [nested-elements.html](nested-elements.html) - Parent-child custom element composition
+- [hyper-layout.html](hyper-layout.html) - `<hyper-layout>` controlled/uncontrolled dashboard editing, capability-driven drag/resize, custom overlays, positions reconciliation, and removal
 - [nested-each-deep.html](nested-each-deep.html) - Deeply nested `{+each}` with property references
 - [same-type-nesting.html](same-type-nesting.html) - Same custom element nested in itself
 - [child-redraw.html](child-redraw.html) - Parent-child attribute passing and re-renders
 - [observer-isolation.html](observer-isolation.html) - Descendant re-renders stay local and do not fan out to ancestors
 - [child-styles.html](child-styles.html) - Passing style objects to children
 - [complex-type-attrs.html](complex-type-attrs.html) - Passing objects/functions to child elements
+
+The Hyper Layout page renders its live demos from the displayed source blocks.
+When changing those examples, update the displayed source first so the rendered
+demo, documentation, and E2E scenario coverage all describe the same behavior.
 
 ### Signals & Reactivity
 
@@ -214,6 +219,7 @@ script only reads the snippet, evals it, and asserts.
 document.getElementById('my-test-output').innerHTML = '&lt;my-elem&gt;&lt;/my-elem&gt;';</code></pre>
       <div id="my-test-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector(
           '[data-test="my-test"] pre code'
         ).textContent;

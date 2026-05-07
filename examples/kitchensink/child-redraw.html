@@ -116,6 +116,7 @@ setTimeout(() => {
       <div id="redraw-container"></div>
       <div id="redraw-log"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="child-redraw-on-parent-update"] pre code').textContent;
         eval(code);
         const expected = '<div id="redraw-container"><parent-elem><child-elem name="value-3"><span id="child-display">Name: value-3</span></child-elem></parent-elem></div>';

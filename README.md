@@ -23,6 +23,7 @@ A lightweight [Custom Elements] library with a fast, built-in render core. Your 
 - First class support for [data stores](#connecting-to-a-data-store)
 - [Server-side rendering](#server-side-rendering-ssr) with progressive hydration
 - Built-in [json-render](#json-render-spec-driven-ui) module: render LLM tool-call output as live UI with 12 built-in components and an auto-generated catalog for LLM schema/prompt generation
+- Optional [Hyper Layout](#hyper-layout-dashboard-editing) module: GridStack-style direct-child dashboard placement with controlled `items`/`positions` state
 - Pass `function` to other custom hyper-elements via there tag attribute
 
 # Setup
@@ -137,6 +138,7 @@ For older browsers, a [Custom Elements polyfill](https://github.com/webcomponent
   - [Server-Side API](#server-side-api)
   - [Client-Side Hydration](#client-side-hydration)
   - [SSR Configuration](#ssr-configuration)
+- [Hyper Layout (Dashboard Editing)](#hyper-layout-dashboard-editing)
 - [Best Practices](#best-practices)
 - [Development](#development)
 
@@ -2275,6 +2277,104 @@ with a console.warn on registration. Registering the same custom
 `jrType` twice is last-write-wins, also with a console.warn.
 
 Full documentation: [`src/json-render/README.md`](src/json-render/README.md).
+
+---
+
+# Hyper Layout (Dashboard Editing)
+
+`hyper-element/layout` registers `<hyper-layout>`, an optional dashboard
+layout editor for direct child custom elements. It follows a parent-owned
+identity model: the parent renders children in order and passes an ordered
+`items` manifest whose opaque IDs map one-to-one to those direct children.
+Hyper Layout owns geometry only.
+
+```js
+import 'hyper-element/layout';
+```
+
+Start with a static layout when you only need Hyper Layout to own grid
+placement:
+
+```html
+<hyper-layout>
+  <sales-card></sales-card>
+  <risk-chart></risk-chart>
+</hyper-layout>
+```
+
+For persisted dashboards, pass `items` and `positions` from the parent. The ID
+is normally a database ID, UUID, or hash from application data; it does not need
+to resemble the rendered element tag.
+
+```html
+<hyper-layout
+  edit=${isEditing}
+  items=${[
+    { id: 'database-id-1', tag: 'sales-card', can: ['drag'] },
+    { id: 'database-id-2', tag: 'risk-chart', can: ['drag', 'resize'] },
+  ]}
+  positions=${positions}
+  onchange=${(event, nextPositions) => persist(nextPositions)}
+  onremoved=${(event, id, nextPositions) => {
+    removeWidgetRecord(id);
+    persist(nextPositions);
+  }}
+  removable="trash"
+  trash="#dashboard-trash"
+>
+  <sales-card></sales-card>
+  <risk-chart></risk-chart>
+</hyper-layout>
+```
+
+`items[index]` maps to `directChildren[index]`. If `items` is present, its
+length must match the direct child count. New IDs are auto-placed, removed IDs
+are dropped from live positions, and a valid reconciliation emits `change` so
+controlled parents can persist the converged layout state.
+
+Removal follows the same parent-owned identity rule. When `removable` and
+`trash` or outside removal are configured, Hyper Layout removes the engine node
+and calls `onremoved(event, id, positions, ids)`. The parent removes the
+matching record from its own data, renders one fewer child, and passes the next
+`items` and `positions` state back into the layout.
+
+While a drag is active, trash removal is previewed before drop. If the cursor
+enters the configured `trash` target or the dragged item overlaps it, the
+default overlay turns red, swaps the move icon for a trash icon, reduces the
+item to 50% opacity, and scales it to 80%. Custom overlays can react to the
+same state with `[data-hl-removing="true"]`. The overlap test accounts for
+that 20% shrink so the preview does not flicker at the trash edge, and
+releasing while the trash preview is active removes the item.
+
+`edit` defaults to false. In edit mode, Hyper Layout wraps each direct child in
+an editor shell with drag/stretch controls and a muted overlay. Descendants
+inside the child remain owned by that child. Nested editable areas require
+nested `<hyper-layout>` elements.
+
+Use `items[].can` to allow `drag`, `resize`, both, or neither per item. Use
+`overlay="custom-overlay-tag"` to render a custom hover overlay; Hyper Layout
+passes capability attributes plus `ctx.attrs.can`, `ctx.attrs.item`,
+`ctx.attrs.node`, `ctx.attrs.drag(event)`, and `ctx.attrs.resize(event)` to that
+overlay.
+
+```js
+hyperElement('dashboard-overlay', {
+  render: (Html, ctx) => Html`
+    <div onpointerdown=${ctx.attrs.drag}>
+      ${ctx.attrs.can.includes('drag') ? 'Move' : ''}
+      ${
+        ctx.attrs.can.includes('resize')
+          ? Html`
+        <button type="button" onpointerdown=${ctx.attrs.resize}>Resize</button>
+      `
+          : ''
+      }
+    </div>
+  `,
+});
+```
+
+Full documentation: [`src/layout/README.md`](src/layout/README.md).
 
 ---
 

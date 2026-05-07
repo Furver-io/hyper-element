@@ -71,6 +71,7 @@
 })();</code></pre>
       <div id="empty-render-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="empty-render"] pre code').textContent;
 
@@ -127,6 +128,7 @@
 })();</code></pre>
       <div id="multiple-renders-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="multiple-renders"] pre code').textContent;
 
@@ -181,6 +183,7 @@
 })();</code></pre>
       <div id="special-chars-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="special-chars"] pre code').textContent;
 
@@ -229,6 +232,7 @@
 })();</code></pre>
       <div id="unicode-content-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="unicode-content"] pre code').textContent;
 
@@ -404,6 +408,7 @@
 })();</code></pre>
       <div id="each-block-inner-content-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="each-block-inner-content"] pre code').textContent;
 
@@ -456,6 +461,7 @@
   });
 })();</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="functional-api-no-args"] pre code').textContent;
         eval(code);
       </script>
@@ -498,6 +504,7 @@
   });
 })();</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="direct-instantiation-blocked"] pre code').textContent;
         eval(code);
       </script>
@@ -614,6 +621,7 @@
 })();</code></pre>
       <div id="nested-hole-switch-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="nested-hole-template-switch"] pre code').textContent;
 
@@ -769,6 +777,7 @@
 })();</code></pre>
       <div id="event-array-skip-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="event-array-same-handler-skip"] pre code').textContent;
 
@@ -888,6 +897,7 @@
 })();</code></pre>
       <div id="boolean-attr-html-vs-xml-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="boolean-attr-html-vs-xml"] pre code').textContent;
 
@@ -1079,6 +1089,7 @@
 })();</code></pre>
       <div id="persistent-fragment-diff-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="persistent-fragment-diff-ops"] pre code').textContent;
 
@@ -1149,6 +1160,7 @@
 })();</code></pre>
       <div id="dom-rerender-container"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="dom-rerender-same-hole"] pre code').textContent;
 
@@ -1191,6 +1203,7 @@
 document.getElementById('getter-output').innerHTML = '&lt;getter-elem&gt;&lt;/getter-elem&gt;';</code></pre>
       <div id="getter-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="prototype-getter-non-function"] pre code').textContent;
         eval(code);
         const expected = '<div id="getter-output"><getter-elem><div id="getter-result">value=42, count=7</div></getter-elem></div>';

@@ -172,6 +172,7 @@ if (hydratedBtn) {
     </section>
 
     <script type="module">
+        await window.hyperElementReady;
       var code = document.querySelector('[data-test="phase-1-2-ssr"] pre code').textContent;
       try {
         var fn = new Function('return (async () => { ' + code + ' })();');

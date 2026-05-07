@@ -58,6 +58,7 @@
 document.getElementById('simple-output').innerHTML = '&lt;simple-element&gt;&lt;/simple-element&gt;';</code></pre>
       <div id="simple-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="simple-element"] pre code').textContent;
         eval(code);
         const expected = '<div id="simple-output"><simple-element>Hello from hyper-element!</simple-element></div>';

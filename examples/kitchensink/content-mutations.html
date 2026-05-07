@@ -71,6 +71,7 @@ setTimeout(() => {
 }, 50);</code></pre>
       <div id="content-mut-output"></div>
       <script type="module">
+        await window.hyperElementReady;
 
         const code = document.querySelector('[data-test="change-content"] pre code').textContent;
 

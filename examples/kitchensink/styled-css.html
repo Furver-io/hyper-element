@@ -90,6 +90,7 @@
     </section>
 
     <script type="module">
+      await window.hyperElementReady;
       await new Promise((resolve) => {
         if (window.hyperElement) resolve();
         else

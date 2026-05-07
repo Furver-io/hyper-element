@@ -53,6 +53,7 @@
       <p>Tests the <code>!definition</code> branch.</p>
       <pre><code>hyperElement(null)</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const section = document.querySelector('[data-test="definition-null"]');
         const code = section.querySelector('pre code').textContent;
         try {
@@ -78,6 +79,7 @@
       <p>Tests the <code>typeof definition !== 'object'</code> branch.</p>
       <pre><code>hyperElement(123)</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const section = document.querySelector(
           '[data-test="definition-number"]'
         );
@@ -108,6 +110,7 @@
       <p>Tests the <code>!renderFn</code> branch.</p>
       <pre><code>hyperElement({})</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const section = document.querySelector('[data-test="render-missing"]');
         const code = section.querySelector('pre code').textContent;
         try {
@@ -130,6 +133,7 @@
       <p>Tests the <code>typeof renderFn !== 'function'</code> branch.</p>
       <pre><code>hyperElement({ render: 'not-a-function' })</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const section = document.querySelector('[data-test="render-string"]');
         const code = section.querySelector('pre code').textContent;
         try {

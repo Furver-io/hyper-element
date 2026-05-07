@@ -58,6 +58,7 @@ attrsElem.setAttribute('greeting', 'Hello World');
 document.getElementById('attrs-output').appendChild(attrsElem);</code></pre>
       <div id="attrs-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="attrs-element"] pre code').textContent;
         eval(code);
         const expected = '<div id="attrs-output"><attrs-element greeting="Hello World"><!--<>-->Greeting: Hello World<!--</>--></attrs-element></div>';

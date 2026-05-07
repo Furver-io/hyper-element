@@ -69,6 +69,7 @@ requestAnimationFrame(() =&gt; {
 });</code></pre>
       <div id="base-render-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="base-render"] pre code').textContent;
         eval(code);
         const expected = '<div id="base-render-output"><base-render-elem></base-render-elem></div>';
@@ -112,6 +113,7 @@ setTimeout(() =&gt; {
 }, 100);</code></pre>
       <div id="no-store-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="setup-no-store"] pre code').textContent;
         eval(code);
         const expected = '<div id="no-store-output"><no-store-elem><span>No store render</span></no-store-elem></div>';
@@ -150,6 +152,7 @@ requestAnimationFrame(() =&gt; {
 });</code></pre>
       <div id="inner-shadow-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="inner-shadow"] pre code').textContent;
         eval(code);
         const expected = '<div id="inner-shadow-output"><inner-shadow-elem><span class="inner-content">Shadow content here</span></inner-shadow-elem></div>';
@@ -203,6 +206,7 @@ setTimeout(() =&gt; {
 }, 50);</code></pre>
       <div id="disconnected-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="disconnected"] pre code').textContent;
         eval(code);
         const expected = '<div id="disconnected-output"></div>';
@@ -241,6 +245,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="inner-shadow-getter-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="inner-shadow-getter"] pre code').textContent;
         eval(code);
         const expected = '<div id="inner-shadow-getter-output"><inner-shadow-getter-elem><div class="inner-content">Inner Shadow Content</div></inner-shadow-getter-elem></div>';
@@ -288,6 +293,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="disconnected-teardown-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="disconnected-teardown"] pre code').textContent;
         eval(code);
         const expected = '<div id="disconnected-teardown-output"></div>';
@@ -335,6 +341,7 @@ setTimeout(() =&gt; {
   }, 800);
 })();</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="base-before-hydrate"] pre code').textContent;
         eval(code);
         const expected = '<ssr-base-hooks><button>Click</button></ssr-base-hooks>';
@@ -396,6 +403,7 @@ setTimeout(() =&gt; {
   section.dataset.testResult = pass ? 'pass' : 'fail';
 })();</code></pre>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="prototype-methods"] pre code').textContent;
         eval(code);
       </script>
@@ -442,6 +450,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="disconnect-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="disconnected-callback"] pre code').textContent;
         eval(code);
         const expected = '<div id="disconnect-output"></div>';
@@ -484,6 +493,7 @@ setTimeout(() =&gt; {
 })();</code></pre>
       <div id="inner-shadow-explicit-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="inner-shadow-explicit"] pre code').textContent;
         eval(code);
         const expected = '<div id="inner-shadow-explicit-output"><inner-shadow-explicit-elem><div class="shadow-content">Shadow Content Here</div></inner-shadow-explicit-elem></div>';

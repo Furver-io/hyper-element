@@ -13,11 +13,13 @@ import { registerStyleRules } from './style-host.js';
 import { isReservedStyledAttr } from './reserved.js';
 
 /**
- * Finds the owning component instance for a styled node. Rendering always
- * installs an explicit render context before +styled handlers run, including
- * update renders triggered by attribute changes.
+ * Finds the owning component instance for a styled node. Browser render paths
+ * install a rendering instance before `+styled` handlers run, including
+ * attribute-driven redraws and fragment updates that need access to the
+ * component's style registry.
  *
- * @param {HTMLElement} _node - Styled DOM node.
+ * @param {HTMLElement} _node - Styled DOM node reserved for future DOM-owner
+ * fallbacks.
  * @returns {HTMLElement|null} Owning component instance.
  */
 function getInstanceForNode(_node) {

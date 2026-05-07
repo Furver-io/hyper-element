@@ -62,6 +62,7 @@ document.getElementById('boolean-attrs-html-output').innerHTML =
   '&lt;boolean-attrs-html-elem&gt;&lt;/boolean-attrs-html-elem&gt;';</code></pre>
       <div id="boolean-attrs-html-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         // Single source of truth: read snippet, execute it, snapshot result.
         const code = document.querySelector('[data-test="boolean-attrs-html"] pre code').textContent;
         eval(code);
@@ -94,6 +95,7 @@ document.getElementById('boolean-attrs-svg-output').innerHTML =
   '&lt;boolean-attrs-svg-elem&gt;&lt;/boolean-attrs-svg-elem&gt;';</code></pre>
       <div id="boolean-attrs-svg-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="boolean-attrs-svg"] pre code').textContent;
         eval(code);
         const expected = '<div id="boolean-attrs-svg-output"><boolean-attrs-svg-elem><svg width="100" height="100">\n        <rect id="svg-rect" width="50" height="50" focusable=""></rect>\n      </svg></boolean-attrs-svg-elem></div>';
@@ -124,6 +126,7 @@ document.getElementById('text-elements-output').innerHTML =
   '&lt;text-elements-elem&gt;&lt;/text-elements-elem&gt;';</code></pre>
       <div id="text-elements-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="text-elements"] pre code').textContent;
         eval(code);
         const expected = '<div id="text-elements-output"><text-elements-elem><div>\n        <style id="inline-style">.test-box { background: blue; }</style>\n        <textarea id="inline-textarea">Initial content here</textarea>\n        <div class="test-box" style="width: 20px; height: 20px;"></div>\n      </div></text-elements-elem></div>';
@@ -154,6 +157,7 @@ document.getElementById('xml-self-closing-output').innerHTML =
   '&lt;xml-self-closing-elem&gt;&lt;/xml-self-closing-elem&gt;';</code></pre>
       <div id="xml-self-closing-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="xml-self-closing"] pre code').textContent;
         eval(code);
         const expected = '<div id="xml-self-closing-output"><xml-self-closing-elem><svg id="svg-container" width="100" height="100">\n        <circle id="circle" cx="50" cy="50" r="25" fill="red"></circle>\n        <rect id="rect" x="10" y="10" width="30" height="30" fill="blue"></rect>\n        <line id="line" x1="0" y1="0" x2="100" y2="100" stroke="green"></line>\n      </svg></xml-self-closing-elem></div>';
@@ -185,6 +189,7 @@ document.getElementById('void-elements-output').innerHTML =
   '&lt;void-elements-elem&gt;&lt;/void-elements-elem&gt;';</code></pre>
       <div id="void-elements-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="void-elements"] pre code').textContent;
         eval(code);
         const expected = '<div id="void-elements-output"><void-elements-elem><div>\n        <img id="img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="test">\n        <br id="br">\n        <hr id="hr">\n        <input id="input" type="text" placeholder="test">\n      </div></void-elements-elem></div>';
@@ -217,6 +222,7 @@ document.getElementById('regular-elements-output').innerHTML =
   '&lt;regular-elements-elem&gt;&lt;/regular-elements-elem&gt;';</code></pre>
       <div id="regular-elements-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="regular-elements"] pre code').textContent;
         eval(code);
         const expected = '<div id="regular-elements-output"><regular-elements-elem><div id="parent">\n        <span id="child">Child text</span>\n        <p id="paragraph">Paragraph content</p>\n        <article id="article">\n          <section id="section">Nested content</section>\n        </article>\n      </div></regular-elements-elem></div>';
@@ -247,6 +253,7 @@ document.getElementById('empty-nonvoid-output').innerHTML =
   '&lt;empty-nonvoid-elem&gt;&lt;/empty-nonvoid-elem&gt;';</code></pre>
       <div id="empty-nonvoid-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="empty-nonvoid"] pre code').textContent;
         eval(code);
         const expected = '<div id="empty-nonvoid-output"><empty-nonvoid-elem><div id="container">\n        <div id="empty-div"></div>\n        <span id="empty-span"></span>\n        <p id="empty-p"></p>\n      </div></empty-nonvoid-elem></div>';
@@ -273,6 +280,7 @@ document.getElementById('null-attrs-output').innerHTML =
   '&lt;null-attrs-elem&gt;&lt;/null-attrs-elem&gt;';</code></pre>
       <div id="null-attrs-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const code = document.querySelector('[data-test="null-attrs"] pre code').textContent;
         eval(code);
         const expected = '<div id="null-attrs-output"><null-attrs-elem><div id="target">Content</div></null-attrs-elem></div>';
@@ -364,6 +372,7 @@ if (!m) {
 }</code></pre>
       <div id="direct-tostring-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         // Single source of truth: read the snippet (which performs every
         // toString() assertion against static expected strings) and execute
         // it inside an async function to honour the top-level `await import`.

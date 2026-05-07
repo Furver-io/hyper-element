@@ -63,6 +63,7 @@ dataElem.setAttribute('data-users', '["ann","bob"]');
 document.getElementById('dataset-json-output').appendChild(dataElem);</code></pre>
       <div id="dataset-json-output"></div>
       <script type="module">
+        await window.hyperElementReady;
         const codeJson = document.querySelector('[data-test="dataset-json"] code').textContent;
         eval(codeJson);
 
@@ -99,6 +100,7 @@ document.getElementById('dataset-json-output').appendChild(dataElem);</code></pr
 );</code></pre>
       <dataset-check-element data-json="[1,2,3]"></dataset-check-element>
       <script type="module">
+        await window.hyperElementReady;
         const codeCheck = document.querySelector('[data-test="dataset-check"] code').textContent;
         eval(codeCheck);
 
