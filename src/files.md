@@ -54,6 +54,7 @@ Key files:
 - `layout/dom.js` - Wrapper and overlay adapter. Moves direct children into editor-owned shells and passes custom overlay input through Hyper Element `ctx.attrs`.
 - `layout/removal.js` - Trash-target adapter. Detects pointer or dragged-wrapper overlap with application-owned trash zones and reflects the active destructive preview state.
 - `layout/interactions.js` - Pointer adapter. Captures edit overlay drag/resize, floats the active wrapper, applies 50% coverage insertion, asks the removal adapter for trash previews, and commits changes.
+- `layout/placeholder.js` - Internal snap-preview adapter. Owns the ignored placeholder element and the grid-to-pixel positioning used during active drags.
 - `layout/geometry.js` - Grid/pixel math. Resolves columns from explicit settings, host-width breakpoints, or target cell width.
 - `layout/events.js` - GridStack-style event dispatch plus Hyper Element `onchange(event, positions)` ergonomics.
 - `layout/properties.js` - IDL property descriptors and Hyper Element shared-attribute reads for object/function values.

@@ -11,13 +11,9 @@
  * start/stop/change lifecycle after engine mutations.
  */
 
-import {
-  deltaToMove,
-  deltaToSize,
-  isOutsideHost,
-  nodeToPixels,
-} from './geometry.js';
+import { deltaToMove, deltaToSize, isOutsideHost } from './geometry.js';
 import { clearRemovalPreview, updateRemovalPreview } from './removal.js';
+import { hideDragPlaceholder, updateDragPlaceholder } from './placeholder.js';
 
 /**
  * Create a pointer interaction controller.
@@ -184,10 +180,15 @@ export function createLayoutInteractions(host) {
       host.emit(`${name}stop`, {
         node: host.engine.get(node.id) || { ...node },
       });
+      const removal =
+        removed && host._lastRemoval?.id === node.id ? host._lastRemoval : null;
       host.commitChange(
         removed ? 'remove' : `user-${action}`,
-        removed ? { removed: [node.id] } : { nodes: [node] }
+        removed
+          ? { removed: [node.id], positions: removal?.positions }
+          : { nodes: [node] }
       );
+      if (removal) host._lastRemoval = null;
     }
 
     document.addEventListener('pointermove', onMove);
@@ -317,40 +318,6 @@ function previewDragNode(host, start, dx, dy, grid) {
     ...start,
     ...deltaToMove(start, dx, dy, grid),
   });
-}
-
-/**
- * Position and reveal the internal drag placeholder.
- * Domain context: the placeholder is the empty dashed snap target shown under
- * the floating item during drag.
- *
- * Technical context: the placeholder uses the same `nodeToPixels()` conversion
- * as real wrappers, so the preview aligns with the eventual `applyLayout()`
- * snap destination.
- *
- * @param {HTMLElement} host - Hyper layout host.
- * @param {Object|null} node - Preview node.
- * @param {Object} grid - Measured grid values.
- */
-function updateDragPlaceholder(host, node, grid) {
-  const placeholder = host._placeholder;
-  if (!placeholder || !node) return;
-  const px = nodeToPixels(node, grid);
-  Object.assign(placeholder.style, {
-    left: `${px.left}px`,
-    top: `${px.top}px`,
-    width: `${px.width}px`,
-    height: `${px.height}px`,
-  });
-  placeholder.dataset.hlPlaceholderActive = 'true';
-}
-
-/**
- * Hide the internal drag placeholder after a drag session.
- * @param {HTMLElement} host - Hyper layout host.
- */
-function hideDragPlaceholder(host) {
-  if (host._placeholder) delete host._placeholder.dataset.hlPlaceholderActive;
 }
 
 /**

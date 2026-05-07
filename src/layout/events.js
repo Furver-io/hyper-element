@@ -103,15 +103,18 @@ export function emitLayoutEvent(host, name, detail = {}) {
  * Domain context: every persisted state transition should have the same detail
  * shape so controlled parents can update stores without branching per action.
  *
- * Technical context: `extra` can add action-specific arrays, but defaults keep
- * `nodes`, `added`, `removed`, and `orphaned` present for stable consumers.
+ * Technical context: `extra` can add action-specific arrays or an already
+ * captured `positions` snapshot. Removal passes the pre-callback snapshot so a
+ * parent re-render cannot make the follow-up `change` describe a different
+ * transient DOM state. Defaults keep `nodes`, `added`, `removed`, and `orphaned`
+ * present for stable consumers.
  *
  * @param {HTMLElement} host - Layout host.
  * @param {string} reason - Change reason.
  * @param {Object} extra - Extra event detail.
  */
 export function commitLayoutChange(host, reason, extra = {}) {
-  const positions = currentLayoutPositions(host);
+  const positions = extra.positions || currentLayoutPositions(host);
   host._layoutPositions = positions;
   emitLayoutEvent(host, 'change', {
     nodes: [],

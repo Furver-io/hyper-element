@@ -204,19 +204,26 @@ export function defineLayoutProperties(host) {
  * validate the settled render result, not the halfway point where a property is
  * already new but the DOM children are still old.
  *
- * Technical context: the latest requested reason wins. A direct public
- * `reconcile()` call clears `_layoutReconcileTicket`, which cancels the queued
- * pass so explicit validation tests and imperative callers still get immediate
- * behavior.
+ * Technical context: object/state reasons outrank plain attribute refreshes.
+ * A parent render can set `positions=${next}` and then update scalar
+ * attributes like `columns`; preserving the object reason prevents the
+ * responsive-column fast path from skipping the new positions input. A direct
+ * public `reconcile()` call clears `_layoutReconcileTicket`, which cancels the
+ * queued pass so explicit validation tests and imperative callers still get
+ * immediate behavior.
  *
  * @param {HTMLElement} host - Layout host.
  * @param {string} reason - Reconcile reason.
  */
-function requestLayoutReconcile(host, reason) {
+export function requestLayoutReconcile(host, reason) {
   if (!host.isConnected) return;
+  const previousReason = host._layoutReconcileReason;
   const ticket = (host._layoutReconcileTicket || 0) + 1;
   host._layoutReconcileTicket = ticket;
-  host._layoutReconcileReason = reason;
+  host._layoutReconcileReason =
+    reason === 'attribute' && previousReason && previousReason !== 'attribute'
+      ? previousReason
+      : reason;
   queueMicrotask(() => {
     if (!host.isConnected || host._layoutReconcileTicket !== ticket) return;
     host._layoutReconcileTicket = 0;

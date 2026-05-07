@@ -13,6 +13,7 @@ src/layout/
 ├── geometry.js
 ├── index.js
 ├── interactions.js
+├── placeholder.js
 ├── positions.js
 ├── properties.js
 ├── removal.js
@@ -80,6 +81,12 @@ Pointer interaction adapter. Captures drag and resize gestures from editor
 overlays, detaches the active wrapper visually, updates placeholders, computes
 50-percent insertion intent, previews trash removal, and commits engine changes
 on pointer release.
+
+### `placeholder.js`
+
+Internal drag placeholder adapter. Owns the ignored snap-preview element and
+the grid-to-pixel positioning used while a dragged wrapper floats above the
+layout.
 
 ### `positions.js`
 

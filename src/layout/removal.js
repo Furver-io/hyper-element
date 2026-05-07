@@ -105,6 +105,31 @@ export function clearRemovalPreview(wrapper) {
 }
 
 /**
+ * Remove a stale wrapper without treating the internal cleanup as parent drift.
+ * Domain context: controlled parents normally respond to `onremoved` by
+ * re-rendering fewer children. When no parent listener exists, Hyper Layout
+ * still needs to clear the deleted wrapper so the user sees the trash action
+ * complete.
+ *
+ * Technical context: wrapper removal is delayed until the next frame so a
+ * parent render gets the first chance to reconcile. If the wrapper still exists
+ * then, the mutation observer is temporarily disconnected because this DOM
+ * mutation is an internal cleanup, not an external child-count change.
+ *
+ * @param {HTMLElement} host - Hyper Layout host.
+ * @param {HTMLElement|null} wrapper - Pending removal wrapper.
+ * @param {string} id - Removed layout item ID.
+ */
+export function cleanupRemovedWrapper(host, wrapper, id) {
+  requestAnimationFrame(() => {
+    if (!wrapper?.isConnected || wrapper.dataset.layoutId !== id) return;
+    host._observer?.disconnect();
+    wrapper.remove();
+    host._observer?.observe(host, { childList: true, subtree: false });
+  });
+}
+
+/**
  * Resolve live trash target rectangles from a public selector.
  * @param {string} selector - Application-owned trash selector.
  * @returns {HTMLElement[]} Matching trash elements.

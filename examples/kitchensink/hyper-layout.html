@@ -286,6 +286,13 @@ document.getElementById('layout-output').innerHTML = '&lt;dashboard-view&gt;&lt;
           const editToggle = demo.querySelector('[data-layout-edit-toggle]');
           const addButton = demo.querySelector('[data-layout-add]');
           const visibleTrash = demo.querySelector('[data-layout-trash]');
+          const transientLayoutErrors = [];
+          const recordTransientLayoutError = (event) => {
+            const message = event.error?.message || event.message || '';
+            if (message.includes('hyper-layout: items length'))
+              transientLayoutErrors.push(message);
+          };
+          window.addEventListener('error', recordTransientLayoutError);
           const items = [
             { id: 'revenue', tag: 'revenue-widget', can: ['drag', 'resize'] },
             { id: 'risk', tag: 'risk-widget', can: ['drag', 'resize'] },
@@ -390,6 +397,10 @@ document.getElementById('layout-output').innerHTML = '&lt;dashboard-view&gt;&lt;
               demoLayout.engine.get('added-4'),
             'core demo add button inserts a new layout item from displayed source'
           );
+          assert(
+            transientLayoutErrors.length === 0,
+            'core demo add waits for settled items and direct children before validating counts'
+          );
           editToggle.click();
           await nextFrame();
           assert(
@@ -488,6 +499,11 @@ document.getElementById('layout-output').innerHTML = '&lt;dashboard-view&gt;&lt;
               !demoLayout.engine.get('added-4'),
             'core demo trash drop removes when the active trash preview is showing even if the pointer is outside'
           );
+          assert(
+            transientLayoutErrors.length === 0,
+            'core demo removal waits for settled items and direct children before validating counts'
+          );
+          window.removeEventListener('error', recordTransientLayoutError);
           editToggle.click();
           await nextFrame();
           assert(
@@ -514,6 +530,19 @@ document.getElementById('layout-output').innerHTML = '&lt;dashboard-view&gt;&lt;
               '[data-hl-content] > revenue-widget, [data-hl-content] > risk-widget, [data-hl-content] > orders-widget'
             ).length === 3,
             'children preserved inside content wrappers'
+          );
+          const singleRowWrapper = layout.querySelector(
+            `[data-layout-id="${items[0].id}"]`
+          );
+          const singleRowChild = singleRowWrapper.querySelector(
+            '[data-hl-content] > *'
+          );
+          const singleRowWrapperRect = singleRowWrapper.getBoundingClientRect();
+          const singleRowChildRect = singleRowChild.getBoundingClientRect();
+          assert(
+            singleRowChildRect.bottom <= singleRowWrapperRect.bottom + 1 &&
+              getComputedStyle(singleRowChild).minHeight === '0px',
+            'one-row children are constrained to the layout wrapper height'
           );
           assert(
             getComputedStyle(layout.querySelector('[data-hl-overlay]'))
@@ -549,8 +578,9 @@ document.getElementById('layout-output').innerHTML = '&lt;dashboard-view&gt;&lt;
           );
 
           let mismatchThrew = false;
+          let badProbe = null;
           try {
-            const badProbe = mountProbe('layout-mismatch-probe', {
+            badProbe = mountProbe('layout-mismatch-probe', {
               render: (Html) => Html`
         <hyper-layout>
           <revenue-widget></revenue-widget>
@@ -563,6 +593,8 @@ document.getElementById('layout-output').innerHTML = '&lt;dashboard-view&gt;&lt;
             bad.reconcile('manual');
           } catch (error) {
             mismatchThrew = error.message.includes('items length');
+          } finally {
+            badProbe?.remove();
           }
           assert(mismatchThrew, 'items and child count mismatch throws');
 
@@ -783,6 +815,148 @@ document.getElementById('layout-output').innerHTML = '&lt;dashboard-view&gt;&lt;
             'pointerup',
             repeatFirst.left + repeatFirst.width / 2,
             repeatFirst.top + repeatFirst.height / 2
+          );
+
+          const pushedRemovalProbe = mountProbe('layout-pushed-removal-probe', {
+            setup: (ctx, onNext) => {
+              ctx.element.removedIds = [];
+              ctx.state = {
+                widgets: [
+                  { id: 'dragged', tag: 'dashboard-widget', label: 'Dragged' },
+                  { id: 'pushed', tag: 'dashboard-widget', label: 'Pushed' },
+                  { id: 'steady', tag: 'dashboard-widget', label: 'Steady' },
+                ],
+                positions: {
+                  columns: 12,
+                  items: [
+                    { id: 'dragged', x: 0, y: 0, w: 4, h: 1 },
+                    { id: 'pushed', x: 4, y: 0, w: 4, h: 1 },
+                    { id: 'steady', x: 8, y: 0, w: 4, h: 1 },
+                  ],
+                },
+              };
+              ctx.renderProbe = onNext(() => ctx.state);
+            },
+            persistPositions: (ctx, _event, positions) => {
+              ctx.state.positions = positions;
+            },
+            removeWidget: (ctx, _event, id, positions, ids) => {
+              if (!id) return;
+              ctx.element.removedIds = [...ctx.element.removedIds, ...ids];
+              ctx.state.widgets = ctx.state.widgets.filter(
+                (widget) => widget.id !== id
+              );
+              ctx.state.positions = {
+                ...positions,
+                items: positions.items.filter((item) => item.id !== id),
+              };
+              ctx.renderProbe();
+            },
+            render: (Html, ctx, state) => {
+              const probeItems = state.widgets.map((widget) => ({
+                id: widget.id,
+                tag: widget.tag,
+                can: ['drag', 'resize'],
+              }));
+              return Html`
+      <hyper-layout
+        edit=${true}
+        removable="trash"
+        trash="#layout-trash"
+        columns="12"
+        cell-height="80"
+        margin="0"
+        items=${probeItems}
+        positions=${state.positions}
+        onchange=${ctx.persistPositions}
+        onremoved=${ctx.removeWidget}
+      >
+        ${state.widgets.map((widget) => Html.wire(widget, ':pushed-removal')`
+          <dashboard-widget label=${widget.label}></dashboard-widget>
+        `)}
+      </hyper-layout>
+    `;
+            },
+          });
+          const pushedRemovalLayout =
+            pushedRemovalProbe.querySelector('hyper-layout');
+          await nextFrame();
+          const pushedRemovalDragged = pushedRemovalLayout.querySelector(
+            '[data-layout-id="dragged"]'
+          );
+          const pushedRemovalTarget = pushedRemovalLayout.querySelector(
+            '[data-layout-id="pushed"]'
+          );
+          const pushedRemovalDrag = pushedRemovalDragged.querySelector(
+            '[data-hl-overlay]'
+          );
+          const pushedRemovalDragRect =
+            pushedRemovalDragged.getBoundingClientRect();
+          const pushedRemovalTargetRect =
+            pushedRemovalTarget.getBoundingClientRect();
+          firePointer(
+            pushedRemovalDrag,
+            'pointerdown',
+            pushedRemovalDragRect.left + pushedRemovalDragRect.width / 2,
+            pushedRemovalDragRect.top + pushedRemovalDragRect.height / 2
+          );
+          firePointer(
+            document,
+            'pointermove',
+            pushedRemovalTargetRect.left + pushedRemovalTargetRect.width / 2,
+            pushedRemovalTargetRect.top + pushedRemovalTargetRect.height / 2
+          );
+          firePointer(
+            document,
+            'pointerup',
+            pushedRemovalTargetRect.left + pushedRemovalTargetRect.width / 2,
+            pushedRemovalTargetRect.top + pushedRemovalTargetRect.height / 2
+          );
+          await nextFrame();
+          assert(
+            pushedRemovalLayout.engine.get('pushed').x === 0 &&
+              pushedRemovalLayout.engine.get('dragged').x === 4,
+            'dragging one item over another moves the covered item before removal'
+          );
+          const pushedRemovalMoved = pushedRemovalLayout.querySelector(
+            '[data-layout-id="pushed"] [data-hl-overlay]'
+          );
+          const pushedRemovalMovedRect =
+            pushedRemovalMoved.getBoundingClientRect();
+          const pushedRemovalTrashRect = trash.getBoundingClientRect();
+          firePointer(
+            pushedRemovalMoved,
+            'pointerdown',
+            pushedRemovalMovedRect.left + pushedRemovalMovedRect.width / 2,
+            pushedRemovalMovedRect.top + pushedRemovalMovedRect.height / 2
+          );
+          firePointer(
+            document,
+            'pointermove',
+            pushedRemovalTrashRect.left + pushedRemovalTrashRect.width / 2,
+            pushedRemovalTrashRect.top + pushedRemovalTrashRect.height / 2
+          );
+          firePointer(
+            document,
+            'pointerup',
+            pushedRemovalTrashRect.left + pushedRemovalTrashRect.width / 2,
+            pushedRemovalTrashRect.top + pushedRemovalTrashRect.height / 2
+          );
+          await nextFrame();
+          const pushedRemovalIds = Array.from(
+            pushedRemovalLayout.querySelectorAll('[data-hl-item]')
+          )
+            .map((wrapper) => wrapper.dataset.layoutId)
+            .sort();
+          assert(
+            pushedRemovalProbe.removedIds.join(',') === 'pushed',
+            'trash removal callback receives only the moved target ID'
+          );
+          assert(
+            pushedRemovalIds.join(',') === 'dragged,steady' &&
+              pushedRemovalLayout.engine.get('dragged') &&
+              !pushedRemovalLayout.engine.get('pushed'),
+            'trashing a pushed item leaves the original dragged item mounted'
           );
 
           const noMoveBefore = layout.engine.get(items[1].id).x;
@@ -1337,6 +1511,61 @@ document.getElementById('layout-output').innerHTML = '&lt;dashboard-view&gt;&lt;
             removable.querySelectorAll('[data-hl-item]').length === 0,
             'trash removal removed wrapper'
           );
+
+          const cleanupProbe = mountProbe('layout-removal-cleanup-probe', {
+            render: (Html) => Html`
+      <hyper-layout
+        style=${{ width: '300px' }}
+        edit=${true}
+        removable="trash"
+        trash="#layout-trash"
+        items=${[{ id: 'cleanup', tag: 'revenue-widget', can: ['drag'] }]}
+        positions=${{ items: [{ id: 'cleanup', x: 0, y: 0, w: 2, h: 1 }] }}
+      >
+        <revenue-widget label="cleanup"></revenue-widget>
+      </hyper-layout>
+    `,
+          });
+          const cleanupLayout = cleanupProbe.querySelector('hyper-layout');
+          const cleanupErrors = [];
+          const recordCleanupError = (event) => {
+            const message = event.error?.message || event.message || '';
+            if (message.includes('hyper-layout: items length'))
+              cleanupErrors.push(message);
+          };
+          window.addEventListener('error', recordCleanupError);
+          await nextFrame();
+          const cleanupDrag = cleanupLayout.querySelector('[data-hl-overlay]');
+          const cleanupDragRect = cleanupDrag.getBoundingClientRect();
+          const cleanupTrashRect = trash.getBoundingClientRect();
+          firePointer(
+            cleanupDrag,
+            'pointerdown',
+            cleanupDragRect.left + cleanupDragRect.width / 2,
+            cleanupDragRect.top + cleanupDragRect.height / 2
+          );
+          firePointer(
+            document,
+            'pointermove',
+            cleanupTrashRect.left + cleanupTrashRect.width / 2,
+            cleanupTrashRect.top + cleanupTrashRect.height / 2
+          );
+          firePointer(
+            document,
+            'pointerup',
+            cleanupTrashRect.left + cleanupTrashRect.width / 2,
+            cleanupTrashRect.top + cleanupTrashRect.height / 2
+          );
+          await nextFrame();
+          assert(
+            cleanupLayout.querySelectorAll('[data-hl-item]').length === 0,
+            'trash removal cleans stale wrapper when no parent listener rerenders'
+          );
+          assert(
+            cleanupErrors.length === 0,
+            'internal trash cleanup does not emit a public child-count mismatch'
+          );
+          window.removeEventListener('error', recordCleanupError);
 
           const missingTrashProbe = mountProbe('layout-missing-trash-probe', {
             render: (Html) => Html`

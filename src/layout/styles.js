@@ -49,8 +49,13 @@ hyper-layout [data-hl-content] {
   width: 100%;
 }
 hyper-layout [data-hl-content] > * {
+  box-sizing: border-box;
   display: block;
   height: 100%;
+  max-height: 100%;
+  max-width: 100%;
+  min-height: 0;
+  min-width: 0;
   width: 100%;
 }
 hyper-layout [data-hl-overlay] {

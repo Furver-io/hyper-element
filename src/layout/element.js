@@ -24,10 +24,18 @@ import {
 } from './events.js';
 import { measureGrid, nodeToPixels, resolveColumns } from './geometry.js';
 import { createLayoutInteractions, isOutsideHost } from './interactions.js';
-import { isCoveringTrash, isOverTrash } from './removal.js';
+import {
+  cleanupRemovedWrapper,
+  isCoveringTrash,
+  isOverTrash,
+} from './removal.js';
 import { ensureLayoutStyles } from './styles.js';
 import { serializePositions } from './positions.js';
-import { defineLayoutProperties } from './properties.js';
+import {
+  defineLayoutProperties,
+  requestLayoutReconcile,
+} from './properties.js';
+import { ensureLayoutPlaceholder } from './placeholder.js';
 import { reconcileLayout } from './state.js';
 
 // prettier-ignore
@@ -75,6 +83,7 @@ export class hyperLayoutElement extends HTMLElement {
     this._resizeObserver = null;
     this._interactions = null;
     this._layoutReconcileTicket = 0;
+    this._lastRemoval = null;
     defineLayoutProperties(this);
     defineLayoutOnChange(this);
     defineLayoutOnRemoved(this);
@@ -97,7 +106,7 @@ export class hyperLayoutElement extends HTMLElement {
     this._interactions = createLayoutInteractions(this);
     this.reconcile('connect');
     this._observer = new MutationObserver(() =>
-      this.reconcile('items-reconciled')
+      requestLayoutReconcile(this, 'items-reconciled')
     );
     this._observer.observe(this, { childList: true, subtree: false });
     this._resizeObserver = new ResizeObserver(() => {
@@ -120,8 +129,11 @@ export class hyperLayoutElement extends HTMLElement {
 
   /**
    * Reconcile when simple attributes change.
-   * Rich property setters call `reconcile()` themselves. This callback covers
-   * attribute-driven configuration such as `<hyper-layout edit columns="6">`.
+   * Rich property setters and Hyper Element shared attributes both schedule
+   * reconciliation after the current render turn. This callback covers
+   * attribute-driven configuration such as `<hyper-layout edit columns="6">`
+   * and the JSX-style `items=${items}` path where attributes can update before
+   * child nodes have been diffed into their final count.
    *
    * The `edit` attribute is intentionally special. Product-wise, edit mode is
    * only an interaction state: users turn it on, move widgets, then turn it off
@@ -140,7 +152,16 @@ export class hyperLayoutElement extends HTMLElement {
       this.applyLayout();
       return;
     }
-    this.reconcile('attribute');
+    // Preserve state-bearing reasons across the queued render turn so a later
+    // scalar attribute cannot take the responsive fast path before new
+    // `items` or `positions` have been loaded.
+    const reason =
+      name === 'items'
+        ? 'items-reconciled'
+        : name === 'positions'
+          ? 'positions'
+          : 'attribute';
+    requestLayoutReconcile(this, reason);
   }
 
   /**
@@ -300,15 +321,30 @@ export class hyperLayoutElement extends HTMLElement {
       (mode === 'outside' || mode === 'both') &&
       isOutsideHost(this, event.clientX, event.clientY);
     if (!overTrash && !outside) return null;
+    // Move the soon-to-be-removed wrapper to the end before parent callbacks run.
+    // Domain context: controlled parents remove the matching item from their own
+    // array and re-render fewer direct children. Hyper Element's child diff trims
+    // by DOM order, so a middle wrapper must be last before that render or a
+    // surviving sibling can be trimmed instead.
+    //
+    // Technical context: the placeholder is an internal direct child ignored by
+    // `layoutChildren()`. Keeping the pending removal before it preserves the
+    // wrapper list order while leaving the placeholder available for future drags.
+    if (wrapper?.parentNode === this) {
+      const before =
+        this._placeholder?.parentNode === this ? this._placeholder : null;
+      this.insertBefore(wrapper, before);
+    }
     const removed = this.engine.remove(id);
     if (!removed) return null;
-    wrapper?.remove();
     this._layoutPositions = this.currentPositions();
+    this._lastRemoval = { id, node: removed, positions: this._layoutPositions };
     this.emit('removed', {
       removed: [id],
       nodes: [removed],
       positions: this._layoutPositions,
     });
+    cleanupRemovedWrapper(this, wrapper, id);
     return removed;
   }
 
@@ -363,28 +399,4 @@ export class hyperLayoutElement extends HTMLElement {
 
 if (!customElements.get('hyper-layout')) {
   customElements.define('hyper-layout', hyperLayoutElement);
-}
-
-/**
- * Ensure the host owns one internal placeholder element.
- * Domain context: active drags need an empty snap preview that is visually
- * separate from the floating widget. The placeholder must be owned by Hyper
- * Layout, not by child components, because it represents engine state.
- *
- * Technical context: the placeholder is inserted before mutation observation
- * starts and `layoutChildren()` ignores it. That keeps the internal element
- * from changing the parent-owned `items[index] -> child[index]` contract.
- *
- * @param {HTMLElement} host - Hyper Layout host.
- * @returns {HTMLElement} Internal placeholder element.
- */
-function ensureLayoutPlaceholder(host) {
-  const existing = Array.from(host.children).find(
-    (child) => child.dataset.hlPlaceholder !== undefined
-  );
-  const placeholder = existing || document.createElement('div');
-  placeholder.dataset.hlPlaceholder = 'true';
-  placeholder.setAttribute('aria-hidden', 'true');
-  if (!existing) host.appendChild(placeholder);
-  return placeholder;
 }
