@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Custom Overlay Hyper Layout Example - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+          body {
+            font-family: sans-serif;
+            padding: 2rem;
+          }
+          section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+          }
+          section[data-test-result='pass'] {
+            border-color: green;
+            background: #f0fff0;
+          }
+          section[data-test-result='fail'] {
+            border-color: red;
+            background: #fff0f0;
+          }
+          .card {
+            align-items: center;
+            background: #e0f2fe;
+            border: 1px solid #0284c7;
+            box-sizing: border-box;
+            display: flex;
+            height: 100%;
+            justify-content: center;
+            min-height: 0;
+            width: 100%;
+          }
+          #layout-trash {
+            background: #fee2e2;
+            border: 1px solid #dc2626;
+            height: 48px;
+            margin-top: 12px;
+            width: 160px;
+          }
+          [data-hl-probe-root] {
+            height: 1px;
+            left: -10000px;
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            width: 1000px;
+          }
+          pre {
+            background: #f5f5f5;
+            box-sizing: border-box;
+            max-width: 100%;
+            padding: 1rem;
+            overflow-x: auto;
+            width: 100%;
+          }
+        </style>
+  </head>
+  <body>
+    <h1>Custom Overlay Hyper Layout Example</h1>
+
+    <section
+          data-test="hyper-layout-custom-overlay-example"
+          data-test-result="pending"
+        >
+          <h2>Custom Overlay Hyper Layout Example</h2>
+          <pre><code>function defineWidget(tag, label) {
+      if (customElements.get(tag)) return;
+      hyperElement(tag, {
+        render: (Html, ctx) =&gt; Html`&lt;button class="card"&gt;${ctx.attrs.label || label}&lt;/button&gt;`
+      });
+    }
+    
+    defineWidget('revenue-widget', 'Revenue');
+    defineWidget('risk-widget', 'Risk');
+    defineWidget('orders-widget', 'Orders');
+    
+    hyperElement('sample-overlay', {
+      render: (Html, ctx) =&gt; {
+        const can = ctx.attrs.can || [];
+        const canDrag = can.includes('drag');
+        const canResize = can.includes('resize');
+        const itemId = ctx.attrs.item?.id || 'item';
+    
+        return Html`
+          &lt;div
+            class="sample-overlay"
+            style=${{ background: 'repeating-linear-gradient(135deg, #0f172a 0 12px, #1d4ed8 12px 24px)', border: '3px solid #f59e0b', boxShadow: 'inset 0 0 0 2px rgba(255, 255, 255, 0.45), 0 10px 26px rgba(15, 23, 42, 0.32)', boxSizing: 'border-box', color: '#ffffff', display: 'grid', height: '100%', overflow: 'hidden', placeItems: 'center', position: 'relative', width: '100%' }}
+          &gt;
+          &lt;button
+            type="button"
+            data-role="drag"
+            aria-label="Move item"
+            hidden=${!canDrag ? '' : null}
+            onpointerdown=${(event) =&gt; ctx.attrs.drag(event)}
+            style=${{ background: 'rgba(255, 255, 255, 0.94)', border: '2px solid #f59e0b', borderRadius: '999px', boxShadow: '0 8px 18px rgba(15, 23, 42, 0.24)', color: '#1e40af', cursor: 'grab', display: canDrag ? 'grid' : 'none', gap: '6px', minWidth: '138px', padding: '12px 16px', placeItems: 'center', position: 'relative' }}
+          &gt;
+            &lt;svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"&gt;
+              &lt;polyline points="5 9 2 12 5 15"&gt;&lt;/polyline&gt;
+              &lt;polyline points="9 5 12 2 15 5"&gt;&lt;/polyline&gt;
+              &lt;polyline points="15 19 12 22 9 19"&gt;&lt;/polyline&gt;
+              &lt;polyline points="19 9 22 12 19 15"&gt;&lt;/polyline&gt;
+              &lt;line x1="2" y1="12" x2="22" y2="12"&gt;&lt;/line&gt;
+              &lt;line x1="12" y1="2" x2="12" y2="22"&gt;&lt;/line&gt;
+            &lt;/svg&gt;
+            &lt;span style=${{ font: '700 13px/1.1 sans-serif', letterSpacing: '0', textTransform: 'uppercase' }}&gt;
+              ${itemId} editor
+            &lt;/span&gt;
+          &lt;/button&gt;
+          &lt;div
+            aria-hidden="true"
+            style=${{ background: '#f59e0b', bottom: '10px', color: '#111827', font: '700 11px/1 sans-serif', left: '10px', letterSpacing: '0', padding: '6px 8px', position: 'absolute' }}
+          &gt;
+            ${itemId} overlay
+          &lt;/div&gt;
+          &lt;button
+            type="button"
+            data-role="resize"
+            aria-label="Resize item"
+            hidden=${!canResize ? '' : null}
+            onpointerdown=${(event) =&gt; ctx.attrs.resize(event)}
+            style=${{ background: '#f59e0b', border: '2px solid #ffffff', bottom: '8px', color: '#111827', cursor: 'nwse-resize', display: canResize ? 'grid' : 'none', height: '40px', padding: '6px', placeItems: 'center', position: 'absolute', right: '8px', width: '40px' }}
+          &gt;
+            &lt;svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"&gt;
+              &lt;line x1="7" y1="7" x2="17" y2="17"&gt;&lt;/line&gt;
+              &lt;polyline points="17 7 17 17 7 17"&gt;&lt;/polyline&gt;
+            &lt;/svg&gt;
+          &lt;/button&gt;
+          &lt;/div&gt;
+        `;
+      }
+    });
+    
+    hyperElement('dashboard-with-overlay', {
+      render: (Html) =&gt; {
+        const items = [
+          { id: 'revenue', tag: 'revenue-widget', can: ['drag'] },
+          { id: 'risk', tag: 'risk-widget', can: ['drag', 'resize'] },
+          { id: 'orders', tag: 'orders-widget', can: ['resize'] }
+        ];
+        const positions = {
+          version: 1,
+          columns: 12,
+          items: [
+            { id: 'risk', x: 0, y: 0, w: 4, h: 2 },
+            { id: 'revenue', x: 4, y: 0, w: 4, h: 2 },
+            { id: 'orders', x: 7, y: 0, w: 3, h: 2 }
+          ]
+        };
+    
+        return Html`
+          &lt;hyper-layout edit=${true} items=${items} positions=${positions} overlay="sample-overlay"&gt;
+            &lt;revenue-widget&gt;&lt;/revenue-widget&gt;
+            &lt;risk-widget&gt;&lt;/risk-widget&gt;
+            &lt;orders-widget&gt;&lt;/orders-widget&gt;
+          &lt;/hyper-layout&gt;
+        `;
+      }
+    });
+    
+    document.getElementById('custom-overlay-layout-output').innerHTML = '&lt;dashboard-with-overlay&gt;&lt;/dashboard-with-overlay&gt;';</code></pre>
+          <div id="custom-overlay-layout-output"></div>
+          <script type="module">
+            await window.hyperElementReady;
+            (async function () {
+              function assert(condition, message) {
+                if (!condition) throw new Error(message);
+              }
+              function nextFrame() {
+                return new Promise((resolve) =>
+                  requestAnimationFrame(() => requestAnimationFrame(resolve))
+                );
+              }
+              function firePointer(target, type, x, y) {
+                target.dispatchEvent(
+                  new PointerEvent(type, {
+                    bubbles: true,
+                    clientX: x,
+                    clientY: y,
+                    pointerId: 9,
+                  })
+                );
+              }
+              function waitForHyperElement() {
+                if (window.hyperElement) return Promise.resolve();
+                if (window.hyperElementReady) return window.hyperElementReady;
+                return new Promise((resolve) =>
+                  window.addEventListener('hyper-element-loaded', resolve, {
+                    once: true,
+                  })
+                );
+              }
+    
+              const section = document.querySelector(
+                '[data-test="hyper-layout-custom-overlay-example"]'
+              );
+              const host = document.getElementById('custom-overlay-layout-output');
+              const probeRoot = document.createElement('div');
+              probeRoot.dataset.hlProbeRoot = '';
+              section.appendChild(probeRoot);
+              await waitForHyperElement();
+              const hyperElement = window.hyperElement;
+              eval(section.querySelector('pre code').textContent);
+              await nextFrame();
+    
+              function defineProbeWidget(tag, label) {
+                if (customElements.get(tag)) return;
+                hyperElement(tag, {
+                  render: (Html, ctx) =>
+                    Html`<button class="card">${ctx.attrs.label || label}</button>`,
+                });
+              }
+              defineProbeWidget('blocked-widget', 'Blocked');
+              if (!customElements.get('blocked-overlay-layout-demo')) {
+                hyperElement('blocked-overlay-layout-demo', {
+                  setup: (ctx) => {
+                    ctx.items = [{ id: 'blocked', tag: 'blocked-widget', can: [] }];
+                    ctx.positions = {
+                      items: [{ id: 'blocked', x: 0, y: 0, w: 2, h: 1 }],
+                    };
+                  },
+                  render: (Html, ctx) => Html`
+            <hyper-layout
+              style=${{ width: '240px' }}
+              edit=${true}
+              items=${ctx.items}
+              positions=${ctx.positions}
+            >
+              <blocked-widget></blocked-widget>
+            </hyper-layout>
+          `,
+                });
+              }
+    
+              probeRoot.insertAdjacentHTML(
+                'beforeend',
+                '<blocked-overlay-layout-demo></blocked-overlay-layout-demo>'
+              );
+              await nextFrame();
+              const layout = host.querySelector(
+                'dashboard-with-overlay hyper-layout'
+              );
+    
+              firePointer(layout, 'pointerdown', 1, 1);
+              const riskOverlay = layout.querySelector(
+                '[data-layout-id="risk"] sample-overlay'
+              );
+              assert(
+                riskOverlay &&
+                  riskOverlay.hasAttribute('can-drag') &&
+                  riskOverlay.hasAttribute('can-resize'),
+                'custom overlay receives capability attributes'
+              );
+              assert(
+                !riskOverlay.querySelector('[data-role="drag"]').hidden &&
+                  !riskOverlay.querySelector('[data-role="resize"]').hidden,
+                'both-capability custom overlay shows drag and resize controls'
+              );
+              assert(
+                riskOverlay.textContent.includes('risk editor') &&
+                  riskOverlay.textContent.includes('risk overlay'),
+                'custom overlay renders developer-supplied content from ctx.attrs'
+              );
+              const riskWrapperRect = layout
+                .querySelector('[data-layout-id="risk"]')
+                .getBoundingClientRect();
+              const riskOverlayRect = riskOverlay.getBoundingClientRect();
+              assert(
+                Math.abs(riskOverlayRect.width - riskWrapperRect.width) < 1 &&
+                  Math.abs(riskOverlayRect.height - riskWrapperRect.height) < 1,
+                'custom overlay stretches to the full item bounds'
+              );
+              const riskBefore = layout.engine.get('risk').x;
+              firePointer(
+                riskOverlay.querySelector('[data-role="drag"]'),
+                'pointerdown',
+                40,
+                40
+              );
+              firePointer(document, 'pointermove', 170, 40);
+              firePointer(document, 'pointerup', 170, 40);
+              await nextFrame();
+              assert(
+                layout.engine.get('risk').x !== riskBefore,
+                'custom overlay callback starts drag'
+              );
+              const widthBefore = layout.engine.get('risk').w;
+              firePointer(
+                riskOverlay.querySelector('[data-role="resize"]'),
+                'pointerdown',
+                220,
+                80
+              );
+              firePointer(document, 'pointermove', 340, 130);
+              firePointer(document, 'pointerup', 340, 130);
+              await nextFrame();
+              assert(
+                layout.engine.get('risk').w > widthBefore,
+                'custom overlay callback starts resize'
+              );
+              const revenueOverlay = layout.querySelector(
+                '[data-layout-id="revenue"] sample-overlay'
+              );
+              assert(
+                revenueOverlay.textContent.includes('revenue editor') &&
+                  revenueOverlay.textContent.includes('revenue overlay'),
+                'drag-only custom overlay renders from ctx.attrs'
+              );
+              assert(
+                !revenueOverlay.querySelector('[data-role="drag"]').hidden &&
+                  revenueOverlay.querySelector('[data-role="resize"]').hidden,
+                'drag-only custom overlay hides resize control'
+              );
+              const revenueBefore = layout.engine.get('revenue').x;
+              const revenueRect = revenueOverlay.getBoundingClientRect();
+              firePointer(
+                revenueOverlay.querySelector('[data-role="drag"]'),
+                'pointerdown',
+                revenueRect.left + 40,
+                revenueRect.top + 40
+              );
+              firePointer(
+                document,
+                'pointermove',
+                revenueRect.left + 140,
+                revenueRect.top + 40
+              );
+              firePointer(
+                document,
+                'pointerup',
+                revenueRect.left + 140,
+                revenueRect.top + 40
+              );
+              await nextFrame();
+              assert(
+                layout.engine.get('revenue').x !== revenueBefore,
+                'can drag-only item infers drag from custom overlay'
+              );
+              layout.positions = {
+                version: 1,
+                columns: 12,
+                items: [
+                  { id: 'risk', x: 0, y: 0, w: 4, h: 2 },
+                  { id: 'revenue', x: 4, y: 0, w: 4, h: 2 },
+                  { id: 'orders', x: 8, y: 0, w: 3, h: 2 },
+                ],
+              };
+              await nextFrame();
+              const inferredOverlay = layout.querySelector(
+                '[data-layout-id="risk"] sample-overlay'
+              );
+              const inferredBefore = layout.engine.get('risk').x;
+              const riskRect = inferredOverlay.getBoundingClientRect();
+              firePointer(
+                inferredOverlay,
+                'pointerdown',
+                riskRect.left + 4,
+                riskRect.top + 4
+              );
+              firePointer(
+                document,
+                'pointermove',
+                riskRect.left + 140,
+                riskRect.top + 4
+              );
+              firePointer(
+                document,
+                'pointerup',
+                riskRect.left + 140,
+                riskRect.top + 4
+              );
+              await nextFrame();
+              assert(
+                layout.engine.get('risk').x !== inferredBefore,
+                'both-capability overlay infers drag away from resize corner'
+              );
+              const ordersBefore = { ...layout.engine.get('orders') };
+              const ordersOverlay = layout.querySelector(
+                '[data-layout-id="orders"] sample-overlay'
+              );
+              assert(
+                ordersOverlay.textContent.includes('orders overlay'),
+                'resize-only custom overlay renders from ctx.attrs'
+              );
+              assert(
+                ordersOverlay.querySelector('[data-role="drag"]').hidden &&
+                  !ordersOverlay.querySelector('[data-role="resize"]').hidden,
+                'resize-only custom overlay hides drag control'
+              );
+              const rect = ordersOverlay.getBoundingClientRect();
+              firePointer(
+                ordersOverlay.querySelector('[data-role="resize"]'),
+                'pointerdown',
+                rect.right - 4,
+                rect.bottom - 4
+              );
+              firePointer(
+                document,
+                'pointermove',
+                rect.right + 240,
+                rect.bottom + 80
+              );
+              firePointer(
+                document,
+                'pointerup',
+                rect.right + 240,
+                rect.bottom + 80
+              );
+              await nextFrame();
+              const ordersAfter = layout.engine.get('orders');
+              assert(
+                ordersAfter.noMove === true &&
+                  (ordersAfter.w > ordersBefore.w ||
+                    ordersAfter.h > ordersBefore.h),
+                `can resize-only item accepts custom overlay resize: ${JSON.stringify(ordersAfter)}`
+              );
+              const blocked = probeRoot.querySelector(
+                'blocked-overlay-layout-demo hyper-layout'
+              );
+              const lockedBefore = { ...blocked.engine.get('blocked') };
+              const lockedOverlay = blocked.querySelector('[data-hl-overlay]');
+              firePointer(lockedOverlay, 'pointerdown', 20, 20);
+              firePointer(document, 'pointermove', 180, 20);
+              firePointer(document, 'pointerup', 180, 20);
+              await nextFrame();
+              assert(
+                blocked.engine.get('blocked').x === lockedBefore.x &&
+                  blocked.engine.get('blocked').w === lockedBefore.w,
+                'empty can list prevents inferred actions'
+              );
+              layout.overlay = '';
+              await nextFrame();
+              assert(
+                layout.querySelector(
+                  '[data-layout-id="risk"] hyper-layout-default-overlay'
+                ),
+                'clearing overlay property restores default overlay'
+              );
+              layout.overlay = 'sample-overlay';
+              layout.positions = {
+                version: 1,
+                columns: 12,
+                items: [
+                  { id: 'risk', x: 0, y: 0, w: 4, h: 2 },
+                  { id: 'revenue', x: 4, y: 0, w: 4, h: 2 },
+                  { id: 'orders', x: 7, y: 0, w: 3, h: 2 },
+                ],
+              };
+              await nextFrame();
+              section.dataset.testResult = 'pass';
+            })().catch((error) => {
+              console.error(error);
+              document.querySelector(
+                '[data-test="hyper-layout-custom-overlay-example"]'
+              ).dataset.testResult = 'fail';
+            });
+          </script>
+        </section>
+    <p>
+      <a href="index.html">&larr; Back to Kitchen Sink</a>
+    </p>
+  </body>
+</html>

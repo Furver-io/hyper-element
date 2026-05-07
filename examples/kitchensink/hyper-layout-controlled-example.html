@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Controlled Hyper Layout Example - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+          body {
+            font-family: sans-serif;
+            padding: 2rem;
+          }
+          section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+          }
+          section[data-test-result='pass'] {
+            border-color: green;
+            background: #f0fff0;
+          }
+          section[data-test-result='fail'] {
+            border-color: red;
+            background: #fff0f0;
+          }
+          .card {
+            align-items: center;
+            background: #e0f2fe;
+            border: 1px solid #0284c7;
+            box-sizing: border-box;
+            display: flex;
+            height: 100%;
+            justify-content: center;
+            min-height: 0;
+            width: 100%;
+          }
+          #layout-trash {
+            background: #fee2e2;
+            border: 1px solid #dc2626;
+            height: 48px;
+            margin-top: 12px;
+            width: 160px;
+          }
+          [data-hl-probe-root] {
+            height: 1px;
+            left: -10000px;
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            width: 1000px;
+          }
+          pre {
+            background: #f5f5f5;
+            box-sizing: border-box;
+            max-width: 100%;
+            padding: 1rem;
+            overflow-x: auto;
+            width: 100%;
+          }
+        </style>
+  </head>
+  <body>
+    <h1>Controlled Hyper Layout Example</h1>
+
+    <section
+          data-test="hyper-layout-controlled-example"
+          data-test-result="pending"
+        >
+          <h2>Controlled Hyper Layout Example</h2>
+          <pre><code>function defineWidget(tag, label) {
+      if (customElements.get(tag)) return;
+      hyperElement(tag, {
+        render: (Html, ctx) =&gt; Html`&lt;button class="card"&gt;${ctx.attrs.label || label}&lt;/button&gt;`
+      });
+    }
+    
+    defineWidget('revenue-widget', 'Revenue');
+    defineWidget('risk-widget', 'Risk');
+    defineWidget('orders-widget', 'Orders');
+    
+    let positions = {
+      version: 1,
+      columns: 12,
+      items: [
+        { id: 'revenue', x: 0, y: 0, w: 4, h: 2 },
+        { id: 'risk', x: 4, y: 0, w: 4, h: 2 },
+        { id: 'orders', x: 8, y: 0, w: 4, h: 2 }
+      ]
+    };
+    
+    function persistPositions(_event, nextPositions) {
+      positions = nextPositions;
+    }
+    
+    hyperElement('controlled-dashboard', {
+      render: (Html, ctx) =&gt; {
+        const items = [
+          { id: 'revenue', tag: 'revenue-widget', can: ['drag'] },
+          { id: 'risk', tag: 'risk-widget', can: ['drag', 'resize'] },
+          { id: 'orders', tag: 'orders-widget', can: ['resize'] }
+        ];
+    
+        return Html`
+          &lt;hyper-layout edit=${true} cell-height="120" items=${items} positions=${positions} onchange=${persistPositions}&gt;
+            &lt;revenue-widget&gt;&lt;/revenue-widget&gt;
+            &lt;risk-widget&gt;&lt;/risk-widget&gt;
+            &lt;orders-widget&gt;&lt;/orders-widget&gt;
+          &lt;/hyper-layout&gt;
+        `;
+      }
+    });
+    
+    document.getElementById('controlled-layout-output').innerHTML = '&lt;controlled-dashboard&gt;&lt;/controlled-dashboard&gt;';</code></pre>
+          <div id="controlled-layout-output"></div>
+          <script type="module">
+            await window.hyperElementReady;
+            (async function () {
+              function assert(condition, message) {
+                if (!condition) throw new Error(message);
+              }
+              function nextFrame() {
+                return new Promise((resolve) =>
+                  requestAnimationFrame(() => requestAnimationFrame(resolve))
+                );
+              }
+              function firePointer(target, type, x, y) {
+                target.dispatchEvent(
+                  new PointerEvent(type, {
+                    bubbles: true,
+                    clientX: x,
+                    clientY: y,
+                    pointerId: 7,
+                  })
+                );
+              }
+              function waitForHyperElement() {
+                if (window.hyperElement) return Promise.resolve();
+                if (window.hyperElementReady) return window.hyperElementReady;
+                return new Promise((resolve) =>
+                  window.addEventListener('hyper-element-loaded', resolve, {
+                    once: true,
+                  })
+                );
+              }
+    
+              const section = document.querySelector(
+                '[data-test="hyper-layout-controlled-example"]'
+              );
+              const host = document.getElementById('controlled-layout-output');
+              const probeRoot = document.createElement('div');
+              probeRoot.dataset.hlProbeRoot = '';
+              section.appendChild(probeRoot);
+              await waitForHyperElement();
+              const hyperElement = window.hyperElement;
+              eval(section.querySelector('pre code').textContent);
+              await nextFrame();
+    
+              function defineProbeWidget(tag, label) {
+                if (customElements.get(tag)) return;
+                hyperElement(tag, {
+                  render: (Html, ctx) =>
+                    Html`<button class="card">${ctx.attrs.label || label}</button>`,
+                });
+              }
+              defineProbeWidget('feedback-a-widget', 'Feedback A');
+              defineProbeWidget('feedback-b-widget', 'Feedback B');
+    
+              const feedbackItems = [
+                { id: 'feedback-a', tag: 'feedback-a-widget' },
+                { id: 'feedback-b', tag: 'feedback-b-widget' },
+              ];
+              let feedbackPositions = {
+                items: [
+                  { id: 'feedback-a', x: 0, y: 0, w: 1, h: 1 },
+                  { id: 'feedback-b', x: 1, y: 0, w: 1, h: 1 },
+                ],
+              };
+              let feedbackChanges = 0;
+              let renderFeedback = () => {};
+              function handleFeedbackChange(_event, nextPositions) {
+                feedbackChanges += 1;
+                feedbackPositions = nextPositions;
+                renderFeedback();
+              }
+              if (!customElements.get('controlled-feedback-demo')) {
+                hyperElement('controlled-feedback-demo', {
+                  setup: (ctx, onNext) => {
+                    renderFeedback = onNext(() => ({
+                      positions: feedbackPositions,
+                    }));
+                  },
+                  render: (Html, ctx, store) => Html`
+            <hyper-layout
+              style=${{ width: '420px' }}
+              edit=${true}
+              items=${feedbackItems}
+              positions=${store?.positions || feedbackPositions}
+              onchange=${handleFeedbackChange}
+            >
+              <feedback-a-widget></feedback-a-widget>
+              <feedback-b-widget></feedback-b-widget>
+            </hyper-layout>
+          `,
+                });
+              }
+    
+              probeRoot.insertAdjacentHTML(
+                'beforeend',
+                '<controlled-feedback-demo></controlled-feedback-demo>'
+              );
+              await nextFrame();
+    
+              const demo = host.querySelector('controlled-dashboard');
+              const layout = demo.querySelector('hyper-layout');
+              const controlledChanges = [];
+              layout.addEventListener('change', (event) =>
+                controlledChanges.push(event.detail.positions)
+              );
+              // The controlled example is executable documentation, so every rendered direct child must be represented by persisted state.
+              assert(
+                layout.save().items.length === 3,
+                'controlled positions include every rendered item'
+              );
+              assert(
+                layout.engine.get('orders').x === 8,
+                'controlled example places orders from persisted state'
+              );
+              assert(
+                layout.engine.get('revenue').noResize === true,
+                'items.can disables revenue resize'
+              );
+              assert(
+                layout.engine.get('orders').noMove === true,
+                'items.can disables orders drag'
+              );
+              const revenueBefore = layout.engine.get('revenue').x;
+              firePointer(
+                layout.querySelector('[data-layout-id="revenue"] [data-hl-drag]'),
+                'pointerdown',
+                40,
+                40
+              );
+              firePointer(document, 'pointermove', 260, 40);
+              firePointer(document, 'pointerup', 260, 40);
+              await nextFrame();
+              assert(
+                layout.engine.get('revenue').x !== revenueBefore,
+                'controlled drag updates positions through onchange'
+              );
+              assert(
+                controlledChanges.some((positions) =>
+                  positions.items.some((item) => item.id === 'revenue')
+                ),
+                'controlled parent received positions'
+              );
+    
+              const feedbackDemo = probeRoot.querySelector(
+                'controlled-feedback-demo'
+              );
+              const feedback = feedbackDemo.querySelector('hyper-layout');
+              firePointer(
+                feedback.querySelector('[data-hl-drag]'),
+                'pointerdown',
+                20,
+                20
+              );
+              firePointer(document, 'pointermove', 160, 20);
+              firePointer(document, 'pointerup', 160, 20);
+              await nextFrame();
+              assert(
+                feedbackChanges === 1,
+                'feeding controlled positions back does not recurse'
+              );
+              // The interaction assertion mutates the public demo, so reset it to the same stable state shown in the visible snippet.
+              layout.positions = {
+                version: 1,
+                columns: 12,
+                items: [
+                  { id: 'revenue', x: 0, y: 0, w: 4, h: 2 },
+                  { id: 'risk', x: 4, y: 0, w: 4, h: 2 },
+                  { id: 'orders', x: 8, y: 0, w: 4, h: 2 },
+                ],
+              };
+              await nextFrame();
+              section.dataset.testResult = 'pass';
+            })().catch((error) => {
+              console.error(error);
+              document.querySelector(
+                '[data-test="hyper-layout-controlled-example"]'
+              ).dataset.testResult = 'fail';
+            });
+          </script>
+        </section>
+    <p>
+      <a href="index.html">&larr; Back to Kitchen Sink</a>
+    </p>
+  </body>
+</html>

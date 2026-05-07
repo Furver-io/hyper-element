@@ -59,7 +59,10 @@ This directory serves two purposes:
 ### Composition
 
 - [nested-elements.html](nested-elements.html) - Parent-child custom element composition
-- [hyper-layout.html](hyper-layout.html) - `<hyper-layout>` controlled/uncontrolled dashboard editing, capability-driven drag/resize, custom overlays, positions reconciliation, and removal
+- [hyper-layout-core.html](hyper-layout-core.html) - `<hyper-layout>` dashboard editing with edit toggles, add/remove controls, trash removal, positions reconciliation, and persisted placement
+- [hyper-layout-controlled-example.html](hyper-layout-controlled-example.html) - Controlled `<hyper-layout>` usage with parent-owned `items`, `positions`, and `onchange` persistence
+- [hyper-layout-uncontrolled-example.html](hyper-layout-uncontrolled-example.html) - Uncontrolled `<hyper-layout>` usage with direct-child auto-placement and ephemeral save output
+- [hyper-layout-custom-overlay-example.html](hyper-layout-custom-overlay-example.html) - Custom overlay rendering driven by item `can` capabilities for drag and resize controls
 - [nested-each-deep.html](nested-each-deep.html) - Deeply nested `{+each}` with property references
 - [same-type-nesting.html](same-type-nesting.html) - Same custom element nested in itself
 - [child-redraw.html](child-redraw.html) - Parent-child attribute passing and re-renders
@@ -67,9 +70,10 @@ This directory serves two purposes:
 - [child-styles.html](child-styles.html) - Passing style objects to children
 - [complex-type-attrs.html](complex-type-attrs.html) - Passing objects/functions to child elements
 
-The Hyper Layout page renders its live demos from the displayed source blocks.
-When changing those examples, update the displayed source first so the rendered
-demo, documentation, and E2E scenario coverage all describe the same behavior.
+The Hyper Layout examples render their live demos from the displayed source
+blocks. When changing those examples, update the displayed source first so the
+rendered demo, documentation, and E2E scenario coverage all describe the same
+behavior.
 
 ### Signals & Reactivity
 
