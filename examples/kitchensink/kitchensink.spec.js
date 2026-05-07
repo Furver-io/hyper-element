@@ -15,6 +15,25 @@ const {
 } = require('fs');
 const path = require('path');
 
+// The bundle project intentionally opens pages through file:// because that is
+// the developer workflow these examples promise to support. Source coverage
+// still runs over HTTP because browser coverage needs the served ESM graph, but
+// bundle verification must exercise the same direct-open path a developer uses
+// from the Kitchen Sink index or from a file browser. This catches missing
+// build artifacts and CORS regressions before a page can show only source code.
+const fileUrlFor = (file) =>
+  `file://${path.join(__dirname, file)}#mode=bundle`;
+
+// Some kitchen sink pages deliberately exercise source-module dynamic imports.
+// Chromium blocks those imports from file:// origins, so those pages keep the
+// existing served bundle path while ordinary bundle examples use file://. The
+// split stress page from the browser regression has no dynamic import and is
+// therefore verified through the direct file path users actually open.
+const needsServedBundleUrl = (file) => {
+  const html = readFileSync(path.join(__dirname, file), 'utf8');
+  return html.includes('await import(') || html.includes('import(');
+};
+
 // Auto-discover all HTML files in kitchensink directory (except index.html)
 const htmlFiles = readdirSync(__dirname).filter(
   (f) => f.endsWith('.html') && f !== 'index.html'
@@ -51,10 +70,16 @@ for (const file of htmlFiles) {
       logs.push(`[pageerror] ${err.message}`);
     });
 
-    // Navigate to page with appropriate mode parameter
-    // Use hash instead of query string since serve may strip query params
+    // Navigate to the page through the protocol that matches the mode. Source
+    // mode stays on HTTP so ESM imports and coverage work. Bundle mode uses the
+    // direct file URL that developers open locally, which proves the displayed
+    // example source can execute without the test server hiding file:// issues.
     const modeParam = `#mode=${testMode}`;
-    await page.goto(`/examples/kitchensink/${file}${modeParam}`);
+    const pageUrl =
+      isBundleMode && !needsServedBundleUrl(file)
+        ? fileUrlFor(file)
+        : `/examples/kitchensink/${file}${modeParam}`;
+    await page.goto(pageUrl);
 
     // For source mode, wait for ES modules to load
     if (isSourceMode) {

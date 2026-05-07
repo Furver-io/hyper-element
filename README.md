@@ -2563,6 +2563,7 @@ npm run test:bundle
 
 - Loads built `build/hyperElement.min.js`
 - Verifies nothing broke during bundling
+- Opens ordinary kitchen sink examples through direct `file://` URLs so local browser review uses the same bundle path developers open manually
 - No coverage collected (just verification)
 
 ### Full Test Suite

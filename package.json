@@ -40,7 +40,7 @@
     "build": "node scripts/build.js",
     "test": "npm run test:src && npm run test:bundle",
     "test:src": "rm -rf coverage && playwright test --project=source-coverage && npm run test:ssr-coverage && npm run test:coverage-report",
-    "test:bundle": "npm run build && playwright test --project=bundle-verify; rm -rf build",
+    "test:bundle": "npm run build && playwright test --project=bundle-verify",
     "test:ssr": "node test/ssr.test.mjs",
     "test:ssr-coverage": "node test/ssr-with-coverage.mjs",
     "test:coverage-report": "node test/coverage-report.mjs",

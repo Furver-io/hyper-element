@@ -195,7 +195,9 @@ Each HTML file in `examples/kitchensink/` is a self-contained test scenario that
 The `kitchensink.spec.js` file:
 
 - Auto-discovers all HTML test files
-- Runs tests against the minified build (`build/hyperElement.min.js`)
+- Runs source coverage over HTTP so ES modules and V8 coverage work
+- Runs bundle verification through direct `file://` pages when possible so local browser examples prove the same path developers open manually
+- Falls back to the served bundle path only for examples that intentionally use dynamic `import()`, because Chromium blocks those imports from a `file://` origin
 - Collects V8 coverage data mapped to `src/` files
 - Validates test assertions
 - Reports console errors on failure
@@ -330,7 +332,10 @@ On mismatch, logs `Expected: ... Actual: ...` to console and sets
 
 ## Test Configuration
 
-Tests run against the minified production build (`build/hyperElement.min.js`) to ensure the shipped code works correctly. Coverage is collected and mapped back to the source files in `src/` using source maps.
+Source tests run over HTTP so coverage can be collected and mapped back to the
+source files in `src/`. Bundle verification builds the browser bundle and then
+opens ordinary examples through direct `file://` URLs so the same copyable pages
+developers review locally cannot regress into source-only, blank demos.
 
 ## Debugging Failed Tests
 
