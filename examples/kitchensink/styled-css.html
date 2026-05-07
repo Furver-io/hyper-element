@@ -308,12 +308,12 @@
 
       hyperElement('styled-css-toggle-child', {
         render: (Html, ctx) => Html`
-          <button ?disabled=${ctx.attrs.disabled}>Toggle Child</button>
+          <button disabled=${ctx.attrs.disabled ? '' : null}>Toggle Child</button>
         `,
       });
       hyperElement('styled-css-toggle-parent', {
         render: (Html) => Html`
-          <styled-css-toggle-child ?disabled=${false}></styled-css-toggle-child>
+          <styled-css-toggle-child disabled=${false}></styled-css-toggle-child>
         `,
       });
       const toggleParent = document.createElement('styled-css-toggle-parent');

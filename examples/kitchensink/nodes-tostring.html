@@ -39,20 +39,22 @@
   </head>
   <body>
     <h1>Nodes toString Coverage</h1>
-    <p>Tests Element.toString() code paths in src/render/nodes.js lines 89-113.</p>
+    <p>
+      Tests Element.toString() code paths in src/render/nodes.js lines 89-113.
+    </p>
 
     <!-- Test 1: Boolean attributes (lines 95-96) -->
     <section data-test="boolean-attrs-html" data-test-result="pending">
       <h2>Boolean Attributes (HTML mode)</h2>
-      <p>Tests boolean attribute rendering with ?attr=${true} syntax.</p>
+      <p>Tests static boolean attribute rendering in HTML mode.</p>
       <pre><code>customElements.define(
   'boolean-attrs-html-elem',
   class extends hyperElement {
     render(Html) {
       Html`&lt;div&gt;
-        &lt;button id="btn-disabled" ?disabled=${true}&gt;Disabled&lt;/button&gt;
-        &lt;input id="input-checked" type="checkbox" ?checked=${true}&gt;
-        &lt;div id="div-hidden" ?hidden=${false}&gt;Visible&lt;/div&gt;
+        &lt;button id="btn-disabled" disabled&gt;Disabled&lt;/button&gt;
+        &lt;input id="input-checked" type="checkbox" checked&gt;
+        &lt;div id="div-hidden"&gt;Visible&lt;/div&gt;
       &lt;/div&gt;`;
     }
   }
@@ -64,14 +66,21 @@ document.getElementById('boolean-attrs-html-output').innerHTML =
       <script type="module">
         await window.hyperElementReady;
         // Single source of truth: read snippet, execute it, snapshot result.
-        const code = document.querySelector('[data-test="boolean-attrs-html"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="boolean-attrs-html"] pre code'
+        ).textContent;
         eval(code);
         // Single-phase render. The snapshot pins the rendered boolean attrs:
-        // disabled+checked become bare attrs, ?hidden=false is omitted, and
+        // disabled+checked become bare attrs, hidden remains omitted, and
         // hyper-element preserves the surrounding whitespace.
-        const expected = '<div id="boolean-attrs-html-output"><boolean-attrs-html-elem><div>\n        <button id="btn-disabled" disabled="">Disabled</button>\n        <input id="input-checked" type="checkbox" checked="">\n        <div id="div-hidden">Visible</div>\n      </div></boolean-attrs-html-elem></div>';
+        const expected =
+          '<div id="boolean-attrs-html-output"><boolean-attrs-html-elem><div>\n        <button id="btn-disabled" disabled="">Disabled</button>\n        <input id="input-checked" type="checkbox" checked="">\n        <div id="div-hidden">Visible</div>\n      </div></boolean-attrs-html-elem></div>';
         setTimeout(() => {
-          window.assertSnapshot('boolean-attrs-html', document.getElementById('boolean-attrs-html-output'), expected);
+          window.assertSnapshot(
+            'boolean-attrs-html',
+            document.getElementById('boolean-attrs-html-output'),
+            expected
+          );
         }, 100);
       </script>
     </section>
@@ -85,7 +94,7 @@ document.getElementById('boolean-attrs-html-output').innerHTML =
   class extends hyperElement {
     render(Html) {
       Html`&lt;svg width="100" height="100"&gt;
-        &lt;rect id="svg-rect" width="50" height="50" ?focusable=${true}/&gt;
+        &lt;rect id="svg-rect" width="50" height="50" focusable/&gt;
       &lt;/svg&gt;`;
     }
   }
@@ -96,11 +105,18 @@ document.getElementById('boolean-attrs-svg-output').innerHTML =
       <div id="boolean-attrs-svg-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="boolean-attrs-svg"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="boolean-attrs-svg"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="boolean-attrs-svg-output"><boolean-attrs-svg-elem><svg width="100" height="100">\n        <rect id="svg-rect" width="50" height="50" focusable=""></rect>\n      </svg></boolean-attrs-svg-elem></div>';
+        const expected =
+          '<div id="boolean-attrs-svg-output"><boolean-attrs-svg-elem><svg width="100" height="100">\n        <rect id="svg-rect" width="50" height="50" focusable=""></rect>\n      </svg></boolean-attrs-svg-elem></div>';
         setTimeout(() => {
-          window.assertSnapshot('boolean-attrs-svg', document.getElementById('boolean-attrs-svg-output'), expected);
+          window.assertSnapshot(
+            'boolean-attrs-svg',
+            document.getElementById('boolean-attrs-svg-output'),
+            expected
+          );
         }, 100);
       </script>
     </section>
@@ -127,11 +143,18 @@ document.getElementById('text-elements-output').innerHTML =
       <div id="text-elements-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="text-elements"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="text-elements"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="text-elements-output"><text-elements-elem><div>\n        <style id="inline-style">.test-box { background: blue; }</style>\n        <textarea id="inline-textarea">Initial content here</textarea>\n        <div class="test-box" style="width: 20px; height: 20px;"></div>\n      </div></text-elements-elem></div>';
+        const expected =
+          '<div id="text-elements-output"><text-elements-elem><div>\n        <style id="inline-style">.test-box { background: blue; }</style>\n        <textarea id="inline-textarea">Initial content here</textarea>\n        <div class="test-box" style="width: 20px; height: 20px;"></div>\n      </div></text-elements-elem></div>';
         setTimeout(() => {
-          window.assertSnapshot('text-elements', document.getElementById('text-elements-output'), expected);
+          window.assertSnapshot(
+            'text-elements',
+            document.getElementById('text-elements-output'),
+            expected
+          );
         }, 100);
       </script>
     </section>
@@ -158,11 +181,18 @@ document.getElementById('xml-self-closing-output').innerHTML =
       <div id="xml-self-closing-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="xml-self-closing"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="xml-self-closing"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="xml-self-closing-output"><xml-self-closing-elem><svg id="svg-container" width="100" height="100">\n        <circle id="circle" cx="50" cy="50" r="25" fill="red"></circle>\n        <rect id="rect" x="10" y="10" width="30" height="30" fill="blue"></rect>\n        <line id="line" x1="0" y1="0" x2="100" y2="100" stroke="green"></line>\n      </svg></xml-self-closing-elem></div>';
+        const expected =
+          '<div id="xml-self-closing-output"><xml-self-closing-elem><svg id="svg-container" width="100" height="100">\n        <circle id="circle" cx="50" cy="50" r="25" fill="red"></circle>\n        <rect id="rect" x="10" y="10" width="30" height="30" fill="blue"></rect>\n        <line id="line" x1="0" y1="0" x2="100" y2="100" stroke="green"></line>\n      </svg></xml-self-closing-elem></div>';
         setTimeout(() => {
-          window.assertSnapshot('xml-self-closing', document.getElementById('xml-self-closing-output'), expected);
+          window.assertSnapshot(
+            'xml-self-closing',
+            document.getElementById('xml-self-closing-output'),
+            expected
+          );
         }, 100);
       </script>
     </section>
@@ -190,11 +220,18 @@ document.getElementById('void-elements-output').innerHTML =
       <div id="void-elements-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="void-elements"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="void-elements"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="void-elements-output"><void-elements-elem><div>\n        <img id="img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="test">\n        <br id="br">\n        <hr id="hr">\n        <input id="input" type="text" placeholder="test">\n      </div></void-elements-elem></div>';
+        const expected =
+          '<div id="void-elements-output"><void-elements-elem><div>\n        <img id="img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="test">\n        <br id="br">\n        <hr id="hr">\n        <input id="input" type="text" placeholder="test">\n      </div></void-elements-elem></div>';
         setTimeout(() => {
-          window.assertSnapshot('void-elements', document.getElementById('void-elements-output'), expected);
+          window.assertSnapshot(
+            'void-elements',
+            document.getElementById('void-elements-output'),
+            expected
+          );
         }, 100);
       </script>
     </section>
@@ -223,11 +260,18 @@ document.getElementById('regular-elements-output').innerHTML =
       <div id="regular-elements-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="regular-elements"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="regular-elements"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="regular-elements-output"><regular-elements-elem><div id="parent">\n        <span id="child">Child text</span>\n        <p id="paragraph">Paragraph content</p>\n        <article id="article">\n          <section id="section">Nested content</section>\n        </article>\n      </div></regular-elements-elem></div>';
+        const expected =
+          '<div id="regular-elements-output"><regular-elements-elem><div id="parent">\n        <span id="child">Child text</span>\n        <p id="paragraph">Paragraph content</p>\n        <article id="article">\n          <section id="section">Nested content</section>\n        </article>\n      </div></regular-elements-elem></div>';
         setTimeout(() => {
-          window.assertSnapshot('regular-elements', document.getElementById('regular-elements-output'), expected);
+          window.assertSnapshot(
+            'regular-elements',
+            document.getElementById('regular-elements-output'),
+            expected
+          );
         }, 100);
       </script>
     </section>
@@ -254,11 +298,18 @@ document.getElementById('empty-nonvoid-output').innerHTML =
       <div id="empty-nonvoid-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="empty-nonvoid"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="empty-nonvoid"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="empty-nonvoid-output"><empty-nonvoid-elem><div id="container">\n        <div id="empty-div"></div>\n        <span id="empty-span"></span>\n        <p id="empty-p"></p>\n      </div></empty-nonvoid-elem></div>';
+        const expected =
+          '<div id="empty-nonvoid-output"><empty-nonvoid-elem><div id="container">\n        <div id="empty-div"></div>\n        <span id="empty-span"></span>\n        <p id="empty-p"></p>\n      </div></empty-nonvoid-elem></div>';
         setTimeout(() => {
-          window.assertSnapshot('empty-nonvoid', document.getElementById('empty-nonvoid-output'), expected);
+          window.assertSnapshot(
+            'empty-nonvoid',
+            document.getElementById('empty-nonvoid-output'),
+            expected
+          );
         }, 100);
       </script>
     </section>
@@ -281,11 +332,18 @@ document.getElementById('null-attrs-output').innerHTML =
       <div id="null-attrs-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="null-attrs"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="null-attrs"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="null-attrs-output"><null-attrs-elem><div id="target">Content</div></null-attrs-elem></div>';
+        const expected =
+          '<div id="null-attrs-output"><null-attrs-elem><div id="target">Content</div></null-attrs-elem></div>';
         setTimeout(() => {
-          window.assertSnapshot('null-attrs', document.getElementById('null-attrs-output'), expected);
+          window.assertSnapshot(
+            'null-attrs',
+            document.getElementById('null-attrs-output'),
+            expected
+          );
         }, 100);
       </script>
     </section>
@@ -293,7 +351,9 @@ document.getElementById('null-attrs-output').innerHTML =
     <!-- Test 9: Direct toString calls on node classes -->
     <section data-test="direct-tostring" data-test-result="pending">
       <h2>Direct toString() Calls</h2>
-      <p>Explicitly call toString() on Element, Fragment, Text, Comment nodes.</p>
+      <p>
+        Explicitly call toString() on Element, Fragment, Text, Comment nodes.
+      </p>
       <pre><code>// Direct toString() exercise on the node classes from render/nodes.js.
 // Each branch is asserted against a static string snapshot.
 const m = await import('hyper-element/render/nodes.js').catch(() => null);
@@ -376,7 +436,9 @@ if (!m) {
         // Single source of truth: read the snippet (which performs every
         // toString() assertion against static expected strings) and execute
         // it inside an async function to honour the top-level `await import`.
-        const code = document.querySelector('[data-test="direct-tostring"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="direct-tostring"] pre code'
+        ).textContent;
         const section = document.querySelector('[data-test="direct-tostring"]');
         try {
           const fn = new Function('return (async () => { ' + code + ' })();');

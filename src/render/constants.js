@@ -9,11 +9,11 @@ export const ATTRIBUTE = 1 << 1; // Standard attribute
 export const COMMENT = 1 << 2; // Node interpolation (comment placeholder)
 export const DATA = 1 << 3; // data-* attributes
 export const DIRECT = 1 << 4; // Direct property assignment
-export const EVENT = 1 << 5; // Event listener (@click)
+export const EVENT = 1 << 5; // Internal render-core event listener
 export const KEY = 1 << 6; // Key attribute for keying
-export const PROP = 1 << 7; // .prop direct property
+export const PROP = 1 << 7; // Internal render-core direct property
 export const TEXT = 1 << 8; // Text content (textContent)
-export const TOGGLE = 1 << 9; // Boolean toggle (?attr)
+export const TOGGLE = 1 << 9; // Internal render-core boolean toggle
 export const UNSAFE = 1 << 10; // Raw HTML (innerHTML)
 export const ATTRIBUTE_TEMPLATE = 1 << 11; // Partial interpolation ("prefix-${x}")
 

@@ -39,11 +39,11 @@ items.map((item) => html`<li>${item.name}</li>`);
 Interpolations are classified by type flags for specialized handling:
 
 - `ATTRIBUTE` - Standard HTML attributes
-- `EVENT` - Event listeners (@click, onclick)
+- `EVENT` - Internal render-core event listener path
 - `TEXT` - textContent interpolation
 - `COMMENT` - Node interpolation (between tags)
 - `ARRAY` - Array of values/nodes
-- `TOGGLE` - Boolean attributes (?disabled)
+- `TOGGLE` - Internal render-core boolean toggle path
 - `KEY` - Keyed array item tracking
 
 ## Usage

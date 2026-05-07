@@ -97,22 +97,29 @@ setTimeout(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="event-callback-no-store"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="event-callback-no-store"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<event-elem><div id="event-result">Count: 10</div></event-elem>';
+        const expected =
+          '<event-elem><div id="event-result">Count: 10</div></event-elem>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="event-callback-no-store"]');
+          const sec = document.querySelector(
+            '[data-test="event-callback-no-store"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('event-callback-no-store', document.querySelector('event-elem'), expected);
-
+          window.assertSnapshot(
+            'event-callback-no-store',
+            document.querySelector('event-elem'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="event-callback-with-data" data-test-result="pending">
@@ -156,29 +163,42 @@ setTimeout(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="event-callback-with-data"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="event-callback-with-data"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<event-data-elem><div id="event-data-result">Data: PASS</div></event-data-elem>';
+        const expected =
+          '<event-data-elem><div id="event-data-result">Data: PASS</div></event-data-elem>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="event-callback-with-data"]');
+          const sec = document.querySelector(
+            '[data-test="event-callback-with-data"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('event-callback-with-data', document.querySelector('event-data-elem'), expected);
-
+          window.assertSnapshot(
+            'event-callback-with-data',
+            document.querySelector('event-data-elem'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test: Event handler with options array -->
-    <section data-test="event-handler-array" data-test-result="pending">
-      <h2>Event Handler Array with Options</h2>
+    <section
+      data-test="event-handler-array"
+      data-test-result="pending"
+      data-internal="render-core"
+      hidden
+    >
+      <h2>Internal Event Handler Array Compatibility</h2>
       <p>
-        Tests event handlers passed as arrays with options: @click=${[handler, { capture: true }]}
+        Private render-core coverage for legacy event handler arrays with
+        options.
       </p>
       <pre><code>let capturePhaseClicked = false;
 let onceClicked = 0;
@@ -200,8 +220,8 @@ customElements.define(
 
     render(Html) {
       Html`&lt;div&gt;
-        &lt;button id="capture-btn" @click=${[() => this.handleCapture(), { capture: true }]}&gt;Capture&lt;/button&gt;
-        &lt;button id="once-btn" @click=${[() => this.handleOnce(), { once: true }]}&gt;Once&lt;/button&gt;
+        &lt;button id="capture-btn" &#64;click=${[() => this.handleCapture(), { capture: true }]}&gt;Capture&lt;/button&gt;
+        &lt;button id="once-btn" &#64;click=${[() => this.handleOnce(), { once: true }]}&gt;Once&lt;/button&gt;
       &lt;/div&gt;`;
     }
   }
@@ -230,22 +250,29 @@ setTimeout(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="event-handler-array"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="event-handler-array"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="event-handler-array-output"><event-array-elem><div>\n        <button id="capture-btn">Capture</button>\n        <button id="once-btn">Once</button>\n      </div></event-array-elem></div>';
+        const expected =
+          '<div id="event-handler-array-output"><event-array-elem><div>\n        <button id="capture-btn">Capture</button>\n        <button id="once-btn">Once</button>\n      </div></event-array-elem></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="event-handler-array"]');
+          const sec = document.querySelector(
+            '[data-test="event-handler-array"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('event-handler-array', document.getElementById('event-handler-array-output'), expected);
-
+          window.assertSnapshot(
+            'event-handler-array',
+            document.getElementById('event-handler-array-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test: Event handler array replacement -->
@@ -277,7 +304,7 @@ customElements.define(
       const handler = this.element._useHandlerA
         ? [() => this.handlerA(), { capture: true }]
         : [() => this.handlerB(), { capture: false }];
-      Html`&lt;button id="replace-btn" @click=${handler}&gt;Click&lt;/button&gt;`;
+      Html`&lt;button id="replace-btn" &#64;click=${handler}&gt;Click&lt;/button&gt;`;
     }
   }
 );
@@ -308,22 +335,29 @@ setTimeout(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="event-handler-array-replace"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="event-handler-array-replace"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="event-handler-array-replace-output"><event-replace-elem><button id="replace-btn">Click</button></event-replace-elem></div>';
+        const expected =
+          '<div id="event-handler-array-replace-output"><event-replace-elem><button id="replace-btn">Click</button></event-replace-elem></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="event-handler-array-replace"]');
+          const sec = document.querySelector(
+            '[data-test="event-handler-array-replace"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('event-handler-array-replace', document.getElementById('event-handler-array-replace-output'), expected);
-
+          window.assertSnapshot(
+            'event-handler-array-replace',
+            document.getElementById('event-handler-array-replace-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

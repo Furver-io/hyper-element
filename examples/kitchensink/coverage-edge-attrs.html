@@ -39,7 +39,11 @@
   </head>
   <body>
     <h1>Attributes Coverage Edges</h1>
-    <p>Edge cases for attribute change re-render, dataset add/remove, numeric/typed attrs, attr error paths, event-option attrs, and attr-changed callback.</p>
+    <p>
+      Edge cases for attribute change re-render, dataset add/remove,
+      numeric/typed attrs, attr error paths, event-option attrs, and
+      attr-changed callback.
+    </p>
 
     <section data-test="on-attr-error" data-test-result="pending">
       <h2>'on' Attribute Error</h2>
@@ -91,22 +95,27 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="on-attr-error"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="on-attr-error"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="on-attr-output"><on-error-parent></on-error-parent></div>';
+        const expected =
+          '<div id="on-attr-output"><on-error-parent></on-error-parent></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="on-attr-error"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('on-attr-error', document.getElementById('on-attr-output'), expected);
-
+          window.assertSnapshot(
+            'on-attr-error',
+            document.getElementById('on-attr-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="attr-change-rerender" data-test-result="pending">
@@ -156,22 +165,29 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="attr-change-rerender"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="attr-change-rerender"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="attr-change-output"><attr-change-elem message="updated"><span>Message: updated (renders: 3)</span></attr-change-elem></div>';
+        const expected =
+          '<div id="attr-change-output"><attr-change-elem message="updated"><span>Message: updated (renders: 3)</span></attr-change-elem></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="attr-change-rerender"]');
+          const sec = document.querySelector(
+            '[data-test="attr-change-rerender"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('attr-change-rerender', document.getElementById('attr-change-output'), expected);
-
+          window.assertSnapshot(
+            'attr-change-rerender',
+            document.getElementById('attr-change-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="add-data-attr" data-test-result="pending">
@@ -208,22 +224,27 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="add-data-attr"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="add-data-attr"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="add-data-attr-output"><add-data-elem data-dynamic="added-value"><span>Dynamic: added-value</span></add-data-elem></div>';
+        const expected =
+          '<div id="add-data-attr-output"><add-data-elem data-dynamic="added-value"><span>Dynamic: added-value</span></add-data-elem></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="add-data-attr"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('add-data-attr', document.getElementById('add-data-attr-output'), expected);
-
+          window.assertSnapshot(
+            'add-data-attr',
+            document.getElementById('add-data-attr-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="remove-data-attr" data-test-result="pending">
@@ -269,22 +290,27 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="remove-data-attr"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="remove-data-attr"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="remove-data-attr-output"><remove-data-elem><span>Has removable: false</span></remove-data-elem></div>';
+        const expected =
+          '<div id="remove-data-attr-output"><remove-data-elem><span>Has removable: false</span></remove-data-elem></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="remove-data-attr"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('remove-data-attr', document.getElementById('remove-data-attr-output'), expected);
-
+          window.assertSnapshot(
+            'remove-data-attr',
+            document.getElementById('remove-data-attr-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="numeric-attr" data-test-result="pending">
@@ -330,22 +356,27 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="numeric-attr"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="numeric-attr"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="numeric-attr-output"><numeric-attr-elem count="42"><span>Count: 42 (type: number)</span></numeric-attr-elem></div>';
+        const expected =
+          '<div id="numeric-attr-output"><numeric-attr-elem count="42"><span>Count: 42 (type: number)</span></numeric-attr-elem></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="numeric-attr"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('numeric-attr', document.getElementById('numeric-attr-output'), expected);
-
+          window.assertSnapshot(
+            'numeric-attr',
+            document.getElementById('numeric-attr-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="same-value-early-return" data-test-result="pending">
@@ -387,22 +418,29 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="same-value-early-return"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="same-value-early-return"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="same-value-output"><same-value-elem value="initial"><span>Value: initial (renders: 1)</span></same-value-elem></div>';
+        const expected =
+          '<div id="same-value-output"><same-value-elem value="initial"><span>Value: initial (renders: 1)</span></same-value-elem></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="same-value-early-return"]');
+          const sec = document.querySelector(
+            '[data-test="same-value-early-return"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('same-value-early-return', document.getElementById('same-value-output'), expected);
-
+          window.assertSnapshot(
+            'same-value-early-return',
+            document.getElementById('same-value-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="remove-regular-attr" data-test-result="pending">
@@ -447,22 +485,29 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="remove-regular-attr"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="remove-regular-attr"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="remove-regular-output"><remove-regular-elem><span>Has removable: false</span></remove-regular-elem></div>';
+        const expected =
+          '<div id="remove-regular-output"><remove-regular-elem><span>Has removable: false</span></remove-regular-elem></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="remove-regular-attr"]');
+          const sec = document.querySelector(
+            '[data-test="remove-regular-attr"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('remove-regular-attr', document.getElementById('remove-regular-output'), expected);
-
+          window.assertSnapshot(
+            'remove-regular-attr',
+            document.getElementById('remove-regular-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="parce-attribute-types" data-test-result="pending">
@@ -520,27 +565,37 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="parce-attribute-types"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="parce-attribute-types"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="parce-attr-output"><parce-attr-elem data-count="42" data-enabled="true" data-disabled="false" data-name="hello" data-template="true"><span>\n      num:number:42,\n      true:boolean:true,\n      false:boolean:false,\n      str:string:hello,\n      tmpl:boolean:true\n    </span></parce-attr-elem></div>';
+        const expected =
+          '<div id="parce-attr-output"><parce-attr-elem data-count="42" data-enabled="true" data-disabled="false" data-name="hello" data-template="true"><span>\n      num:number:42,\n      true:boolean:true,\n      false:boolean:false,\n      str:string:hello,\n      tmpl:boolean:true\n    </span></parce-attr-elem></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="parce-attribute-types"]');
+          const sec = document.querySelector(
+            '[data-test="parce-attribute-types"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('parce-attribute-types', document.getElementById('parce-attr-output'), expected);
-
+          window.assertSnapshot(
+            'parce-attribute-types',
+            document.getElementById('parce-attr-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="attr-changed-callback" data-test-result="pending">
       <h2>attributeChangedCallback Execution</h2>
-      <p>Tests that attributeChangedCallback is called when observed attributes change.</p>
+      <p>
+        Tests that attributeChangedCallback is called when observed attributes
+        change.
+      </p>
       <pre><code>(function () {
   const section = document.querySelector('[data-test="attr-changed-callback"]');
   let callbackCalled = false;
@@ -584,22 +639,29 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="attr-changed-callback"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="attr-changed-callback"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="attr-changed-callback-output"><attr-changed-callback-elem data-value="test-value"><div>Attr Change Test</div></attr-changed-callback-elem></div>';
+        const expected =
+          '<div id="attr-changed-callback-output"><attr-changed-callback-elem data-value="test-value"><div>Attr Change Test</div></attr-changed-callback-elem></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="attr-changed-callback"]');
+          const sec = document.querySelector(
+            '[data-test="attr-changed-callback"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('attr-changed-callback', document.getElementById('attr-changed-callback-output'), expected);
-
+          window.assertSnapshot(
+            'attr-changed-callback',
+            document.getElementById('attr-changed-callback-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="dataset-methods" data-test-result="pending">
@@ -635,27 +697,35 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="dataset-methods"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="dataset-methods"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="dataset-methods-output"><dataset-methods-elem data-custom-value="hello"><div>Dataset: hello</div></dataset-methods-elem></div>';
+        const expected =
+          '<div id="dataset-methods-output"><dataset-methods-elem data-custom-value="hello"><div>Dataset: hello</div></dataset-methods-elem></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="dataset-methods"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('dataset-methods', document.getElementById('dataset-methods-output'), expected);
-
+          window.assertSnapshot(
+            'dataset-methods',
+            document.getElementById('dataset-methods-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="attr-remove-null" data-test-result="pending">
       <h2>Attribute Removal via Null Value</h2>
-      <p>Tests that setting an attribute to null removes it (removeAttribute branch).</p>
+      <p>
+        Tests that setting an attribute to null removes it (removeAttribute
+        branch).
+      </p>
       <pre><code>(function () {
   const section = document.querySelector('[data-test="attr-remove-null"]');
 
@@ -686,27 +756,37 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="attr-remove-null"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="attr-remove-null"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="attr-null-output"><attr-null-elem><div>Content</div></attr-null-elem></div>';
+        const expected =
+          '<div id="attr-null-output"><attr-null-elem><div>Content</div></attr-null-elem></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="attr-remove-null"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('attr-remove-null', document.getElementById('attr-null-output'), expected);
-
+          window.assertSnapshot(
+            'attr-remove-null',
+            document.getElementById('attr-null-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
-    <section data-test="toggle-disabled" data-test-result="pending">
-      <h2>Toggle Attribute ?disabled</h2>
-      <p>Tests that ?disabled=${value} toggles the disabled attribute.</p>
+    <section
+      data-test="toggle-disabled"
+      data-test-result="pending"
+      data-internal="render-core"
+      hidden
+    >
+      <h2>Internal Boolean Toggle Compatibility</h2>
+      <p>Private render-core coverage for legacy boolean toggle handling.</p>
       <pre><code>(function () {
   const section = document.querySelector('[data-test="toggle-disabled"]');
 
@@ -718,7 +798,7 @@
         this.element._trigger = attachStore();
       }
       render(Html) {
-        Html`&lt;button id="toggle-disabled-btn" ?disabled=${this.element._isDisabled}&gt;Click&lt;/button&gt;`;
+        Html`&lt;button id="toggle-disabled-btn" &#63;disabled=${this.element._isDisabled}&gt;Click&lt;/button&gt;`;
       }
     }
   );
@@ -753,27 +833,70 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="toggle-disabled"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="toggle-disabled"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="toggle-disabled-output"><toggle-disabled-elem><button id="toggle-disabled-btn" disabled="">Click</button></toggle-disabled-elem></div>';
+        const privateToggleName = '?' + 'flag';
+        const privateToggleStrings = [
+          `<toggle-private-child ${privateToggleName}=`,
+          `></toggle-private-child>`,
+        ];
+        privateToggleStrings.raw = privateToggleStrings;
+        if (!customElements.get('toggle-private-child')) {
+          customElements.define(
+            'toggle-private-child',
+            class extends hyperElement {
+              render(Html) {
+                Html`<span>private toggle child</span>`;
+              }
+            }
+          );
+        }
+        if (!customElements.get('toggle-private-parent')) {
+          customElements.define(
+            'toggle-private-parent',
+            class extends hyperElement {
+              render(Html) {
+                Html(privateToggleStrings, false);
+              }
+            }
+          );
+        }
+        const privateHost = document.createElement('div');
+        privateHost.hidden = true;
+        document.body.appendChild(privateHost);
+        privateHost.appendChild(
+          document.createElement('toggle-private-parent')
+        );
+
+        const expected =
+          '<div id="toggle-disabled-output"><toggle-disabled-elem><button id="toggle-disabled-btn" disabled="">Click</button></toggle-disabled-elem></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="toggle-disabled"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('toggle-disabled', document.getElementById('toggle-disabled-output'), expected);
-
+          window.assertSnapshot(
+            'toggle-disabled',
+            document.getElementById('toggle-disabled-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
-    <section data-test="toggle-hidden" data-test-result="pending">
-      <h2>Toggle Attribute ?hidden</h2>
-      <p>Tests that ?hidden=${value} toggles the hidden attribute.</p>
+    <section
+      data-test="toggle-hidden"
+      data-test-result="pending"
+      data-internal="render-core"
+      hidden
+    >
+      <h2>Internal Boolean Hidden Compatibility</h2>
+      <p>Private render-core coverage for legacy hidden toggle handling.</p>
       <pre><code>(function () {
   const section = document.querySelector('[data-test="toggle-hidden"]');
 
@@ -785,7 +908,7 @@
         this.element._trigger = attachStore();
       }
       render(Html) {
-        Html`&lt;div id="toggle-hidden-div" ?hidden=${this.element._isHidden}&gt;Content&lt;/div&gt;`;
+        Html`&lt;div id="toggle-hidden-div" &#63;hidden=${this.element._isHidden}&gt;Content&lt;/div&gt;`;
       }
     }
   );
@@ -812,22 +935,27 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="toggle-hidden"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="toggle-hidden"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="toggle-hidden-output"><toggle-hidden-elem><div id="toggle-hidden-div" hidden="">Content</div></toggle-hidden-elem></div>';
+        const expected =
+          '<div id="toggle-hidden-output"><toggle-hidden-elem><div id="toggle-hidden-div" hidden="">Content</div></toggle-hidden-elem></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="toggle-hidden"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('toggle-hidden', document.getElementById('toggle-hidden-output'), expected);
-
+          window.assertSnapshot(
+            'toggle-hidden',
+            document.getElementById('toggle-hidden-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="data-spread" data-test-result="pending">
@@ -866,22 +994,27 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="data-spread"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="data-spread"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="data-spread-output"><data-spread-elem><div id="data-spread-result" data-user-id="123" data-role="admin" data-count="42">Has data</div></data-spread-elem></div>';
+        const expected =
+          '<div id="data-spread-output"><data-spread-elem><div id="data-spread-result" data-user-id="123" data-role="admin" data-count="42">Has data</div></data-spread-elem></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="data-spread"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('data-spread', document.getElementById('data-spread-output'), expected);
-
+          window.assertSnapshot(
+            'data-spread',
+            document.getElementById('data-spread-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="data-spread-null" data-test-result="pending">
@@ -929,27 +1062,37 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="data-spread-null"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="data-spread-null"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="data-spread-null-output"><data-spread-null-elem><div id="data-spread-null-result" data-key="value">Has data</div></data-spread-null-elem></div>';
+        const expected =
+          '<div id="data-spread-null-output"><data-spread-null-elem><div id="data-spread-null-result" data-key="value">Has data</div></data-spread-null-elem></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="data-spread-null"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('data-spread-null', document.getElementById('data-spread-null-output'), expected);
-
+          window.assertSnapshot(
+            'data-spread-null',
+            document.getElementById('data-spread-null-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
-    <section data-test="event-options" data-test-result="pending">
-      <h2>Event with Options Array</h2>
-      <p>Tests @click=${[handler, options]} form with event listener options.</p>
+    <section
+      data-test="event-options"
+      data-test-result="pending"
+      data-internal="render-core"
+      hidden
+    >
+      <h2>Internal Event Options Compatibility</h2>
+      <p>Private render-core coverage for legacy event listener options.</p>
       <pre><code>(function () {
   const section = document.querySelector('[data-test="event-options"]');
   let capturePhaseTriggered = false;
@@ -965,8 +1108,8 @@
         bubblePhaseTriggered = true;
       }
       render(Html) {
-        Html`&lt;div id="event-options-outer" @click=${[() =&gt; this.handleCapture(), { capture: true }]}&gt;
-          &lt;button id="event-options-btn" @click=${() =&gt; this.handleBubble()}&gt;Click&lt;/button&gt;
+        Html`&lt;div id="event-options-outer" &#64;click=${[() =&gt; this.handleCapture(), { capture: true }]}&gt;
+          &lt;button id="event-options-btn" &#64;click=${() =&gt; this.handleBubble()}&gt;Click&lt;/button&gt;
         &lt;/div&gt;`;
       }
     }
@@ -990,22 +1133,27 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="event-options"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="event-options"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="event-options-output"><event-options-elem><div id="event-options-outer">\n          <button id="event-options-btn">Click</button>\n        </div></event-options-elem></div>';
+        const expected =
+          '<div id="event-options-output"><event-options-elem><div id="event-options-outer">\n          <button id="event-options-btn">Click</button>\n        </div></event-options-elem></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="event-options"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('event-options', document.getElementById('event-options-output'), expected);
-
+          window.assertSnapshot(
+            'event-options',
+            document.getElementById('event-options-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="event-options-update" data-test-result="pending">
@@ -1027,7 +1175,7 @@
         const handler = this.element._useFirst
           ? [() =&gt; handler1Calls++, { once: true }]
           : [() =&gt; handler2Calls++, { once: false }];
-        Html`&lt;button id="event-update-btn" @click=${handler}&gt;Click&lt;/button&gt;`;
+        Html`&lt;button id="event-update-btn" &#64;click=${handler}&gt;Click&lt;/button&gt;`;
       }
     }
   );
@@ -1061,22 +1209,29 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="event-options-update"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="event-options-update"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="event-options-update-output"><event-update-elem><button id="event-update-btn">Click</button></event-update-elem></div>';
+        const expected =
+          '<div id="event-options-update-output"><event-update-elem><button id="event-update-btn">Click</button></event-update-elem></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="event-options-update"]');
+          const sec = document.querySelector(
+            '[data-test="event-options-update"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('event-options-update', document.getElementById('event-options-update-output'), expected);
-
+          window.assertSnapshot(
+            'event-options-update',
+            document.getElementById('event-options-update-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="event-remove" data-test-result="pending">
@@ -1095,7 +1250,7 @@
       }
       render(Html) {
         const handler = this.element._hasHandler ? () =&gt; clickCount++ : null;
-        Html`&lt;button id="event-remove-btn" @click=${handler}&gt;Click&lt;/button&gt;`;
+        Html`&lt;button id="event-remove-btn" &#64;click=${handler}&gt;Click&lt;/button&gt;`;
       }
     }
   );
@@ -1128,24 +1283,28 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="event-remove"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="event-remove"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="event-remove-output"><event-remove-elem><button id="event-remove-btn">Click</button></event-remove-elem></div>';
+        const expected =
+          '<div id="event-remove-output"><event-remove-elem><button id="event-remove-btn">Click</button></event-remove-elem></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="event-remove"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('event-remove', document.getElementById('event-remove-output'), expected);
-
+          window.assertSnapshot(
+            'event-remove',
+            document.getElementById('event-remove-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
-
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>
   </body>

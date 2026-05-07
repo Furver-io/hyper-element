@@ -75,22 +75,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="base-styles"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="base-styles"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-1"><styled-base><!--<>--><h2 style="color: red; font-size: 24px;">Title</h2>\n    <span style="font-weight: bold;">Content</span>\n  <!--</>--></styled-base></div>';
+        const expected =
+          '<div id="output-1"><styled-base><!--<>--><h2 style="color: red; font-size: 24px;">Title</h2>\n    <span style="font-weight: bold;">Content</span>\n  <!--</>--></styled-base></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="base-styles"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('base-styles', document.getElementById('output-1'), expected);
-
+          window.assertSnapshot(
+            'base-styles',
+            document.getElementById('output-1'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 2: Shared Selectors -->
@@ -122,22 +127,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="shared-selectors"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="shared-selectors"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-2"><styled-shared><!--<>--><h3 style="margin: 0px; font-family: Arial;">Heading</h3>\n    <p style="margin: 0px; font-family: Arial;">Paragraph</p>\n  <!--</>--></styled-shared></div>';
+        const expected =
+          '<div id="output-2"><styled-shared><!--<>--><h3 style="margin: 0px; font-family: Arial;">Heading</h3>\n    <p style="margin: 0px; font-family: Arial;">Paragraph</p>\n  <!--</>--></styled-shared></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="shared-selectors"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('shared-selectors', document.getElementById('output-2'), expected);
-
+          window.assertSnapshot(
+            'shared-selectors',
+            document.getElementById('output-2'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 3: Prop Flags -->
@@ -178,22 +188,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="prop-flags"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="prop-flags"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-3"><styled-flags><!--<>--><div style="padding: 10px; border: 1px solid gray;">Normal</div>\n    <div style="padding: 10px; border: 1px solid red; background-color: rgb(255, 238, 238);">Error</div>\n    <div style="padding: 20px; border: 1px solid red; background-color: rgb(255, 238, 238); font-size: 18px;">Error + Large</div>\n  <!--</>--></styled-flags></div>';
+        const expected =
+          '<div id="output-3"><styled-flags><!--<>--><div style="padding: 10px; border: 1px solid gray;">Normal</div>\n    <div style="padding: 10px; border: 1px solid red; background-color: rgb(255, 238, 238);">Error</div>\n    <div style="padding: 20px; border: 1px solid red; background-color: rgb(255, 238, 238); font-size: 18px;">Error + Large</div>\n  <!--</>--></styled-flags></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="prop-flags"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('prop-flags', document.getElementById('output-3'), expected);
-
+          window.assertSnapshot(
+            'prop-flags',
+            document.getElementById('output-3'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 4: Logic Functions -->
@@ -225,22 +240,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="logic-functions"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="logic-functions"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-4"><styled-logic percent="75"><!--<>--><span style="display: inline-block; width: 75%;">Bar</span>\n  <!--</>--></styled-logic></div>';
+        const expected =
+          '<div id="output-4"><styled-logic percent="75"><!--<>--><span style="display: inline-block; width: 75%;">Bar</span>\n  <!--</>--></styled-logic></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="logic-functions"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('logic-functions', document.getElementById('output-4'), expected);
-
+          window.assertSnapshot(
+            'logic-functions',
+            document.getElementById('output-4'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 5: Color Palettes with withOptions -->
@@ -274,22 +294,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="color-palettes"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="color-palettes"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-5"><styled-themed><button style="background-color: rgb(0, 123, 255); color: white;">Click</button></styled-themed></div>';
+        const expected =
+          '<div id="output-5"><styled-themed><button style="background-color: rgb(0, 123, 255); color: white;">Click</button></styled-themed></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="color-palettes"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('color-palettes', document.getElementById('output-5'), expected);
-
+          window.assertSnapshot(
+            'color-palettes',
+            document.getElementById('output-5'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 6: Style Passthrough (No Logic Function) -->
@@ -320,22 +345,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="style-passthrough"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="style-passthrough"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-6"><styled-passthrough><!--<>--><div style="display: flex; gap: 8px; flex-direction: column;">Content</div>\n  <!--</>--></styled-passthrough></div>';
+        const expected =
+          '<div id="output-6"><styled-passthrough><!--<>--><div style="display: flex; gap: 8px; flex-direction: column;">Content</div>\n  <!--</>--></styled-passthrough></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="style-passthrough"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('style-passthrough', document.getElementById('output-6'), expected);
-
+          window.assertSnapshot(
+            'style-passthrough',
+            document.getElementById('output-6'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 7: No Styles for Tag -->
@@ -365,22 +395,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="no-styles-for-tag"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="no-styles-for-tag"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-7"><styled-no-match><span>No span styles</span></styled-no-match></div>';
+        const expected =
+          '<div id="output-7"><styled-no-match><span>No span styles</span></styled-no-match></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="no-styles-for-tag"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('no-styles-for-tag', document.getElementById('output-7'), expected);
-
+          window.assertSnapshot(
+            'no-styles-for-tag',
+            document.getElementById('output-7'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 8: Mixed +styled and Regular Elements -->
@@ -412,22 +447,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="mixed-elements"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="mixed-elements"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-8"><styled-mixed><!--<>--><p style="color: navy;">Styled paragraph</p>\n    <p>Regular paragraph</p>\n  <!--</>--></styled-mixed></div>';
+        const expected =
+          '<div id="output-8"><styled-mixed><!--<>--><p style="color: navy;">Styled paragraph</p>\n    <p>Regular paragraph</p>\n  <!--</>--></styled-mixed></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="mixed-elements"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('mixed-elements', document.getElementById('output-8'), expected);
-
+          window.assertSnapshot(
+            'mixed-elements',
+            document.getElementById('output-8'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 9: Logic Function with Context Access -->
@@ -457,22 +497,29 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="logic-with-context"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="logic-with-context"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-9"><styled-context textcolor="green"><div style="padding: 10px; color: green;">Context-aware</div></styled-context></div>';
+        const expected =
+          '<div id="output-9"><styled-context textcolor="green"><div style="padding: 10px; color: green;">Context-aware</div></styled-context></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="logic-with-context"]');
+          const sec = document.querySelector(
+            '[data-test="logic-with-context"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('logic-with-context', document.getElementById('output-9'), expected);
-
+          window.assertSnapshot(
+            'logic-with-context',
+            document.getElementById('output-9'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 10: Color in Compound Value -->
@@ -505,22 +552,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="color-in-compound"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="color-in-compound"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-10"><styled-compound><div style="border: 2px solid rgb(0, 123, 255);">Border</div></styled-compound></div>';
+        const expected =
+          '<div id="output-10"><styled-compound><div style="border: 2px solid rgb(0, 123, 255);">Border</div></styled-compound></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="color-in-compound"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('color-in-compound', document.getElementById('output-10'), expected);
-
+          window.assertSnapshot(
+            'color-in-compound',
+            document.getElementById('output-10'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 11: withOptions without tag name (manual registration) -->
@@ -549,28 +601,38 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="withoptions-no-tag"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="withoptions-no-tag"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-11"><styled-manual><span style="color: rgb(255, 102, 0);">Manual</span></styled-manual></div>';
+        const expected =
+          '<div id="output-11"><styled-manual><span style="color: rgb(255, 102, 0);">Manual</span></styled-manual></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="withoptions-no-tag"]');
+          const sec = document.querySelector(
+            '[data-test="withoptions-no-tag"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('withoptions-no-tag', document.getElementById('output-11'), expected);
-
+          window.assertSnapshot(
+            'withoptions-no-tag',
+            document.getElementById('output-11'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 12: withOptions with render function shorthand -->
     <section data-test="withoptions-shorthand" data-test-result="pending">
       <h2>12. withOptions Render Function Shorthand</h2>
-      <p>Passing just a render function to the factory (coverage for shorthand path).</p>
+      <p>
+        Passing just a render function to the factory (coverage for shorthand
+        path).
+      </p>
       <pre><code>const themed12 = withOptions({ colors: { info: '#17a2b8' } });
 themed12('styled-shorthand', (Html) => Html`&lt;span&gt;Shorthand Works&lt;/span&gt;`);
 
@@ -587,22 +649,29 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="withoptions-shorthand"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="withoptions-shorthand"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-12"><styled-shorthand><span>Shorthand Works</span></styled-shorthand></div>';
+        const expected =
+          '<div id="output-12"><styled-shorthand><span>Shorthand Works</span></styled-shorthand></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="withoptions-shorthand"]');
+          const sec = document.querySelector(
+            '[data-test="withoptions-shorthand"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('withoptions-shorthand', document.getElementById('output-12'), expected);
-
+          window.assertSnapshot(
+            'withoptions-shorthand',
+            document.getElementById('output-12'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 13: Non-string values in styles with color palette -->
@@ -632,22 +701,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="non-string-values"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="non-string-values"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-13"><styled-numbers><div style="z-index: 100; opacity: 0.5; color: rgb(255, 255, 0);">Numbers</div></styled-numbers></div>';
+        const expected =
+          '<div id="output-13"><styled-numbers><div style="z-index: 100; opacity: 0.5; color: rgb(255, 255, 0);">Numbers</div></styled-numbers></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="non-string-values"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('non-string-values', document.getElementById('output-13'), expected);
-
+          window.assertSnapshot(
+            'non-string-values',
+            document.getElementById('output-13'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 14: Null/empty values in styles -->
@@ -674,28 +748,35 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="null-values"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="null-values"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-14"><styled-null><div style="padding: 10px;">Null clears</div></styled-null></div>';
+        const expected =
+          '<div id="output-14"><styled-null><div style="padding: 10px;">Null clears</div></styled-null></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="null-values"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('null-values', document.getElementById('output-14'), expected);
-
+          window.assertSnapshot(
+            'null-values',
+            document.getElementById('output-14'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 15: Empty styled config -->
     <section data-test="empty-styled" data-test-result="pending">
       <h2>15. Empty Styled Config</h2>
-      <p>Works correctly when styled array is empty or has no matching styles.</p>
+      <p>
+        Works correctly when styled array is empty or has no matching styles.
+      </p>
       <pre><code>hyperElement('styled-empty', {
   styled: [{}],
   render: (Html) =>
@@ -715,22 +796,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="empty-styled"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="empty-styled"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-15"><styled-empty><div style="margin: 5px;">Passthrough</div></styled-empty></div>';
+        const expected =
+          '<div id="output-15"><styled-empty><div style="margin: 5px;">Passthrough</div></styled-empty></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="empty-styled"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('empty-styled', document.getElementById('output-15'), expected);
-
+          window.assertSnapshot(
+            'empty-styled',
+            document.getElementById('output-15'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 16: Re-render updates styles -->
@@ -767,28 +853,36 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="rerender-update"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="rerender-update"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-16"><styled-rerender width="200"><div style="display: inline-block; background-color: rgb(238, 238, 238); width: 200px;">Box</div></styled-rerender></div>';
+        const expected =
+          '<div id="output-16"><styled-rerender width="200"><div style="display: inline-block; background-color: rgb(238, 238, 238); width: 200px;">Box</div></styled-rerender></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="rerender-update"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('rerender-update', document.getElementById('output-16'), expected);
-
+          window.assertSnapshot(
+            'rerender-update',
+            document.getElementById('output-16'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 17: Direct render outside component (+styled fallback) -->
     <section data-test="direct-render-fallback" data-test-result="pending">
       <h2>17. Direct Render Fallback</h2>
-      <p>Using Html.lite directly outside a component still applies inline styles.</p>
+      <p>
+        Using Html.lite directly outside a component still applies inline
+        styles.
+      </p>
       <pre><code>hyperElement('direct-render-test', {
   render: function (Html) {
     const target = document.createElement('div');
@@ -812,28 +906,38 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="direct-render-fallback"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="direct-render-fallback"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-17"><direct-render-test><div id="container"><div><span style="color: green; font-weight: bold;">Direct</span></div></div></direct-render-test></div>';
+        const expected =
+          '<div id="output-17"><direct-render-test><div id="container"><div><span style="color: green; font-weight: bold;">Direct</span></div></div></direct-render-test></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="direct-render-fallback"]');
+          const sec = document.querySelector(
+            '[data-test="direct-render-fallback"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('direct-render-fallback', document.getElementById('output-17'), expected);
-
+          window.assertSnapshot(
+            'direct-render-fallback',
+            document.getElementById('output-17'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 18: +styled without styled config -->
     <section data-test="no-styled-config" data-test-result="pending">
       <h2>18. +styled Without Styled Config</h2>
-      <p>Using +styled syntax without defining styled config passes through styles.</p>
+      <p>
+        Using +styled syntax without defining styled config passes through
+        styles.
+      </p>
       <pre><code>hyperElement('no-styled-config', {
   render: (Html) =>
     Html`&lt;div+styled style=${{ color: 'blue', padding: '5px' }}&gt;Passthrough&lt;/div&gt;`,
@@ -853,22 +957,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="no-styled-config"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="no-styled-config"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-18"><no-styled-config><div style="color: blue; padding: 5px;">Passthrough</div></no-styled-config></div>';
+        const expected =
+          '<div id="output-18"><no-styled-config><div style="color: blue; padding: 5px;">Passthrough</div></no-styled-config></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="no-styled-config"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('no-styled-config', document.getElementById('output-18'), expected);
-
+          window.assertSnapshot(
+            'no-styled-config',
+            document.getElementById('output-18'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 19: +styled with empty styled array -->
@@ -894,28 +1003,38 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="empty-styled-array"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="empty-styled-array"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-19"><empty-styled-array><div style="margin: 10px;">Empty Array</div></empty-styled-array></div>';
+        const expected =
+          '<div id="output-19"><empty-styled-array><div style="margin: 10px;">Empty Array</div></empty-styled-array></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="empty-styled-array"]');
+          const sec = document.querySelector(
+            '[data-test="empty-styled-array"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('empty-styled-array', document.getElementById('output-19'), expected);
-
+          window.assertSnapshot(
+            'empty-styled-array',
+            document.getElementById('output-19'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 20: +styled without config or inline style (return null path) -->
     <section data-test="no-config-no-style" data-test-result="pending">
       <h2>20. +styled Without Config or Inline Style</h2>
-      <p>Covers the return null fallback path when no styled config and no style value.</p>
+      <p>
+        Covers the return null fallback path when no styled config and no style
+        value.
+      </p>
       <pre><code>hyperElement('no-config-no-style', {
   render: (Html) => Html`&lt;span+styled&gt;Plain text&lt;/span&gt;`,
 });
@@ -934,28 +1053,38 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="no-config-no-style"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="no-config-no-style"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-20"><no-config-no-style><span>Plain text</span></no-config-no-style></div>';
+        const expected =
+          '<div id="output-20"><no-config-no-style><span>Plain text</span></no-config-no-style></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="no-config-no-style"]');
+          const sec = document.querySelector(
+            '[data-test="no-config-no-style"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('no-config-no-style', document.getElementById('output-20'), expected);
-
+          window.assertSnapshot(
+            'no-config-no-style',
+            document.getElementById('output-20'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 21: Conditional Prop Flag via Style Object with Inline Styles -->
     <section data-test="conditional-prop-flag" data-test-result="pending">
       <h2>21. Conditional Prop Flag via Style Object</h2>
-      <p>Like react-outline: <code>&lt;Title style={{ error: true, width: '200px' }}&gt;</code></p>
+      <p>
+        Like react-outline:
+        <code>&lt;Title style={{ error: true, width: '200px' }}&gt;</code>
+      </p>
       <pre><code>hyperElement('styled-conditional-flag', {
   styled: [{
     div: {
@@ -985,28 +1114,38 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="conditional-prop-flag"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="conditional-prop-flag"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-21"><styled-conditional-flag haserror="true"><!--<>--><div style="padding: 10px; border: 1px solid red; background-color: rgb(255, 238, 238); width: 200px;">Conditional</div>\n  <!--</>--></styled-conditional-flag></div>';
+        const expected =
+          '<div id="output-21"><styled-conditional-flag haserror="true"><!--<>--><div style="padding: 10px; border: 1px solid red; background-color: rgb(255, 238, 238); width: 200px;">Conditional</div>\n  <!--</>--></styled-conditional-flag></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="conditional-prop-flag"]');
+          const sec = document.querySelector(
+            '[data-test="conditional-prop-flag"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('conditional-prop-flag', document.getElementById('output-21'), expected);
-
+          window.assertSnapshot(
+            'conditional-prop-flag',
+            document.getElementById('output-21'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 22: Multiple Conditional Flags via Style Object -->
     <section data-test="multiple-conditional-flags" data-test-result="pending">
       <h2>22. Multiple Conditional Flags via Style Object</h2>
-      <p>Pass multiple boolean flags via style object: <code>style=${{ error: true, large: true }}</code></p>
+      <p>
+        Pass multiple boolean flags via style object:
+        <code>style=${{ error: true, large: true }}</code>
+      </p>
       <pre><code>hyperElement('styled-multi-flags', {
   styled: [{
     div: {
@@ -1037,28 +1176,38 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="multiple-conditional-flags"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="multiple-conditional-flags"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-22"><styled-multi-flags err="true" big="true"><!--<>--><div style="padding: 20px; font-size: 24px; color: red;">Multi</div>\n  <!--</>--></styled-multi-flags></div>';
+        const expected =
+          '<div id="output-22"><styled-multi-flags err="true" big="true"><!--<>--><div style="padding: 20px; font-size: 24px; color: red;">Multi</div>\n  <!--</>--></styled-multi-flags></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="multiple-conditional-flags"]');
+          const sec = document.querySelector(
+            '[data-test="multiple-conditional-flags"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('multiple-conditional-flags', document.getElementById('output-22'), expected);
-
+          window.assertSnapshot(
+            'multiple-conditional-flags',
+            document.getElementById('output-22'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 23: Logic Function Conditional Styling -->
     <section data-test="logic-fn-base-style" data-test-result="pending">
       <h2>23. Logic Function Conditional Styling</h2>
-      <p>Logic functions receive <code>(styleValue, ctx, store)</code> and return computed styles.</p>
+      <p>
+        Logic functions receive <code>(styleValue, ctx, store)</code> and return
+        computed styles.
+      </p>
       <pre><code>hyperElement('styled-logic-conditional', {
   styled: [
     { span: { color: 'gray' } },
@@ -1091,28 +1240,37 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="logic-fn-base-style"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="logic-fn-base-style"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-23"><styled-logic-conditional><!--<>--><span style="color: gray; font-size: 24px; font-weight: bold;">Important</span>\n    <span style="color: gray; font-size: 14px; font-weight: normal;">Normal</span>\n  <!--</>--></styled-logic-conditional></div>';
+        const expected =
+          '<div id="output-23"><styled-logic-conditional><!--<>--><span style="color: gray; font-size: 24px; font-weight: bold;">Important</span>\n    <span style="color: gray; font-size: 14px; font-weight: normal;">Normal</span>\n  <!--</>--></styled-logic-conditional></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="logic-fn-base-style"]');
+          const sec = document.querySelector(
+            '[data-test="logic-fn-base-style"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('logic-fn-base-style', document.getElementById('output-23'), expected);
-
+          window.assertSnapshot(
+            'logic-fn-base-style',
+            document.getElementById('output-23'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 24: Function Without Base Style -->
     <section data-test="fn-without-base" data-test-result="pending">
       <h2>24. Function Without Base Style</h2>
-      <p>Like react-outline: Logic function exists but no base style defined.</p>
+      <p>
+        Like react-outline: Logic function exists but no base style defined.
+      </p>
       <pre><code>hyperElement('styled-fn-no-base', {
   styled: [
     { /* no 'div' here */ },
@@ -1135,22 +1293,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="fn-without-base"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="fn-without-base"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-24"><styled-fn-no-base><div style="background-color: lightgray; padding: 15px;">Function Only</div></styled-fn-no-base></div>';
+        const expected =
+          '<div id="output-24"><styled-fn-no-base><div style="background-color: lightgray; padding: 15px;">Function Only</div></styled-fn-no-base></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="fn-without-base"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('fn-without-base', document.getElementById('output-24'), expected);
-
+          window.assertSnapshot(
+            'fn-without-base',
+            document.getElementById('output-24'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 25: Animate.css Integration -->
@@ -1183,36 +1346,49 @@ requestAnimationFrame(() => {
           border: 2px dashed purple;
         }
         @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.7;
+          }
         }
       </style>
       <div id="output-25"></div>
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="animate-css"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="animate-css"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-25"><styled-with-class><!--<>--><div class="custom-animation" style="padding: 20px; background-color: rgb(224, 224, 255);">Styled + Class</div>\n  <!--</>--></styled-with-class></div>';
+        const expected =
+          '<div id="output-25"><styled-with-class><!--<>--><div class="custom-animation" style="padding: 20px; background-color: rgb(224, 224, 255);">Styled + Class</div>\n  <!--</>--></styled-with-class></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="animate-css"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('animate-css', document.getElementById('output-25'), expected);
-
+          window.assertSnapshot(
+            'animate-css',
+            document.getElementById('output-25'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 26: Store Access in Logic Function -->
     <section data-test="store-access" data-test-result="pending">
       <h2>26. Store Access in Logic Function</h2>
-      <p>+styled exclusive: Logic functions receive <code>(styleValue, ctx, store)</code>.</p>
+      <p>
+        +styled exclusive: Logic functions receive
+        <code>(styleValue, ctx, store)</code>.
+      </p>
       <pre><code>hyperElement('styled-store-access', {
   setup: (ctx, onNext) => onNext({ loading: true }),
   styled: [
@@ -1241,28 +1417,35 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="store-access"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="store-access"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-26"><styled-store-access><div style="padding: 15px; opacity: 0.5; cursor: wait;">Loading State</div></styled-store-access></div>';
+        const expected =
+          '<div id="output-26"><styled-store-access><div style="padding: 15px; opacity: 0.5; cursor: wait;">Loading State</div></styled-store-access></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="store-access"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('store-access', document.getElementById('output-26'), expected);
-
+          window.assertSnapshot(
+            'store-access',
+            document.getElementById('output-26'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 27: Implied Tag Names -->
     <section data-test="implied-tags" data-test-result="pending">
       <h2>27. Implied Tag Names</h2>
-      <p>Like react-outline: Style names matching HTML tags get auto-applied.</p>
+      <p>
+        Like react-outline: Style names matching HTML tags get auto-applied.
+      </p>
       <pre><code>hyperElement('styled-implied-tags', {
   styled: [{
     table: { borderCollapse: 'collapse', width: '100%' },
@@ -1297,22 +1480,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="implied-tags"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="implied-tags"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-27"><styled-implied-tags><!--<>--><table style="border-collapse: collapse; width: 100%;">\n      <tbody><tr style="border-bottom: 2px solid rgb(51, 51, 51);"><td style="padding: 8px; text-align: center;">A</td><td style="padding: 8px; text-align: center;">B</td></tr></tbody>\n    </table>\n    <button style="cursor: pointer; background-color: rgb(0, 123, 255); color: white;">Click</button>\n  <!--</>--></styled-implied-tags></div>';
+        const expected =
+          '<div id="output-27"><styled-implied-tags><!--<>--><table style="border-collapse: collapse; width: 100%;">\n      <tbody><tr style="border-bottom: 2px solid rgb(51, 51, 51);"><td style="padding: 8px; text-align: center;">A</td><td style="padding: 8px; text-align: center;">B</td></tr></tbody>\n    </table>\n    <button style="cursor: pointer; background-color: rgb(0, 123, 255); color: white;">Click</button>\n  <!--</>--></styled-implied-tags></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="implied-tags"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('implied-tags', document.getElementById('output-27'), expected);
-
+          window.assertSnapshot(
+            'implied-tags',
+            document.getElementById('output-27'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 28: Complex Nested Structure -->
@@ -1360,28 +1548,36 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="complex-nested"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="complex-nested"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-28"><styled-complex-nested><!--<>--><article style="border: 1px solid rgb(204, 204, 204); border-radius: 8px; overflow: hidden;">\n      <header style="background-color: rgb(240, 240, 240); padding: 10px;"><h1 style="margin: 0px; font-size: 18px; color: rgb(51, 51, 51);">Title</h1></header>\n      <section style="padding: 15px;"><p style="margin: 0px; line-height: 1.5; color: rgb(102, 102, 102);">Content here</p></section>\n      <footer style="background-color: rgb(250, 250, 250); padding: 10px; text-align: right;">Footer</footer>\n    </article>\n  <!--</>--></styled-complex-nested></div>';
+        const expected =
+          '<div id="output-28"><styled-complex-nested><!--<>--><article style="border: 1px solid rgb(204, 204, 204); border-radius: 8px; overflow: hidden;">\n      <header style="background-color: rgb(240, 240, 240); padding: 10px;"><h1 style="margin: 0px; font-size: 18px; color: rgb(51, 51, 51);">Title</h1></header>\n      <section style="padding: 15px;"><p style="margin: 0px; line-height: 1.5; color: rgb(102, 102, 102);">Content here</p></section>\n      <footer style="background-color: rgb(250, 250, 250); padding: 10px; text-align: right;">Footer</footer>\n    </article>\n  <!--</>--></styled-complex-nested></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="complex-nested"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('complex-nested', document.getElementById('output-28'), expected);
-
+          window.assertSnapshot(
+            'complex-nested',
+            document.getElementById('output-28'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 29: Styled with non-prop-flag attributes -->
     <section data-test="non-prop-flags" data-test-result="pending">
       <h2>29. Styled with Non-Prop-Flag Attributes</h2>
-      <p>Styled elements can have regular HTML attributes that aren't treated as prop flags.</p>
+      <p>
+        Styled elements can have regular HTML attributes that aren't treated as
+        prop flags.
+      </p>
       <pre><code>window.__npfClickCount = 0;
 const handler = () => { window.__npfClickCount++; };
 
@@ -1396,9 +1592,8 @@ hyperElement('styled-with-attrs', {
       slot="content"
       data-test="value"
       aria-label="Test label"
-      @click=${handler}
-      .title=${'Direct prop'}
-      ?hidden=${false}&gt;
+      onclick=${handler}
+      title=${'Direct prop'}&gt;
       Content with attributes
     &lt;/div&gt;
   `,
@@ -1425,22 +1620,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="non-prop-flags"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="non-prop-flags"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="output-29"><styled-with-attrs><!--<>--><div class="my-class" id="my-id" role="button" slot="content" data-test="value" aria-label="Test label" title="Direct prop" style="padding: 10px; color: green;">\n      Content with attributes\n    </div>\n  <!--</>--></styled-with-attrs></div>';
+        const expected =
+          '<div id="output-29"><styled-with-attrs><!--<>--><div class="my-class" id="my-id" role="button" slot="content" data-test="value" aria-label="Test label" title="Direct prop" style="padding: 10px; color: green;">\n      Content with attributes\n    </div>\n  <!--</>--></styled-with-attrs></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="non-prop-flags"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('non-prop-flags', document.getElementById('output-29'), expected);
-
+          window.assertSnapshot(
+            'non-prop-flags',
+            document.getElementById('output-29'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

@@ -110,18 +110,24 @@ setTimeout(() => {
       <div id="observer-childlist-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="descendant-childlist-does-not-rerender-parent"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="descendant-childlist-does-not-rerender-parent"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="observer-childlist-output"><observer-childlist-parent data-parent-renders="2"><observer-childlist-child><!--<>--><button>count=1</button>\n    <span>child=1</span>\n  <!--</>--></observer-childlist-child></observer-childlist-parent></div>';
+        const expected =
+          '<div id="observer-childlist-output"><observer-childlist-parent data-parent-renders="2"><observer-childlist-child><!--<>--><button>count=1</button>\n    <span>child=1</span>\n  <!--</>--></observer-childlist-child></observer-childlist-parent></div>';
         const poll = setInterval(() => {
-          const sec = document.querySelector('[data-test="descendant-childlist-does-not-rerender-parent"]');
+          const sec = document.querySelector(
+            '[data-test="descendant-childlist-does-not-rerender-parent"]'
+          );
           if (sec.dataset.testResult === 'pending') return;
           clearInterval(poll);
           if (sec.dataset.testResult === 'fail') return;
           window.assertSnapshot(
             'descendant-childlist-does-not-rerender-parent',
-            document.getElementById('observer-childlist-output')
-          , expected);
+            document.getElementById('observer-childlist-output'),
+            expected
+          );
         }, 50);
       </script>
     </section>
@@ -148,7 +154,7 @@ hyperElement('observer-attr-child', {
   render: (Html, ctx, state) => Html`
     &lt;button
       onclick=${ctx.toggle}
-      ?disabled=${state.disabled}
+      disabled=${state.disabled ? '' : null}
       title=${state.disabled ? 'disabled' : 'enabled'}
     &gt;toggle&lt;/button&gt;
   `,
@@ -195,18 +201,24 @@ setTimeout(() => {
       <div id="observer-attr-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="descendant-attributes-does-not-rerender-parent"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="descendant-attributes-does-not-rerender-parent"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="observer-attr-output"><observer-attr-parent data-parent-renders="2"><observer-attr-child><!--<>--><button title="disabled" disabled="">toggle</button>\n  <!--</>--></observer-attr-child></observer-attr-parent></div>';
+        const expected =
+          '<div id="observer-attr-output"><observer-attr-parent data-parent-renders="2"><observer-attr-child><!--<>--><button title="disabled" disabled="">toggle</button>\n  <!--</>--></observer-attr-child></observer-attr-parent></div>';
         const poll = setInterval(() => {
-          const sec = document.querySelector('[data-test="descendant-attributes-does-not-rerender-parent"]');
+          const sec = document.querySelector(
+            '[data-test="descendant-attributes-does-not-rerender-parent"]'
+          );
           if (sec.dataset.testResult === 'pending') return;
           clearInterval(poll);
           if (sec.dataset.testResult === 'fail') return;
           window.assertSnapshot(
             'descendant-attributes-does-not-rerender-parent',
-            document.getElementById('observer-attr-output')
-          , expected);
+            document.getElementById('observer-attr-output'),
+            expected
+          );
         }, 50);
       </script>
     </section>

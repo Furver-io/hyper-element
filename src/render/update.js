@@ -169,8 +169,8 @@ const styleHandler = (node, value) => {
  * Identity short-circuit (`prev === value`): when the previously
  * bound listener reference is being reassigned unchanged, the
  * remove/add cycle is skipped entirely. Applied to the single-slot
- * variant (the overwhelmingly common case for `@click=${fn}` /
- * `onclick=${fn}` bindings); the `[handler, options]` array
+ * variant (the overwhelmingly common case for function-backed click
+ * bindings); the `[handler, options]` array
  * variant intentionally does not add a second guard at this layer
  * because freshly-allocated tuples defeat an array-identity check
  * anyway, and `Hole.update()` already short-circuits on tuple

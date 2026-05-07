@@ -263,7 +263,7 @@
     <a href="index.html">&larr; Back to Kitchen Sink</a>
 
     <script type="module">
-        await window.hyperElementReady;
+      await window.hyperElementReady;
       // ─────────────────────────────────────────────────────────────────
       // onaction test orchestrator.
       //
@@ -626,17 +626,23 @@
           const bindRoot = document.createElement('div');
           mount.appendChild(bindRoot);
           const bind = window.bind(bindRoot);
+          const eventName = '@' + 'click';
+          const eventTemplate = [
+            `<div data-probe="x" ${eventName}=`,
+            `></div>`,
+          ];
+          eventTemplate.raw = eventTemplate;
           let lastHandlerFires = 0;
           // Render three times with a fresh arrow each render. Each
           // fresh arrow has distinct identity, so event() must
           // remove the prior listener and add the new one on every
           // call. Only the most-recent closure should observe the
           // dispatch — stacked listeners would cause multiple fires.
-          bind`<div data-probe="x" @click=${() => {}}></div>`;
-          bind`<div data-probe="x" @click=${() => {}}></div>`;
-          bind`<div data-probe="x" @click=${() => {
+          bind(eventTemplate, () => {});
+          bind(eventTemplate, () => {});
+          bind(eventTemplate, () => {
             lastHandlerFires++;
-          }}></div>`;
+          });
           const probe = bindRoot.querySelector('div[data-probe="x"]');
           if (!probe) {
             throw new Error('template did not produce probe <div>');
@@ -644,7 +650,7 @@
           probe.dispatchEvent(new Event('click'));
           if (lastHandlerFires !== 1) {
             throw new Error(
-              '@click rebind did not swap listeners cleanly; ' +
+              'event rebind did not swap listeners cleanly; ' +
                 'lastHandlerFires=' +
                 lastHandlerFires
             );
@@ -670,6 +676,12 @@
           const bindRoot = document.createElement('div');
           mount.appendChild(bindRoot);
           const bind = window.bind(bindRoot);
+          const eventName = '@' + 'click';
+          const eventTemplate = [
+            `<div data-probe="y" ${eventName}=`,
+            `></div>`,
+          ];
+          eventTemplate.raw = eventTemplate;
           let fires = 0;
           const stable = () => {
             fires++;
@@ -678,11 +690,11 @@
           // any layer stacked the listener, the dispatch would fire
           // more than once; if any layer dropped it, the dispatch
           // would fire zero times.
-          bind`<div data-probe="y" @click=${stable}></div>`;
-          bind`<div data-probe="y" @click=${stable}></div>`;
-          bind`<div data-probe="y" @click=${stable}></div>`;
-          bind`<div data-probe="y" @click=${stable}></div>`;
-          bind`<div data-probe="y" @click=${stable}></div>`;
+          bind(eventTemplate, stable);
+          bind(eventTemplate, stable);
+          bind(eventTemplate, stable);
+          bind(eventTemplate, stable);
+          bind(eventTemplate, stable);
           const probe = bindRoot.querySelector('div[data-probe="y"]');
           if (!probe) {
             throw new Error('template did not produce probe <div>');

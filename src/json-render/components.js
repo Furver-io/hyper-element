@@ -303,7 +303,7 @@ function renderChecklist(Html, def, key, kids, hostEl) {
 
   // Read optimistic checked-flags from local state (seeded from the
   // spec on first render, preserved across self-triggered re-renders).
-  // All three rendered outputs — the `?checked` attribute, the
+  // All three rendered outputs — the checked attribute, the
   // `.checked` class on each label, and the "N/M complete" counter —
   // project from this single source.
   const checked = getChecklistState(hostEl, key, items);
@@ -319,14 +319,14 @@ function renderChecklist(Html, def, key, kids, hostEl) {
             item,
             ':ci' + i
           )`<label class="jr-checklist-item ${checked[i] ? 'checked' : ''}">
-          <input type="checkbox" ?checked=${checked[i]}
+          <input type="checkbox" checked=${checked[i] ? '' : null}
             onchange=${(e) => {
               // Mutate the local checked-array in place, dispatch
               // jr-action for external authoritative flows, then
               // call hostEl.render() to re-run the <json-render>
               // render pipeline. Html.wire's keying on `def` / `item`
               // preserves node identity so only the affected checkbox
-              // (?checked attribute), its label class, and the
+              // (checked attribute), its label class, and the
               // counter text node get patched — no full rebuild.
               checked[i] = e.target.checked;
               dispatchAction(hostEl, 'checklist_toggle', {

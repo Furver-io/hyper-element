@@ -343,7 +343,7 @@ document.getElementById('checklist-state-output').appendChild(elem);</code></pre
         await window.hyperElementReady;
         // Drive the same Checklist spec through a mount → toggle-on →
         // toggle-off cycle, asserting the three bug regressions each
-        // step: class on <label>, ?checked attribute on the input,
+        // step: class on <label>, checked attribute on the input,
         // counter text, and the jr-action payload.
         const code = document.querySelector(
           '[data-test="checklist-state"] pre code'

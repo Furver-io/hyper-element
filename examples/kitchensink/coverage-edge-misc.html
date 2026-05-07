@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>DOM Content &amp; Misc Coverage Edges - hyper-element Kitchen Sink</title>
+    <title>
+      DOM Content &amp; Misc Coverage Edges - hyper-element Kitchen Sink
+    </title>
     <script src="test-loader.js"></script>
     <style>
       body {
@@ -39,7 +41,11 @@
   </head>
   <body>
     <h1>DOM Content &amp; Misc Coverage Edges</h1>
-    <p>Edge cases for textarea/style/title/svg dynamic content, template-content-mutation, style-null/prop/string handling, text-type-direct, direct-dot-prop, and ref-attribute.</p>
+    <p>
+      Edge cases for textarea/style/title/svg dynamic content,
+      template-content-mutation, style-null/prop/string handling,
+      text-type-direct, direct-dot-prop, and ref-attribute.
+    </p>
 
     <section data-test="textarea-static-content" data-test-result="pending">
       <h2>Textarea Static Content</h2>
@@ -70,20 +76,32 @@
       <div id="textarea-static-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="textarea-static-content"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="textarea-static-content"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="textarea-static-output"><textarea-static-elem><textarea>Static textarea content</textarea></textarea-static-elem></div>';
+        const expected =
+          '<div id="textarea-static-output"><textarea-static-elem><textarea>Static textarea content</textarea></textarea-static-elem></div>';
         setTimeout(() => {
-          const sec = document.querySelector('[data-test="textarea-static-content"]');
+          const sec = document.querySelector(
+            '[data-test="textarea-static-content"]'
+          );
           if (sec.dataset.testResult === 'fail') return;
-          window.assertSnapshot('textarea-static-content', document.getElementById('textarea-static-output'), expected);
+          window.assertSnapshot(
+            'textarea-static-content',
+            document.getElementById('textarea-static-output'),
+            expected
+          );
         }, 500);
       </script>
     </section>
 
     <section data-test="textarea-dynamic-content" data-test-result="pending">
       <h2>Textarea Dynamic Content (TEXT_TYPE)</h2>
-      <p>Tests TEXT_TYPE path where single interpolation triggers directFor('textContent')</p>
+      <p>
+        Tests TEXT_TYPE path where single interpolation triggers
+        directFor('textContent')
+      </p>
       <pre><code>(function () {
   const section = document.querySelector('[data-test="textarea-dynamic-content"]');
 
@@ -116,20 +134,31 @@
       <div id="textarea-dynamic-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="textarea-dynamic-content"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="textarea-dynamic-content"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="textarea-dynamic-output"><textarea-dynamic-elem><textarea>Dynamic textarea content via TEXT_TYPE</textarea></textarea-dynamic-elem></div>';
+        const expected =
+          '<div id="textarea-dynamic-output"><textarea-dynamic-elem><textarea>Dynamic textarea content via TEXT_TYPE</textarea></textarea-dynamic-elem></div>';
         setTimeout(() => {
-          const sec = document.querySelector('[data-test="textarea-dynamic-content"]');
+          const sec = document.querySelector(
+            '[data-test="textarea-dynamic-content"]'
+          );
           if (sec.dataset.testResult === 'fail') return;
-          window.assertSnapshot('textarea-dynamic-content', document.getElementById('textarea-dynamic-output'), expected);
+          window.assertSnapshot(
+            'textarea-dynamic-content',
+            document.getElementById('textarea-dynamic-output'),
+            expected
+          );
         }, 500);
       </script>
     </section>
 
     <section data-test="style-dynamic-content" data-test-result="pending">
       <h2>Style Dynamic Content (TEXT_TYPE)</h2>
-      <p>Tests TEXT_TYPE path with style element containing single interpolation</p>
+      <p>
+        Tests TEXT_TYPE path with style element containing single interpolation
+      </p>
       <pre><code>(function () {
   const section = document.querySelector('[data-test="style-dynamic-content"]');
 
@@ -162,13 +191,22 @@
       <div id="style-dynamic-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="style-dynamic-content"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="style-dynamic-content"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="style-dynamic-output"><style-dynamic-elem><!--<>--><style>.styled-box { background-color: rgb(255, 0, 0); width: 50px; height: 50px; }</style>\n             <div class="styled-box"></div><!--</>--></style-dynamic-elem></div>';
+        const expected =
+          '<div id="style-dynamic-output"><style-dynamic-elem><!--<>--><style>.styled-box { background-color: rgb(255, 0, 0); width: 50px; height: 50px; }</style>\n             <div class="styled-box"></div><!--</>--></style-dynamic-elem></div>';
         setTimeout(() => {
-          const sec = document.querySelector('[data-test="style-dynamic-content"]');
+          const sec = document.querySelector(
+            '[data-test="style-dynamic-content"]'
+          );
           if (sec.dataset.testResult === 'fail') return;
-          window.assertSnapshot('style-dynamic-content', document.getElementById('style-dynamic-output'), expected);
+          window.assertSnapshot(
+            'style-dynamic-content',
+            document.getElementById('style-dynamic-output'),
+            expected
+          );
         }, 500);
       </script>
     </section>
@@ -209,13 +247,22 @@
       <div id="title-dynamic-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="title-dynamic-content"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="title-dynamic-content"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="title-dynamic-output"><title-dynamic-elem><svg width="100" height="50">\n               <title>Dynamic SVG Title</title>\n               <rect width="100" height="50" fill="green"></rect>\n             </svg></title-dynamic-elem></div>';
+        const expected =
+          '<div id="title-dynamic-output"><title-dynamic-elem><svg width="100" height="50">\n               <title>Dynamic SVG Title</title>\n               <rect width="100" height="50" fill="green"></rect>\n             </svg></title-dynamic-elem></div>';
         setTimeout(() => {
-          const sec = document.querySelector('[data-test="title-dynamic-content"]');
+          const sec = document.querySelector(
+            '[data-test="title-dynamic-content"]'
+          );
           if (sec.dataset.testResult === 'fail') return;
-          window.assertSnapshot('title-dynamic-content', document.getElementById('title-dynamic-output'), expected);
+          window.assertSnapshot(
+            'title-dynamic-content',
+            document.getElementById('title-dynamic-output'),
+            expected
+          );
         }, 500);
       </script>
     </section>
@@ -253,20 +300,32 @@
       <div id="svg-dynamic-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="svg-dynamic-content"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="svg-dynamic-content"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="svg-dynamic-output"><svg-dynamic-elem><svg width="100" height="100"><circle cx="50" cy="50" fill="blue" r="25"></circle></svg></svg-dynamic-elem></div>';
+        const expected =
+          '<div id="svg-dynamic-output"><svg-dynamic-elem><svg width="100" height="100"><circle cx="50" cy="50" fill="blue" r="25"></circle></svg></svg-dynamic-elem></div>';
         setTimeout(() => {
-          const sec = document.querySelector('[data-test="svg-dynamic-content"]');
+          const sec = document.querySelector(
+            '[data-test="svg-dynamic-content"]'
+          );
           if (sec.dataset.testResult === 'fail') return;
-          window.assertSnapshot('svg-dynamic-content', document.getElementById('svg-dynamic-output'), expected);
+          window.assertSnapshot(
+            'svg-dynamic-content',
+            document.getElementById('svg-dynamic-output'),
+            expected
+          );
         }, 500);
       </script>
     </section>
 
     <section data-test="template-content-mutation" data-test-result="pending">
       <h2>Template Content Mutation (Observer Re-attach)</h2>
-      <p>Tests that mutating innerHTML of a template element triggers re-parsing via observer.js attrs.template check.</p>
+      <p>
+        Tests that mutating innerHTML of a template element triggers re-parsing
+        via observer.js attrs.template check.
+      </p>
       <template-mutation-elem template>Hello {name}!</template-mutation-elem>
       <pre><code>customElements.define(
   'template-mutation-elem',
@@ -303,13 +362,22 @@ setTimeout(() =&gt; {
 }, 100);</code></pre>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="template-content-mutation"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="template-content-mutation"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<template-mutation-elem template=""><!--<>--><!--<>-->Goodbye World!<!--</>--><!--</>--></template-mutation-elem>';
+        const expected =
+          '<template-mutation-elem template=""><!--<>--><!--<>-->Goodbye World!<!--</>--><!--</>--></template-mutation-elem>';
         setTimeout(() => {
-          const sec = document.querySelector('[data-test="template-content-mutation"]');
+          const sec = document.querySelector(
+            '[data-test="template-content-mutation"]'
+          );
           if (sec.dataset.testResult === 'fail') return;
-          window.assertSnapshot('template-content-mutation', document.querySelector('template-mutation-elem'), expected);
+          window.assertSnapshot(
+            'template-content-mutation',
+            document.querySelector('template-mutation-elem'),
+            expected
+          );
         }, 500);
       </script>
     </section>
@@ -354,13 +422,20 @@ setTimeout(() =&gt; {
       <div id="style-null-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="style-null-remove"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="style-null-remove"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="style-null-output"><style-null-elem><div id="style-null-result">styled</div></style-null-elem></div>';
+        const expected =
+          '<div id="style-null-output"><style-null-elem><div id="style-null-result">styled</div></style-null-elem></div>';
         setTimeout(() => {
           const sec = document.querySelector('[data-test="style-null-remove"]');
           if (sec.dataset.testResult === 'fail') return;
-          window.assertSnapshot('style-null-remove', document.getElementById('style-null-output'), expected);
+          window.assertSnapshot(
+            'style-null-remove',
+            document.getElementById('style-null-output'),
+            expected
+          );
         }, 500);
       </script>
     </section>
@@ -408,20 +483,29 @@ setTimeout(() =&gt; {
       <div id="style-prop-null-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="style-prop-null"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="style-prop-null"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="style-prop-null-output"><style-prop-null-elem><div id="style-prop-null-result" style="font-weight: bold;">styled</div></style-prop-null-elem></div>';
+        const expected =
+          '<div id="style-prop-null-output"><style-prop-null-elem><div id="style-prop-null-result" style="font-weight: bold;">styled</div></style-prop-null-elem></div>';
         setTimeout(() => {
           const sec = document.querySelector('[data-test="style-prop-null"]');
           if (sec.dataset.testResult === 'fail') return;
-          window.assertSnapshot('style-prop-null', document.getElementById('style-prop-null-output'), expected);
+          window.assertSnapshot(
+            'style-prop-null',
+            document.getElementById('style-prop-null-output'),
+            expected
+          );
         }, 500);
       </script>
     </section>
 
     <section data-test="style-string" data-test-result="pending">
       <h2>Style String Attribute</h2>
-      <p>Tests that style=${'color: blue'} sets the style as a string attribute.</p>
+      <p>
+        Tests that style=${'color: blue'} sets the style as a string attribute.
+      </p>
       <pre><code>(async function () {
   const section = document.querySelector('[data-test="style-string"]');
   const wait = () =&gt; new Promise(r =&gt; requestAnimationFrame(r));
@@ -450,20 +534,30 @@ setTimeout(() =&gt; {
       <div id="style-string-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="style-string"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="style-string"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="style-string-output"><style-string-elem><div id="style-string-result" style="color: blue; font-size: 20px">styled</div></style-string-elem></div>';
+        const expected =
+          '<div id="style-string-output"><style-string-elem><div id="style-string-result" style="color: blue; font-size: 20px">styled</div></style-string-elem></div>';
         setTimeout(() => {
           const sec = document.querySelector('[data-test="style-string"]');
           if (sec.dataset.testResult === 'fail') return;
-          window.assertSnapshot('style-string', document.getElementById('style-string-output'), expected);
+          window.assertSnapshot(
+            'style-string',
+            document.getElementById('style-string-output'),
+            expected
+          );
         }, 500);
       </script>
     </section>
 
     <section data-test="text-type-direct" data-test-result="pending">
       <h2>TEXT_TYPE: textContent Direct Property</h2>
-      <p>Tests the TEXT_TYPE path: return [path, directFor('textContent'), TEXT] - triggered when element has only text interpolation.</p>
+      <p>
+        Tests the TEXT_TYPE path: return [path, directFor('textContent'), TEXT]
+        - triggered when element has only text interpolation.
+      </p>
       <pre><code>(async function () {
   const section = document.querySelector('[data-test="text-type-direct"]');
   const wait = () =&gt; new Promise(r =&gt; requestAnimationFrame(r));
@@ -503,20 +597,32 @@ setTimeout(() =&gt; {
       <div id="text-type-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="text-type-direct"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="text-type-direct"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="text-type-output"><text-type-elem><span id="text-type-result">Updated</span></text-type-elem></div>';
+        const expected =
+          '<div id="text-type-output"><text-type-elem><span id="text-type-result">Updated</span></text-type-elem></div>';
         setTimeout(() => {
           const sec = document.querySelector('[data-test="text-type-direct"]');
           if (sec.dataset.testResult === 'fail') return;
-          window.assertSnapshot('text-type-direct', document.getElementById('text-type-output'), expected);
+          window.assertSnapshot(
+            'text-type-direct',
+            document.getElementById('text-type-output'),
+            expected
+          );
         }, 500);
       </script>
     </section>
 
-    <section data-test="direct-dot-prop" data-test-result="pending">
-      <h2>DIRECT: .property Setter</h2>
-      <p>Tests the DIRECT path: return [path, direct(name.slice(1)), DIRECT] - triggered by .propName=${value} syntax.</p>
+    <section
+      data-test="direct-dot-prop"
+      data-test-result="pending"
+      data-internal="render-core"
+      hidden
+    >
+      <h2>Internal Direct Property Compatibility</h2>
+      <p>Private render-core coverage for legacy direct property assignment.</p>
       <pre><code>(async function () {
   const section = document.querySelector('[data-test="direct-dot-prop"]');
   const wait = () =&gt; new Promise(r =&gt; requestAnimationFrame(r));
@@ -530,10 +636,9 @@ setTimeout(() =&gt; {
         this.element._trigger = onNext();
       }
       render(Html) {
-        // .value= and .checked= trigger DIRECT path with direct(name.slice(1))
         Html`&lt;div id="direct-dot-result"&gt;
-          &lt;input type="text" id="direct-input" .value=${this.element._myValue} /&gt;
-          &lt;input type="checkbox" id="direct-checkbox" .checked=${this.element._checked} /&gt;
+          &lt;input type="text" id="direct-input" &#46;value=${this.element._myValue} /&gt;
+          &lt;input type="checkbox" id="direct-checkbox" &#46;checked=${this.element._checked} /&gt;
         &lt;/div&gt;`;
       }
     }
@@ -570,20 +675,30 @@ setTimeout(() =&gt; {
       <div id="direct-dot-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="direct-dot-prop"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="direct-dot-prop"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="direct-dot-output"><direct-dot-elem><div id="direct-dot-result">\n          <input type="text" id="direct-input">\n          <input type="checkbox" id="direct-checkbox">\n        </div></direct-dot-elem></div>';
+        const expected =
+          '<div id="direct-dot-output"><direct-dot-elem><div id="direct-dot-result">\n          <input type="text" id="direct-input">\n          <input type="checkbox" id="direct-checkbox">\n        </div></direct-dot-elem></div>';
         setTimeout(() => {
           const sec = document.querySelector('[data-test="direct-dot-prop"]');
           if (sec.dataset.testResult === 'fail') return;
-          window.assertSnapshot('direct-dot-prop', document.getElementById('direct-dot-output'), expected);
+          window.assertSnapshot(
+            'direct-dot-prop',
+            document.getElementById('direct-dot-output'),
+            expected
+          );
         }, 500);
       </script>
     </section>
 
     <section data-test="ref-attribute" data-test-result="pending">
       <h2>DIRECT: ref Attribute (Symbol Property)</h2>
-      <p>Tests the ref path: return [path, directFor(ref), DIRECT] - stores callback on node via Symbol property.</p>
+      <p>
+        Tests the ref path: return [path, directFor(ref), DIRECT] - stores
+        callback on node via Symbol property.
+      </p>
       <pre><code>(async function () {
   const section = document.querySelector('[data-test="ref-attribute"]');
   const wait = () =&gt; new Promise(r =&gt; requestAnimationFrame(r));
@@ -632,17 +747,23 @@ setTimeout(() =&gt; {
       <div id="ref-attr-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="ref-attribute"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ref-attribute"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="ref-attr-output"><ref-attr-elem><div id="ref-target">Ref Target</div></ref-attr-elem></div>';
+        const expected =
+          '<div id="ref-attr-output"><ref-attr-elem><div id="ref-target">Ref Target</div></ref-attr-elem></div>';
         setTimeout(() => {
           const sec = document.querySelector('[data-test="ref-attribute"]');
           if (sec.dataset.testResult === 'fail') return;
-          window.assertSnapshot('ref-attribute', document.getElementById('ref-attr-output'), expected);
+          window.assertSnapshot(
+            'ref-attribute',
+            document.getElementById('ref-attr-output'),
+            expected
+          );
         }, 500);
       </script>
     </section>
-
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>
   </body>

@@ -73,22 +73,27 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="empty-render"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="empty-render"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="empty-render-output"><empty-element></empty-element></div>';
+        const expected =
+          '<div id="empty-render-output"><empty-element></empty-element></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="empty-render"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('empty-render', document.getElementById('empty-render-output'), expected);
-
+          window.assertSnapshot(
+            'empty-render',
+            document.getElementById('empty-render-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="multiple-renders" data-test-result="pending">
@@ -130,22 +135,27 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="multiple-renders"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="multiple-renders"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="multiple-renders-output"><multi-render-element><!--<>-->Render count: 1<!--</>--></multi-render-element></div>';
+        const expected =
+          '<div id="multiple-renders-output"><multi-render-element><!--<>-->Render count: 1<!--</>--></multi-render-element></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="multiple-renders"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('multiple-renders', document.getElementById('multiple-renders-output'), expected);
-
+          window.assertSnapshot(
+            'multiple-renders',
+            document.getElementById('multiple-renders-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="special-chars" data-test-result="pending">
@@ -185,22 +195,27 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="special-chars"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="special-chars"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="special-chars-output"><special-chars-element data-text="&lt;b&gt;bold&lt;/b&gt;"><!--<>-->Text: &lt;b&gt;bold&lt;/b&gt;<!--</>--></special-chars-element></div>';
+        const expected =
+          '<div id="special-chars-output"><special-chars-element data-text="&lt;b&gt;bold&lt;/b&gt;"><!--<>-->Text: &lt;b&gt;bold&lt;/b&gt;<!--</>--></special-chars-element></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="special-chars"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('special-chars', document.getElementById('special-chars-output'), expected);
-
+          window.assertSnapshot(
+            'special-chars',
+            document.getElementById('special-chars-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="unicode-content" data-test-result="pending">
@@ -234,22 +249,27 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="unicode-content"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="unicode-content"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="unicode-content-output"><unicode-element>Unicode: Hello World</unicode-element></div>';
+        const expected =
+          '<div id="unicode-content-output"><unicode-element>Unicode: Hello World</unicode-element></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="unicode-content"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('unicode-content', document.getElementById('unicode-content-output'), expected);
-
+          window.assertSnapshot(
+            'unicode-content',
+            document.getElementById('unicode-content-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="each-block-inner-content" data-test-result="pending">
@@ -410,29 +430,36 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="each-block-inner-content"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="each-block-inner-content"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="each-block-inner-content-output"><each-inner-content-element><!--<>--><div id="props">\n            <!--<>--><span class="user">Alice:admin</span>\n            <!--</>--><!--<>--><span class="user">Bob:user</span>\n            <!--</>--><!--◦-->\n          </div>\n          <div id="index">\n            <!--<>--><span class="idx">0</span>\n            <!--</>--><!--<>--><span class="idx">1</span>\n            <!--</>--><!--<>--><span class="idx">2</span>\n            <!--</>--><!--◦-->\n          </div>\n          <div id="spread">\n            <!--<>--><span class="val">one</span>\n            <!--</>--><!--<>--><span class="val">two</span>\n            <!--</>--><!--<>--><span class="val">three</span>\n            <!--</>--><!--◦-->\n          </div>\n          <div id="nested">\n            <!--<>--><div class="user-tags" data-name="Alice">\n                <span class="tag">vip</span><span class="tag">early</span><!--◦-->\n              </div>\n            <!--</>--><!--<>--><div class="user-tags" data-name="Bob">\n                <span class="tag">new</span><!--◦-->\n              </div>\n            <!--</>--><!--◦-->\n          </div>\n          <div id="static-content">\n            <!--<>--><span class="static">static text only</span>\n            <!--</>--><!--<>--><span class="static">static text only</span>\n            <!--</>--><!--<>--><span class="static">static text only</span>\n            <!--</>--><!--◦-->\n          </div>\n          <div id="non-array-nested">\n            <!--<>--><span class="name">Carol</span>\n              \n            <!--</>--><!--◦-->\n          </div>\n          <div id="mixed">before 3 <span class="m">one</span><span class="m">two</span><span class="m">three</span><!--◦--> after</div>\n        <!--</>--></each-inner-content-element></div>';
+        const expected =
+          '<div id="each-block-inner-content-output"><each-inner-content-element><!--<>--><div id="props">\n            <!--<>--><span class="user">Alice:admin</span>\n            <!--</>--><!--<>--><span class="user">Bob:user</span>\n            <!--</>--><!--◦-->\n          </div>\n          <div id="index">\n            <!--<>--><span class="idx">0</span>\n            <!--</>--><!--<>--><span class="idx">1</span>\n            <!--</>--><!--<>--><span class="idx">2</span>\n            <!--</>--><!--◦-->\n          </div>\n          <div id="spread">\n            <!--<>--><span class="val">one</span>\n            <!--</>--><!--<>--><span class="val">two</span>\n            <!--</>--><!--<>--><span class="val">three</span>\n            <!--</>--><!--◦-->\n          </div>\n          <div id="nested">\n            <!--<>--><div class="user-tags" data-name="Alice">\n                <span class="tag">vip</span><span class="tag">early</span><!--◦-->\n              </div>\n            <!--</>--><!--<>--><div class="user-tags" data-name="Bob">\n                <span class="tag">new</span><!--◦-->\n              </div>\n            <!--</>--><!--◦-->\n          </div>\n          <div id="static-content">\n            <!--<>--><span class="static">static text only</span>\n            <!--</>--><!--<>--><span class="static">static text only</span>\n            <!--</>--><!--<>--><span class="static">static text only</span>\n            <!--</>--><!--◦-->\n          </div>\n          <div id="non-array-nested">\n            <!--<>--><span class="name">Carol</span>\n              \n            <!--</>--><!--◦-->\n          </div>\n          <div id="mixed">before 3 <span class="m">one</span><span class="m">two</span><span class="m">three</span><!--◦--> after</div>\n        <!--</>--></each-inner-content-element></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="each-block-inner-content"]');
+          const sec = document.querySelector(
+            '[data-test="each-block-inner-content"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('each-block-inner-content', document.getElementById('each-block-inner-content-output'), expected);
-
+          window.assertSnapshot(
+            'each-block-inner-content',
+            document.getElementById('each-block-inner-content-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="functional-api-no-args" data-test-result="pending">
       <h2>Functional API - No Arguments Error</h2>
       <p>
-        Calling hyperElement() with no arguments should throw an error.
-        Tests the Proxy apply trap validation in src/index.js.
+        Calling hyperElement() with no arguments should throw an error. Tests
+        the Proxy apply trap validation in src/index.js.
       </p>
       <pre><code>(function () {
   requestAnimationFrame(() => {
@@ -462,12 +489,17 @@
 })();</code></pre>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="functional-api-no-args"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="functional-api-no-args"] pre code'
+        ).textContent;
         eval(code);
       </script>
     </section>
 
-    <section data-test="direct-instantiation-blocked" data-test-result="pending">
+    <section
+      data-test="direct-instantiation-blocked"
+      data-test-result="pending"
+    >
       <h2>Direct Instantiation Blocked</h2>
       <p>
         Attempting to call <code>new hyperElement()</code> directly should throw
@@ -505,7 +537,9 @@
 })();</code></pre>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="direct-instantiation-blocked"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="direct-instantiation-blocked"] pre code'
+        ).textContent;
         eval(code);
       </script>
     </section>
@@ -513,8 +547,8 @@
     <section data-test="nested-hole-template-switch" data-test-result="pending">
       <h2>Nested Hole Template Switch (getHole else branch)</h2>
       <p>
-        Tests the <code>getHole</code> else branch in hole.js where a nested Hole
-        switches to a different template. This triggers
+        Tests the <code>getHole</code> else branch in hole.js where a nested
+        Hole switches to a different template. This triggers
         <code>hole.n.replaceWith(dom(value))</code> when
         <code>hole.t !== value.t</code>.
       </p>
@@ -623,31 +657,41 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="nested-hole-template-switch"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="nested-hole-template-switch"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="nested-hole-switch-output"><nested-hole-switch-element><!--<>--><div>\n            <span class="count-display">Count: 4</span>\n            <div class="conditional">\n              <p class="even">Even: 4</p>\n            </div>\n          </div>\n        <!--</>--></nested-hole-switch-element></div>';
+        const expected =
+          '<div id="nested-hole-switch-output"><nested-hole-switch-element><!--<>--><div>\n            <span class="count-display">Count: 4</span>\n            <div class="conditional">\n              <p class="even">Even: 4</p>\n            </div>\n          </div>\n        <!--</>--></nested-hole-switch-element></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="nested-hole-template-switch"]');
+          const sec = document.querySelector(
+            '[data-test="nested-hole-template-switch"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('nested-hole-template-switch', document.getElementById('nested-hole-switch-output'), expected);
-
+          window.assertSnapshot(
+            'nested-hole-template-switch',
+            document.getElementById('nested-hole-switch-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
-    <section data-test="event-array-same-handler-skip" data-test-result="pending">
-      <h2>Event Array Same Handler Skip (hole.js EVENT optimization)</h2>
+    <section
+      data-test="event-array-same-handler-skip"
+      data-test-result="pending"
+      data-internal="render-core"
+      hidden
+    >
+      <h2>Internal Event Array Same Handler Skip</h2>
       <p>
-        Tests the <code>else if (type & EVENT && value[0] === prev[0])</code>
-        branch in hole.js update(). When an event is passed as
-        <code>@click=${[handler, options]}</code> and the handler reference
-        doesn't change between renders, the update is skipped (continue).
+        Private render-core coverage for the EVENT array optimization when the
+        handler reference does not change between renders.
       </p>
       <pre><code>(function () {
   const section = document.querySelector('[data-test="event-array-same-handler-skip"]');
@@ -684,7 +728,7 @@
             &lt;span class="click-count"&gt;Clicks: ${this.element.clickCount}&lt;/span&gt;
             &lt;button
               class="event-skip-btn"
-              @click=${[this.element.handleClick, { passive: true }]}
+              &#64;click=${[this.element.handleClick, { passive: true }]}
             &gt;
               Click Me
             &lt;/button&gt;
@@ -779,33 +823,43 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="event-array-same-handler-skip"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="event-array-same-handler-skip"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="event-array-skip-output"><event-array-skip-element><!--<>--><div>\n            <span class="render-count">Renders: 3</span>\n            <span class="click-count">Clicks: 2</span>\n            <button class="event-skip-btn">\n              Click Me\n            </button>\n          </div>\n        <!--</>--></event-array-skip-element></div>';
+        const expected =
+          '<div id="event-array-skip-output"><event-array-skip-element><!--<>--><div>\n            <span class="render-count">Renders: 3</span>\n            <span class="click-count">Clicks: 2</span>\n            <button class="event-skip-btn">\n              Click Me\n            </button>\n          </div>\n        <!--</>--></event-array-skip-element></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="event-array-same-handler-skip"]');
+          const sec = document.querySelector(
+            '[data-test="event-array-same-handler-skip"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('event-array-same-handler-skip', document.getElementById('event-array-skip-output'), expected);
-
+          window.assertSnapshot(
+            'event-array-same-handler-skip',
+            document.getElementById('event-array-skip-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="boolean-attr-html-vs-xml" data-test-result="pending">
       <h2>Boolean Attribute: HTML vs XML Mode (Element.toString)</h2>
       <p>
-        Tests the boolean attribute handling in <code>Element.toString()</code>
-        from nodes.js. When <code>typeof value === 'boolean'</code> is true:
-        <ul>
-          <li>HTML mode: outputs <code>` ${key}`</code> (bare attribute)</li>
-          <li>XML/SVG mode: outputs <code>` ${key}=""`</code> (empty value)</li>
-        </ul>
+        Tests the boolean attribute handling in
+        <code>Element.toString()</code> from nodes.js. When
+        <code>typeof value === 'boolean'</code> is true:
+      </p>
+      <ul>
+        <li>HTML mode: outputs <code>` ${key}`</code> (bare attribute)</li>
+        <li>XML/SVG mode: outputs <code>` ${key}=""`</code> (empty value)</li>
+      </ul>
+      <p>
         Uses STATIC boolean attributes (no value) to trigger this code path.
       </p>
       <pre><code>(function () {
@@ -899,35 +953,53 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="boolean-attr-html-vs-xml"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="boolean-attr-html-vs-xml"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="boolean-attr-html-vs-xml-output"><boolean-attr-element><!--<>--><div class="html-mode">\n            \n            <input type="text" disabled="" class="html-input">\n            <input type="checkbox" checked="" class="html-checkbox">\n            <button disabled="" class="html-button">HTML Button</button>\n            <textarea readonly="" class="html-textarea">Read only</textarea>\n          </div>\n          <svg class="xml-mode" width="100" height="100">\n            \n            <rect focusable="" class="svg-rect" width="50" height="50"></rect>\n            <circle focusable="" class="svg-circle" r="25" cx="75" cy="75"></circle>\n          </svg>\n        <!--</>--></boolean-attr-element></div>';
+        const expected =
+          '<div id="boolean-attr-html-vs-xml-output"><boolean-attr-element><!--<>--><div class="html-mode">\n            \n            <input type="text" disabled="" class="html-input">\n            <input type="checkbox" checked="" class="html-checkbox">\n            <button disabled="" class="html-button">HTML Button</button>\n            <textarea readonly="" class="html-textarea">Read only</textarea>\n          </div>\n          <svg class="xml-mode" width="100" height="100">\n            \n            <rect focusable="" class="svg-rect" width="50" height="50"></rect>\n            <circle focusable="" class="svg-circle" r="25" cx="75" cy="75"></circle>\n          </svg>\n        <!--</>--></boolean-attr-element></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="boolean-attr-html-vs-xml"]');
+          const sec = document.querySelector(
+            '[data-test="boolean-attr-html-vs-xml"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('boolean-attr-html-vs-xml', document.getElementById('boolean-attr-html-vs-xml-output'), expected);
-
+          window.assertSnapshot(
+            'boolean-attr-html-vs-xml',
+            document.getElementById('boolean-attr-html-vs-xml-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
-    <section data-test="persistent-fragment-diff-ops" data-test-result="pending">
+    <section
+      data-test="persistent-fragment-diff-ops"
+      data-test-result="pending"
+    >
       <h2>PersistentFragment Diff Operations (diffFragment -1 and -0)</h2>
       <p>
         Tests the <code>diffFragment</code> function's handling of multi-node
         fragments during array operations. Specifically targets:
-        <ul>
-          <li><code>drop(node)</code> - triggered by array item REMOVAL (operation -1)</li>
-          <li><code>node.lastChild</code> - triggered by array REORDERING (operation -0)</li>
-        </ul>
-        These branches only execute for PersistentFragments (nodeType === 11) during
-        the diff algorithm's reconciliation of array-based templates.
+      </p>
+      <ul>
+        <li>
+          <code>drop(node)</code> - triggered by array item REMOVAL (operation
+          -1)
+        </li>
+        <li>
+          <code>node.lastChild</code> - triggered by array REORDERING (operation
+          -0)
+        </li>
+      </ul>
+      <p>
+        These branches only execute for PersistentFragments (nodeType === 11)
+        during the diff algorithm's reconciliation of array-based templates.
       </p>
       <pre><code>(function () {
   const section = document.querySelector('[data-test="persistent-fragment-diff-ops"]');
@@ -1091,22 +1163,29 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="persistent-fragment-diff-ops"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="persistent-fragment-diff-ops"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="persistent-fragment-diff-output"><persistent-fragment-diff-element><!--<>--><div class="item-container">\n            <!--◦-->\n          </div>\n        <!--</>--></persistent-fragment-diff-element></div>';
+        const expected =
+          '<div id="persistent-fragment-diff-output"><persistent-fragment-diff-element><!--<>--><div class="item-container">\n            <!--◦-->\n          </div>\n        <!--</>--></persistent-fragment-diff-element></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="persistent-fragment-diff-ops"]');
+          const sec = document.querySelector(
+            '[data-test="persistent-fragment-diff-ops"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('persistent-fragment-diff-ops', document.getElementById('persistent-fragment-diff-output'), expected);
-
+          window.assertSnapshot(
+            'persistent-fragment-diff-ops',
+            document.getElementById('persistent-fragment-diff-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="dom-rerender-same-hole" data-test-result="pending">
@@ -1162,25 +1241,35 @@
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="dom-rerender-same-hole"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="dom-rerender-same-hole"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="dom-rerender-container"><span class="dom-test">Hello 42</span></div>';
+        const expected =
+          '<div id="dom-rerender-container"><span class="dom-test">Hello 42</span></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="dom-rerender-same-hole"]');
+          const sec = document.querySelector(
+            '[data-test="dom-rerender-same-hole"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('dom-rerender-same-hole', document.getElementById('dom-rerender-container'), expected);
-
+          window.assertSnapshot(
+            'dom-rerender-same-hole',
+            document.getElementById('dom-rerender-container'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
-    <section data-test="prototype-getter-non-function" data-test-result="pending">
+    <section
+      data-test="prototype-getter-non-function"
+      data-test-result="pending"
+    >
       <h2>Lowercase Prototype Getter Returning Non-Function</h2>
       <p>
         Class definition with a lowercase getter (<code>get someValue()</code>)
@@ -1204,11 +1293,18 @@ document.getElementById('getter-output').innerHTML = '&lt;getter-elem&gt;&lt;/ge
       <div id="getter-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="prototype-getter-non-function"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="prototype-getter-non-function"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="getter-output"><getter-elem><div id="getter-result">value=42, count=7</div></getter-elem></div>';
+        const expected =
+          '<div id="getter-output"><getter-elem><div id="getter-result">value=42, count=7</div></getter-elem></div>';
         requestAnimationFrame(() => {
-          window.assertSnapshot('prototype-getter-non-function', document.getElementById('getter-output'), expected);
+          window.assertSnapshot(
+            'prototype-getter-non-function',
+            document.getElementById('getter-output'),
+            expected
+          );
         });
       </script>
     </section>

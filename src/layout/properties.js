@@ -75,13 +75,16 @@ export function defineLayoutProperties(host) {
   Object.defineProperties(host, {
     edit: {
       /**
-       * Read the edit-mode flag from the standard boolean host attribute.
-       * The editor treats `edit="false"` as disabled so plain HTML examples
-       * can turn the mode off without removing the attribute manually.
+       * Read the edit-mode flag from Hyper Element shared attributes first,
+       * then from the standard boolean host attribute. This lets public
+       * templates use `edit=${state.editing}` without the private render-core
+       * toggle prefix while plain HTML can still use `<hyper-layout edit>`.
        *
        * @returns {boolean} Whether edit mode is currently active.
        */
       get() {
+        const shared = readSharedLayoutAttribute(this, 'edit');
+        if (shared !== undefined) return !!shared;
         return (
           this.hasAttribute('edit') && this.getAttribute('edit') !== 'false'
         );

@@ -85,22 +85,26 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-basic-click"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-basic-click"] pre code'
+        ).textContent;
 
         eval(code);
 
         const expected = '<ssr-counter><button>Count: 2</button></ssr-counter>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="ssr-basic-click"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-basic-click', document.querySelector('ssr-counter'), expected);
-
+          window.assertSnapshot(
+            'ssr-basic-click',
+            document.querySelector('ssr-counter'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 2: Input Event Replay -->
@@ -143,22 +147,27 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-input-replay"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-input-replay"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-input><!--<>--><input type="text" value="Hello World">\n        <span>Echo: Hello World</span>\n      <!--</>--></ssr-input>';
+        const expected =
+          '<ssr-input><!--<>--><input type="text" value="Hello World">\n        <span>Echo: Hello World</span>\n      <!--</>--></ssr-input>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="ssr-input-replay"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-input-replay', document.querySelector('ssr-input'), expected);
-
+          window.assertSnapshot(
+            'ssr-input-replay',
+            document.querySelector('ssr-input'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 3: onBeforeHydrate Filter (Class-based) -->
@@ -204,22 +213,29 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-before-hydrate-class"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-before-hydrate-class"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-filter-class><button>Clicks: 1</button></ssr-filter-class>';
+        const expected =
+          '<ssr-filter-class><button>Clicks: 1</button></ssr-filter-class>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="ssr-before-hydrate-class"]');
+          const sec = document.querySelector(
+            '[data-test="ssr-before-hydrate-class"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-before-hydrate-class', document.querySelector('ssr-filter-class'), expected);
-
+          window.assertSnapshot(
+            'ssr-before-hydrate-class',
+            document.querySelector('ssr-filter-class'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 4: onAfterHydrate Callback (Class-based) -->
@@ -251,22 +267,29 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-after-hydrate-class"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-after-hydrate-class"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-after-class><button>Button</button></ssr-after-class>';
+        const expected =
+          '<ssr-after-class><button>Button</button></ssr-after-class>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="ssr-after-hydrate-class"]');
+          const sec = document.querySelector(
+            '[data-test="ssr-after-hydrate-class"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-after-hydrate-class', document.querySelector('ssr-after-class'), expected);
-
+          window.assertSnapshot(
+            'ssr-after-hydrate-class',
+            document.querySelector('ssr-after-class'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 5: Functional API SSR Hydration -->
@@ -301,22 +324,29 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-functional-api"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-functional-api"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-func-counter><button>Count: 2</button></ssr-func-counter>';
+        const expected =
+          '<ssr-func-counter><button>Count: 2</button></ssr-func-counter>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="ssr-functional-api"]');
+          const sec = document.querySelector(
+            '[data-test="ssr-functional-api"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-functional-api', document.querySelector('ssr-func-counter'), expected);
-
+          window.assertSnapshot(
+            'ssr-functional-api',
+            document.querySelector('ssr-func-counter'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 6: Functional API with Lifecycle Hooks -->
@@ -364,22 +394,29 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-functional-hooks"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-functional-hooks"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-func-hooks><button>Clicks: 2</button></ssr-func-hooks>';
+        const expected =
+          '<ssr-func-hooks><button>Clicks: 2</button></ssr-func-hooks>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="ssr-functional-hooks"]');
+          const sec = document.querySelector(
+            '[data-test="ssr-functional-hooks"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-functional-hooks', document.querySelector('ssr-func-hooks'), expected);
-
+          window.assertSnapshot(
+            'ssr-functional-hooks',
+            document.querySelector('ssr-func-hooks'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 7: Checkbox State Restoration -->
@@ -403,7 +440,7 @@ setTimeout(function () {
       }
       render(Html, store) {
         Html`
-        &lt;input type="checkbox" onchange=${function (e) { this.handleChange(e); }.bind(this)} ?checked=${store?.isChecked ?? false}&gt;
+        &lt;input type="checkbox" onchange=${function (e) { this.handleChange(e); }.bind(this)} checked=${store?.isChecked ? '' : null}&gt;
         &lt;label&gt;Checked: ${store?.isChecked ? 'yes' : 'no'}&lt;/label&gt;
       `;
       }
@@ -422,22 +459,29 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-checkbox-state"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-checkbox-state"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-checkbox><!--<>--><input type="checkbox" checked="">\n        <label>Checked: yes</label>\n      <!--</>--></ssr-checkbox>';
+        const expected =
+          '<ssr-checkbox><!--<>--><input type="checkbox" checked="">\n        <label>Checked: yes</label>\n      <!--</>--></ssr-checkbox>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="ssr-checkbox-state"]');
+          const sec = document.querySelector(
+            '[data-test="ssr-checkbox-state"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-checkbox-state', document.querySelector('ssr-checkbox'), expected);
-
+          window.assertSnapshot(
+            'ssr-checkbox-state',
+            document.querySelector('ssr-checkbox'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 8: No Events - Still Calls Hooks -->
@@ -476,28 +520,34 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-no-events"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-no-events"] pre code'
+        ).textContent;
 
         eval(code);
 
         const expected = '<ssr-no-events><div>Rendered</div></ssr-no-events>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="ssr-no-events"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-no-events', document.querySelector('ssr-no-events'), expected);
-
+          window.assertSnapshot(
+            'ssr-no-events',
+            document.querySelector('ssr-no-events'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 9: Keyboard Event Replay -->
     <section data-test="ssr-keyboard-replay" data-test-result="pending">
       <h2>Keyboard Event Replay</h2>
-      <p>Keyboard events are captured and replayed with key details preserved.</p>
+      <p>
+        Keyboard events are captured and replayed with key details preserved.
+      </p>
       <pre><code>var keyInput = document.getElementById('ssr-keyboard-input');
 var keyEvent = new KeyboardEvent('keydown', {
   bubbles: true,
@@ -531,28 +581,39 @@ setTimeout(function () {
   }, 100);
 }, 50);</code></pre>
       <ssr-keyboard>
-        <input type="text" id="ssr-keyboard-input" aria-label="keyboard test input" />
+        <input
+          type="text"
+          id="ssr-keyboard-input"
+          aria-label="keyboard test input"
+        />
         <span id="ssr-keyboard-result"></span>
       </ssr-keyboard>
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-keyboard-replay"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-keyboard-replay"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-keyboard><!--<>--><input type="text">\n        <span>Last key: Enter</span>\n      <!--</>--></ssr-keyboard>';
+        const expected =
+          '<ssr-keyboard><!--<>--><input type="text">\n        <span>Last key: Enter</span>\n      <!--</>--></ssr-keyboard>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="ssr-keyboard-replay"]');
+          const sec = document.querySelector(
+            '[data-test="ssr-keyboard-replay"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-keyboard-replay', document.querySelector('ssr-keyboard'), expected);
-
+          window.assertSnapshot(
+            'ssr-keyboard-replay',
+            document.querySelector('ssr-keyboard'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 10: Mouse Event Replay -->
@@ -600,22 +661,27 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-mouse-replay"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-mouse-replay"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-mouse><!--<>--><div style="width: 100px; height: 100px; background: #eee">Click target</div>\n        <span>Coords: 42, 24</span>\n      <!--</>--></ssr-mouse>';
+        const expected =
+          '<ssr-mouse><!--<>--><div style="width: 100px; height: 100px; background: #eee">Click target</div>\n        <span>Coords: 42, 24</span>\n      <!--</>--></ssr-mouse>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="ssr-mouse-replay"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-mouse-replay', document.querySelector('ssr-mouse'), expected);
-
+          window.assertSnapshot(
+            'ssr-mouse-replay',
+            document.querySelector('ssr-mouse'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 11: Multiple Event Types -->
@@ -667,28 +733,38 @@ setTimeout(function () {
   }, 100);
 }, 50);</code></pre>
       <ssr-multi-events>
-        <input type="text" id="ssr-multi-input" value="" aria-label="multi-event test input" />
+        <input
+          type="text"
+          id="ssr-multi-input"
+          value=""
+          aria-label="multi-event test input"
+        />
         <span id="ssr-multi-log"></span>
       </ssr-multi-events>
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-multi-events"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-multi-events"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-multi-events><!--<>--><input type="text">\n        <span>Events: </span>\n      <!--</>--></ssr-multi-events>';
+        const expected =
+          '<ssr-multi-events><!--<>--><input type="text">\n        <span>Events: </span>\n      <!--</>--></ssr-multi-events>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="ssr-multi-events"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-multi-events', document.querySelector('ssr-multi-events'), expected);
-
+          window.assertSnapshot(
+            'ssr-multi-events',
+            document.querySelector('ssr-multi-events'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 12: SSR Dev Mode Indicator -->
@@ -714,7 +790,9 @@ setTimeout(function () {
 })();</code></pre>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="ssr-dev-mode"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-dev-mode"] pre code'
+        ).textContent;
         eval(code);
       </script>
     </section>
@@ -734,7 +812,9 @@ setTimeout(function () {
 })();</code></pre>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="ssr-configure-events"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-configure-events"] pre code'
+        ).textContent;
         eval(code);
       </script>
     </section>
@@ -773,7 +853,7 @@ setTimeout(function () {
         touchCaptured = true;
       }
       render(Html) {
-        Html`&lt;div style="width: 100px; height: 100px; background: #eee" @touchstart=${function (e) { this.handleTouch(e); }.bind(this)}&gt;Touch target&lt;/div&gt;`;
+        Html`&lt;div style="width: 100px; height: 100px; background: #eee" ontouchstart=${function (e) { this.handleTouch(e); }.bind(this)}&gt;Touch target&lt;/div&gt;`;
       }
     }
   );
@@ -794,22 +874,27 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-touch-replay"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-touch-replay"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-touch-test><div style="width: 100px; height: 100px; background: #eee">Touch target</div></ssr-touch-test>';
+        const expected =
+          '<ssr-touch-test><div style="width: 100px; height: 100px; background: #eee">Touch target</div></ssr-touch-test>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="ssr-touch-replay"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-touch-replay', document.querySelector('ssr-touch-test'), expected);
-
+          window.assertSnapshot(
+            'ssr-touch-replay',
+            document.querySelector('ssr-touch-test'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 15: Scroll State Capture and Restore -->
@@ -817,7 +902,8 @@ setTimeout(function () {
       <h2>Scroll State Capture and Restore</h2>
       <p>
         Tests that scroll positions are captured and restored after hydration.
-        Uses focus event to trigger captureScrollState (scroll not in default events).
+        Uses focus event to trigger captureScrollState (scroll not in default
+        events).
       </p>
       <pre><code>var scrollContainer = document.getElementById('ssr-scroll-container');
 if (scrollContainer) {
@@ -865,22 +951,27 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-scroll-state"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-scroll-state"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-scroll-test><div id="ssr-scroll-container" style="width: 200px; height: 100px; overflow: auto;" tabindex="0">\n  <div style="width: 400px; height: 300px; background: linear-gradient(135deg, #eee, #ccc);">\n    Scrollable content here.\n  </div>\n</div></ssr-scroll-test>';
+        const expected =
+          '<ssr-scroll-test><div id="ssr-scroll-container" style="width: 200px; height: 100px; overflow: auto;" tabindex="0">\n  <div style="width: 400px; height: 300px; background: linear-gradient(135deg, #eee, #ccc);">\n    Scrollable content here.\n  </div>\n</div></ssr-scroll-test>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="ssr-scroll-state"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-scroll-state', document.querySelector('ssr-scroll-test'), expected);
-
+          window.assertSnapshot(
+            'ssr-scroll-state',
+            document.querySelector('ssr-scroll-test'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 16: Checked State Restoration via restoreElementState -->
@@ -928,29 +1019,46 @@ setTimeout(function () {
   }, 100);
 }, 50);</code></pre>
       <ssr-checked-restore>
-        <input type="checkbox" id="ssr-restore-checkbox" aria-label="restore test checkbox" />
-        <input type="radio" name="ssr-radio" id="ssr-restore-radio" value="a" aria-label="restore test radio" />
+        <input
+          type="checkbox"
+          id="ssr-restore-checkbox"
+          aria-label="restore test checkbox"
+        />
+        <input
+          type="radio"
+          name="ssr-radio"
+          id="ssr-restore-radio"
+          value="a"
+          aria-label="restore test radio"
+        />
         <label>Check me</label>
       </ssr-checked-restore>
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-checked-restore"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-checked-restore"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-checked-restore><!--<>--><input type="checkbox" aria-label="test checkbox">\n<input type="radio" name="ssr-radio" value="a" aria-label="test radio">\n<label>Check me</label><!--</>--></ssr-checked-restore>';
+        const expected =
+          '<ssr-checked-restore><!--<>--><input type="checkbox" aria-label="test checkbox">\n<input type="radio" name="ssr-radio" value="a" aria-label="test radio">\n<label>Check me</label><!--</>--></ssr-checked-restore>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="ssr-checked-restore"]');
+          const sec = document.querySelector(
+            '[data-test="ssr-checked-restore"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-checked-restore', document.querySelector('ssr-checked-restore'), expected);
-
+          window.assertSnapshot(
+            'ssr-checked-restore',
+            document.querySelector('ssr-checked-restore'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 17: Path Resolution Failure Warning -->
@@ -997,29 +1105,35 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-path-failure"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-path-failure"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-path-fail><div id="different-structure">\n  <span>No button here</span>\n</div></ssr-path-fail>';
+        const expected =
+          '<ssr-path-fail><div id="different-structure">\n  <span>No button here</span>\n</div></ssr-path-fail>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="ssr-path-failure"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-path-failure', document.querySelector('ssr-path-fail'), expected);
-
+          window.assertSnapshot(
+            'ssr-path-failure',
+            document.querySelector('ssr-path-fail'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 18: onBeforeHydrate Invalid Return -->
     <section data-test="ssr-before-invalid" data-test-result="pending">
       <h2>onBeforeHydrate Invalid Return (Warning)</h2>
       <p>
-        Tests that returning a non-array from onBeforeHydrate triggers a warning.
+        Tests that returning a non-array from onBeforeHydrate triggers a
+        warning.
       </p>
       <pre><code>var invalidBtn = document.getElementById('ssr-invalid-btn');
 if (invalidBtn) invalidBtn.click();
@@ -1056,22 +1170,29 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-before-invalid"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-before-invalid"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<ssr-invalid-return><button>Button</button></ssr-invalid-return>';
+        const expected =
+          '<ssr-invalid-return><button>Button</button></ssr-invalid-return>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="ssr-before-invalid"]');
+          const sec = document.querySelector(
+            '[data-test="ssr-before-invalid"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-before-invalid', document.querySelector('ssr-invalid-return'), expected);
-
+          window.assertSnapshot(
+            'ssr-before-invalid',
+            document.querySelector('ssr-invalid-return'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <!-- Test 19: Functional API Non-Function Properties -->
@@ -1095,22 +1216,29 @@ setTimeout(function () {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="ssr-func-non-fn-props"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="ssr-func-non-fn-props"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="ssr-non-fn-output"><ssr-non-fn-elem><div>Value: undefined</div></ssr-non-fn-elem></div>';
+        const expected =
+          '<div id="ssr-non-fn-output"><ssr-non-fn-elem><div>Value: undefined</div></ssr-non-fn-elem></div>';
 
         setTimeout(() => {
-
-          const sec = document.querySelector('[data-test="ssr-func-non-fn-props"]');
+          const sec = document.querySelector(
+            '[data-test="ssr-func-non-fn-props"]'
+          );
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('ssr-func-non-fn-props', document.getElementById('ssr-non-fn-output'), expected);
-
+          window.assertSnapshot(
+            'ssr-func-non-fn-props',
+            document.getElementById('ssr-non-fn-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <a href="index.html">&larr; Back to Kitchen Sink</a>

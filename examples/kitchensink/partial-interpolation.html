@@ -39,7 +39,9 @@
   </head>
   <body>
     <h1>Partial Interpolation (Issue #21)</h1>
-    <p>Demonstrates partial attribute interpolation like class="prefix-${value}".</p>
+    <p>
+      Demonstrates partial attribute interpolation like class="prefix-${value}".
+    </p>
 
     <section data-test="simple-partial" data-test-result="pending">
       <h2>Simple Partial Interpolation</h2>
@@ -60,12 +62,19 @@ document.getElementById('simple-partial-output').appendChild(
       <div id="simple-partial-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="simple-partial"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="simple-partial"] pre code'
+        ).textContent;
         eval(code);
         // Single-phase render. Pins the resolved partial-interpolated class.
-        const expected = '<div id="simple-partial-output"><simple-partial><div id="simple-partial-target" class="btn-primary"></div></simple-partial></div>';
+        const expected =
+          '<div id="simple-partial-output"><simple-partial><div id="simple-partial-target" class="btn-primary"></div></simple-partial></div>';
         requestAnimationFrame(() => {
-          window.assertSnapshot('simple-partial', document.getElementById('simple-partial-output'), expected);
+          window.assertSnapshot(
+            'simple-partial',
+            document.getElementById('simple-partial-output'),
+            expected
+          );
         });
       </script>
     </section>
@@ -91,11 +100,18 @@ document.getElementById('multiple-holes-output').appendChild(
       <div id="multiple-holes-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="multiple-holes"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="multiple-holes"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="multiple-holes-output"><multiple-holes><div id="multiple-holes-target" class="flex items-center gap-2"></div></multiple-holes></div>';
+        const expected =
+          '<div id="multiple-holes-output"><multiple-holes><div id="multiple-holes-target" class="flex items-center gap-2"></div></multiple-holes></div>';
         requestAnimationFrame(() => {
-          window.assertSnapshot('multiple-holes', document.getElementById('multiple-holes-output'), expected);
+          window.assertSnapshot(
+            'multiple-holes',
+            document.getElementById('multiple-holes-output'),
+            expected
+          );
         });
       </script>
     </section>
@@ -119,11 +135,18 @@ document.getElementById('conditional-class-output').appendChild(
       <div id="conditional-class-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="conditional-class"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="conditional-class"] pre code'
+        ).textContent;
         eval(code);
-        const expected = '<div id="conditional-class-output"><conditional-class><button id="conditional-class-target" class="btn active">Click</button></conditional-class></div>';
+        const expected =
+          '<div id="conditional-class-output"><conditional-class><button id="conditional-class-target" class="btn active">Click</button></conditional-class></div>';
         requestAnimationFrame(() => {
-          window.assertSnapshot('conditional-class', document.getElementById('conditional-class-output'), expected);
+          window.assertSnapshot(
+            'conditional-class',
+            document.getElementById('conditional-class-output'),
+            expected
+          );
         });
       </script>
     </section>
@@ -140,7 +163,7 @@ customElements.define(
       const titleVal = 'My Title';
       const clickHandler = () => { window.__mixedClicked = true; };
       const content = 'Content Here';
-      Html`&lt;div class="prefix-${classVal}" title="${titleVal}" @click=${clickHandler} id="mixed-attrs-target"&gt;${content}&lt;/div&gt;`;
+      Html`&lt;div class="prefix-${classVal}" title="${titleVal}" onclick=${clickHandler} id="mixed-attrs-target"&gt;${content}&lt;/div&gt;`;
     }
   }
 );
@@ -165,22 +188,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="mixed-attrs"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="mixed-attrs"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="mixed-attrs-output"><mixed-attrs><div id="mixed-attrs-target" title="My Title" class="prefix-suffix">Content Here</div></mixed-attrs></div>';
+        const expected =
+          '<div id="mixed-attrs-output"><mixed-attrs><div id="mixed-attrs-target" title="My Title" class="prefix-suffix">Content Here</div></mixed-attrs></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="mixed-attrs"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('mixed-attrs', document.getElementById('mixed-attrs-output'), expected);
-
+          window.assertSnapshot(
+            'mixed-attrs',
+            document.getElementById('mixed-attrs-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="cascade-test" data-test-result="pending">
@@ -195,7 +223,7 @@ customElements.define(
       Html`&lt;button
         class="skill-node ${node.earned ? 'earned' : 'locked'}"
         title="${node.id}"
-        @click=${() => { window.__cascadeClicked = true; }}
+        onclick=${() => { window.__cascadeClicked = true; }}
         id="cascade-test-target"&gt;${node.label}&lt;/button&gt;`;
     }
   }
@@ -221,22 +249,27 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="cascade-test"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="cascade-test"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="cascade-test-output"><cascade-test><button id="cascade-test-target" title="skill-1" class="skill-node locked">RPC</button></cascade-test></div>';
+        const expected =
+          '<div id="cascade-test-output"><cascade-test><button id="cascade-test-target" title="skill-1" class="skill-node locked">RPC</button></cascade-test></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="cascade-test"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('cascade-test', document.getElementById('cascade-test-output'), expected);
-
+          window.assertSnapshot(
+            'cascade-test',
+            document.getElementById('cascade-test-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="update-partial" data-test-result="pending">
@@ -284,27 +317,35 @@ requestAnimationFrame(() => {
       <script type="module">
         await window.hyperElementReady;
 
-        const code = document.querySelector('[data-test="update-partial"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="update-partial"] pre code'
+        ).textContent;
 
         eval(code);
 
-        const expected = '<div id="update-partial-output"><update-partial><div id="update-partial-target" class="counter-5">5</div></update-partial></div>';
+        const expected =
+          '<div id="update-partial-output"><update-partial><div id="update-partial-target" class="counter-5">5</div></update-partial></div>';
 
         setTimeout(() => {
-
           const sec = document.querySelector('[data-test="update-partial"]');
 
           if (sec.dataset.testResult === 'fail') return;
 
-          window.assertSnapshot('update-partial', document.getElementById('update-partial-output'), expected);
-
+          window.assertSnapshot(
+            'update-partial',
+            document.getElementById('update-partial-output'),
+            expected
+          );
         }, 500);
-       </script>
+      </script>
     </section>
 
     <section data-test="empty-result" data-test-result="pending">
       <h2>Empty Result Removes Attribute</h2>
-      <p>When partial interpolation results in empty string, attribute is removed.</p>
+      <p>
+        When partial interpolation results in empty string, attribute is
+        removed.
+      </p>
       <pre><code>customElements.define(
   'empty-result',
   class extends hyperElement {
@@ -322,13 +363,20 @@ document.getElementById('empty-result-output').appendChild(
       <div id="empty-result-output"></div>
       <script type="module">
         await window.hyperElementReady;
-        const code = document.querySelector('[data-test="empty-result"] pre code').textContent;
+        const code = document.querySelector(
+          '[data-test="empty-result"] pre code'
+        ).textContent;
         eval(code);
         // Single-phase render. The class attribute is fully removed because
         // both interpolation slots resolve to empty strings.
-        const expected = '<div id="empty-result-output"><empty-result><div id="empty-result-target">Content</div></empty-result></div>';
+        const expected =
+          '<div id="empty-result-output"><empty-result><div id="empty-result-target">Content</div></empty-result></div>';
         requestAnimationFrame(() => {
-          window.assertSnapshot('empty-result', document.getElementById('empty-result-output'), expected);
+          window.assertSnapshot(
+            'empty-result',
+            document.getElementById('empty-result-output'),
+            expected
+          );
         });
       </script>
     </section>
