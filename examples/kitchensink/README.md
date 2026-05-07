@@ -33,7 +33,14 @@ This directory serves two purposes:
 ### Templates & Blocks
 
 - [templates.html](templates.html) - `Html.template()` with `{variable}` substitution
-- [advanced-templates.html](advanced-templates.html) - `{+if}`, `{+each}`, `{+unless}` block syntax
+- [advanced-template-variable.html](advanced-template-variable.html) - simple `Html.template()` variable substitution
+- [advanced-template-if-truthy.html](advanced-template-if-truthy.html) - `{+if}` block rendering for truthy conditions
+- [advanced-template-if-falsy.html](advanced-template-if-falsy.html) - `{+if}` block omission for falsy conditions
+- [advanced-template-if-else.html](advanced-template-if-else.html) - `{+if}` with `{else}` branch rendering
+- [advanced-template-each-iteration.html](advanced-template-each-iteration.html) - `{+each}` iteration over primitive array values
+- [advanced-template-each-objects.html](advanced-template-each-objects.html) - `{+each}` iteration with object property access
+- [advanced-template-unless-falsy.html](advanced-template-unless-falsy.html) - `{+unless}` block rendering for falsy conditions
+- [advanced-template-unless-truthy.html](advanced-template-unless-truthy.html) - `{+unless}` block omission for truthy conditions
 - [block-syntax-advanced.html](block-syntax-advanced.html) - Nested blocks, edge cases, null/undefined handling
 - [auto-wire-each.html](auto-wire-each.html) - `{+each ${array}}...{-each}` template iteration
 - [keyed-templates.html](keyed-templates.html) - Template directives with keys
@@ -77,11 +84,24 @@ behavior.
 
 ### Signals & Reactivity
 
-- [signals.html](signals.html) - `signal()`, `computed()`, `effect()`, `batch()`, `untracked()`
+- [signal-basic.html](signal-basic.html) - `signal()` creation plus value reads, writes, and `peek()`
+- [signal-subscribe.html](signal-subscribe.html) - `signal().subscribe()` notifications and unsubscribe behavior
+- [signal-computed-basic.html](signal-computed-basic.html) - `computed()` values derived from multiple signals
+- [signal-computed-lazy.html](signal-computed-lazy.html) - lazy computed evaluation and cached reads
+- [signal-effect-basic.html](signal-effect-basic.html) - `effect()` reruns when dependencies change
+- [signal-effect-cleanup.html](signal-effect-cleanup.html) - effect cleanup before reruns and disposal
+- [signal-untracked.html](signal-untracked.html) - `untracked()` reads that avoid dependency registration
+- [signal-batch.html](signal-batch.html) - `batch()` grouped signal updates
+- [signal-computed-nested.html](signal-computed-nested.html) - computed values that depend on other computed values
+- [signal-effect-computed.html](signal-effect-computed.html) - effects that depend on computed values
+- [signal-component.html](signal-component.html) - using signal state inside a `hyperElement` component
+- [signal-batch-nested.html](signal-batch-nested.html) - nested `batch()` calls
+- [signal-batch-effects.html](signal-batch-effects.html) - deferred effects after batched updates
 
 ### Events
 
-- [event-callbacks.html](event-callbacks.html) - External event callbacks using `attachStore()`
+- [event-callback-no-store.html](event-callback-no-store.html) - External event callbacks using `attachStore()` without a backing store
+- [event-callback-with-data.html](event-callback-with-data.html) - Passing external event payloads through the `attachStore()` trigger
 
 ### Functional API
 
@@ -115,7 +135,11 @@ behavior.
 
 ### Performance
 
-- [stress-test.html](stress-test.html) - Large lists, rapid updates, deep nesting
+- [stress-large-list.html](stress-large-list.html) - Rendering a keyed 100 item list
+- [stress-rapid-rerender.html](stress-rapid-rerender.html) - Running 50 quick render cycles on one element
+- [stress-many-elements.html](stress-many-elements.html) - Creating 20 custom element instances on one page
+- [stress-list-updates.html](stress-list-updates.html) - Adding and removing keyed list items
+- [stress-many-interpolations.html](stress-many-interpolations.html) - Rendering templates with 20 interpolation points
 
 ## Running Demos
 
@@ -265,14 +289,16 @@ See `templates.html`, `dataset.html`, `nodes-tostring.html` for reference.
 
 Use when the assertion is on internal state (e.g. signal values, counter
 increments) rather than DOM HTML. The snippet sets `section.dataset.testResult`
-directly. The script just `eval`s the snippet. See `signals.html`.
+directly. The script just `eval`s the snippet. See `signal-basic.html` and the
+other focused `signal-*.html` pages.
 
 ### Pattern C — multi-phase driver inside snippet
 
 Use when the demo needs clicks, observers, intervals, or multi-tick verification.
 The driver code (clicks, setTimeouts, observers) goes INSIDE the snippet. The
 snippet sets the section result when verification completes. See
-`event-callbacks.html`, `child-redraw.html`.
+`event-callback-no-store.html`, `event-callback-with-data.html`, and
+`child-redraw.html`.
 
 ### Pattern D — async snippet with `await import()`
 

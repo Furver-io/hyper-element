@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Many Elements Stress Test - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+      .metrics {
+        font-family: monospace;
+        background: #f5f5f5;
+        padding: 0.5rem;
+        margin: 0.5rem 0;
+      }
+      .list-container {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Many Elements Stress Test</h1>
+    <p>Performance coverage for creating many custom element instances on one page.</p>
+
+    <!-- Test: Many elements on page -->
+    <section data-test="many-elements" data-test-result="pending">
+      <h2>Many Elements (20 Instances)</h2>
+      <p>Tests creating 20 custom element instances.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="many-elements"]');
+
+  customElements.define(
+    'many-elem-instance',
+    class extends hyperElement {
+      static get observedAttributes() {
+        return ['index'];
+      }
+      render(Html) {
+        Html`&lt;span class="instance"&gt;I${this.attrs.index}&lt;/span&gt;`;
+      }
+    }
+  );
+
+  const container = document.getElementById('many-elements-output');
+
+  for (let i = 0; i &lt; 20; i++) {
+    const elem = document.createElement('many-elem-instance');
+    elem.setAttribute('index', i);
+    container.appendChild(elem);
+  }
+
+  setTimeout(() =&gt; {
+    const instances = document.querySelectorAll('#many-elements-output .instance');
+    if (
+      instances.length === 20 &&
+      instances[0].textContent === 'I0' &&
+      instances[19].textContent === 'I19'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 200);
+})();</code></pre>
+      <div id="many-elements-output"></div>
+      <script type="module">
+        await window.hyperElementReady;
+
+        const code = document.querySelector('[data-test="many-elements"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="many-elements-output"><many-elem-instance index="0"><span class="instance">I0</span></many-elem-instance><many-elem-instance index="1"><span class="instance">I1</span></many-elem-instance><many-elem-instance index="2"><span class="instance">I2</span></many-elem-instance><many-elem-instance index="3"><span class="instance">I3</span></many-elem-instance><many-elem-instance index="4"><span class="instance">I4</span></many-elem-instance><many-elem-instance index="5"><span class="instance">I5</span></many-elem-instance><many-elem-instance index="6"><span class="instance">I6</span></many-elem-instance><many-elem-instance index="7"><span class="instance">I7</span></many-elem-instance><many-elem-instance index="8"><span class="instance">I8</span></many-elem-instance><many-elem-instance index="9"><span class="instance">I9</span></many-elem-instance><many-elem-instance index="10"><span class="instance">I10</span></many-elem-instance><many-elem-instance index="11"><span class="instance">I11</span></many-elem-instance><many-elem-instance index="12"><span class="instance">I12</span></many-elem-instance><many-elem-instance index="13"><span class="instance">I13</span></many-elem-instance><many-elem-instance index="14"><span class="instance">I14</span></many-elem-instance><many-elem-instance index="15"><span class="instance">I15</span></many-elem-instance><many-elem-instance index="16"><span class="instance">I16</span></many-elem-instance><many-elem-instance index="17"><span class="instance">I17</span></many-elem-instance><many-elem-instance index="18"><span class="instance">I18</span></many-elem-instance><many-elem-instance index="19"><span class="instance">I19</span></many-elem-instance></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="many-elements"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('many-elements', document.getElementById('many-elements-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

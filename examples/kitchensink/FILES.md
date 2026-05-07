@@ -18,7 +18,14 @@ Index of every file in this directory and its specific responsibility.
 | `content-handling.html`        | Accessing wrapped content via `this.wrappedContent`                                                        | A          |
 | `content-mutations.html`       | Re-rendering when wrapped content changes                                                                  | C          |
 | `templates.html`               | `Html.template()` with `{variable}` substitution                                                           | A          |
-| `advanced-templates.html`      | `{+if}`, `{+each}`, `{+unless}` block syntax                                                               | A          |
+| `advanced-template-variable.html` | Advanced template variable replacement                                                                    | A          |
+| `advanced-template-if-truthy.html` | `{+if}` truthy branch rendering                                                                           | A          |
+| `advanced-template-if-falsy.html` | `{+if}` falsy branch omission                                                                             | A          |
+| `advanced-template-if-else.html` | `{+if}`/`{+else}` branch selection                                                                         | A          |
+| `advanced-template-each-iteration.html` | `{+each}` array iteration                                                                            | A          |
+| `advanced-template-each-objects.html` | `{+each}` object property access                                                                      | A          |
+| `advanced-template-unless-falsy.html` | `{+unless}` falsy branch rendering                                                                   | A          |
+| `advanced-template-unless-truthy.html` | `{+unless}` truthy branch omission                                                                   | A          |
 | `block-syntax-advanced.html`   | Nested blocks, edge cases, null/undefined handling                                                         | A, C       |
 | `auto-wire-each.html`          | `{+each ${array}}...{-each}` template iteration                                                            | A          |
 | `keyed-templates.html`         | Template directives with keys                                                                              | B, C       |
@@ -38,8 +45,23 @@ Index of every file in this directory and its specific responsibility.
 | `observer-isolation.html`      | Verifies descendant child renders do not cause ancestor re-renders                                         | C          |
 | `child-styles.html`            | Passing style objects to children                                                                          | A, B       |
 | `complex-type-attrs.html`      | Passing objects/functions to child elements                                                                | A          |
-| `signals.html`                 | `signal()`, `computed()`, `effect()`, `batch()`, `untracked()`                                             | B          |
-| `event-callbacks.html`         | External event callbacks via `attachStore()`                                                               | C          |
+| `signal-basic.html`            | `signal()` creation plus value reads, writes, and `peek()`                                                | B          |
+| `signal-subscribe.html`        | `signal().subscribe()` notifications and unsubscribe behavior                                             | B          |
+| `signal-computed-basic.html`   | `computed()` values derived from multiple signals                                                         | B          |
+| `signal-computed-lazy.html`    | Lazy computed evaluation and cached reads                                                                 | B          |
+| `signal-effect-basic.html`     | `effect()` reruns when dependencies change                                                                | B          |
+| `signal-effect-cleanup.html`   | Effect cleanup before reruns and disposal                                                                 | B          |
+| `signal-untracked.html`        | `untracked()` reads that avoid dependency registration                                                    | B          |
+| `signal-batch.html`            | `batch()` grouped signal updates                                                                          | B          |
+| `signal-computed-nested.html`  | Computed values that depend on other computed values                                                      | B          |
+| `signal-effect-computed.html`  | Effects that depend on computed values                                                                    | B          |
+| `signal-component.html`        | Using signal state inside a `hyperElement` component                                                      | B          |
+| `signal-batch-nested.html`     | Nested `batch()` calls                                                                                    | B          |
+| `signal-batch-effects.html`    | Deferred effects after batched updates                                                                    | B          |
+| `event-callback-no-store.html` | External event callbacks via `attachStore()` without a backing store                                      | C          |
+| `event-callback-with-data.html` | External event callbacks that pass payloads into `render()` through the trigger                         | C          |
+| `event-handler-array.html`     | Hidden render-core compatibility coverage for event handler arrays with listener options                  | C          |
+| `event-handler-array-replace.html` | Hidden render-core compatibility coverage for replacing event handler arrays                         | C          |
 | `functional-api.html`          | Functional component definition API                                                                        | A, B, C    |
 | `functional-validation.html`   | Validation for functional API inputs                                                                       | B          |
 | `corner-cases.html`            | Edge cases including `document.body` mocking                                                               | A, C       |
@@ -50,7 +72,11 @@ Index of every file in this directory and its specific responsibility.
 | `coverage-edge-blocks.html`    | Block syntax parser coverage edges                                                                         | A          |
 | `coverage-edge-keyed.html`     | Keyed lists and diff algorithm branches                                                                    | B, C       |
 | `coverage-edge-misc.html`      | DOM content and misc coverage edges                                                                        | A          |
-| `stress-test.html`             | Large lists, rapid updates, deep nesting                                                                   | A, C       |
+| `stress-large-list.html`       | Rendering a keyed 100 item list                                                                            | A, C       |
+| `stress-rapid-rerender.html`   | Running 50 quick render cycles on one element                                                              | A, C       |
+| `stress-many-elements.html`    | Creating 20 custom element instances on one page                                                           | A, C       |
+| `stress-list-updates.html`     | Adding and removing keyed list items                                                                       | A, C       |
+| `stress-many-interpolations.html` | Rendering templates with 20 interpolation points                                                        | A, C       |
 | `ssr-dev-indicator-head.html`  | SSR dev-mode indicator visibility                                                                          | B, C       |
 | `ssr-e2e.html`                 | Full SSR hydration flow (6 phases)                                                                         | B, D       |
 | `ssr-hydration.html`           | SSR hydration edge cases                                                                                   | B, C       |

@@ -130,10 +130,36 @@
         <span class="description">Using Html.template() with variables</span>
       </li>
       <li>
-        <a href="advanced-templates.html">Advanced Templates</a>
-        <span class="description"
-          >Using {+if}, {+each}, {+unless} block syntax</span
-        >
+        <a href="advanced-template-variable.html">Template Variable</a>
+        <span class="description">Simple Html.template() variable substitution</span>
+      </li>
+      <li>
+        <a href="advanced-template-if-truthy.html">If Truthy</a>
+        <span class="description">Rendering a {+if} block when the condition is true</span>
+      </li>
+      <li>
+        <a href="advanced-template-if-falsy.html">If Falsy</a>
+        <span class="description">Skipping a {+if} block when the condition is false</span>
+      </li>
+      <li>
+        <a href="advanced-template-if-else.html">If Else</a>
+        <span class="description">Rendering the {else} branch from a false condition</span>
+      </li>
+      <li>
+        <a href="advanced-template-each-iteration.html">Each Iteration</a>
+        <span class="description">Iterating array values with {+each}</span>
+      </li>
+      <li>
+        <a href="advanced-template-each-objects.html">Each Objects</a>
+        <span class="description">Reading object properties inside {+each}</span>
+      </li>
+      <li>
+        <a href="advanced-template-unless-falsy.html">Unless Falsy</a>
+        <span class="description">Rendering a {+unless} block from a false condition</span>
+      </li>
+      <li>
+        <a href="advanced-template-unless-truthy.html">Unless Truthy</a>
+        <span class="description">Skipping a {+unless} block from a true condition</span>
       </li>
       <li>
         <a href="block-syntax-advanced.html">Block Syntax Advanced</a>
@@ -278,9 +304,15 @@
     <h2>Events</h2>
     <ul>
       <li>
-        <a href="event-callbacks.html">Event Callbacks</a>
+        <a href="event-callback-no-store.html">External Event Trigger</a>
         <span class="description"
-          >Using setup() for external event handling</span
+          >Using attachStore() without a backing store to re-render from external callbacks</span
+        >
+      </li>
+      <li>
+        <a href="event-callback-with-data.html">External Event With Data</a>
+        <span class="description"
+          >Passing external event payloads through the attachStore() trigger</span
         >
       </li>
     </ul>
@@ -288,10 +320,56 @@
     <h2>Signals &amp; Reactivity</h2>
     <ul>
       <li>
-        <a href="signals.html">Signals</a>
-        <span class="description"
-          >signal(), computed(), effect(), batch(), untracked()</span
-        >
+        <a href="signal-basic.html">Signal Basic</a>
+        <span class="description">Creating a signal and reading, writing, and peeking values</span>
+      </li>
+      <li>
+        <a href="signal-subscribe.html">Signal Subscribe</a>
+        <span class="description">Subscribing to signal value changes and unsubscribing</span>
+      </li>
+      <li>
+        <a href="signal-computed-basic.html">Computed Basic</a>
+        <span class="description">Deriving computed values from multiple signals</span>
+      </li>
+      <li>
+        <a href="signal-computed-lazy.html">Computed Lazy</a>
+        <span class="description">Lazy computed evaluation and cached reads</span>
+      </li>
+      <li>
+        <a href="signal-effect-basic.html">Effect Basic</a>
+        <span class="description">Running effects when signal dependencies change</span>
+      </li>
+      <li>
+        <a href="signal-effect-cleanup.html">Effect Cleanup</a>
+        <span class="description">Running cleanup callbacks before reruns and disposal</span>
+      </li>
+      <li>
+        <a href="signal-untracked.html">Untracked</a>
+        <span class="description">Reading signals without registering dependencies</span>
+      </li>
+      <li>
+        <a href="signal-batch.html">Batch</a>
+        <span class="description">Grouping signal updates with batch()</span>
+      </li>
+      <li>
+        <a href="signal-computed-nested.html">Nested Computed</a>
+        <span class="description">Composing computed values from other computed values</span>
+      </li>
+      <li>
+        <a href="signal-effect-computed.html">Effect With Computed</a>
+        <span class="description">Using computed values inside effects</span>
+      </li>
+      <li>
+        <a href="signal-component.html">Signal Component</a>
+        <span class="description">Using signal state inside a hyperElement component</span>
+      </li>
+      <li>
+        <a href="signal-batch-nested.html">Nested Batch</a>
+        <span class="description">Running nested batch() calls</span>
+      </li>
+      <li>
+        <a href="signal-batch-effects.html">Batch Effects</a>
+        <span class="description">Deferring effects until batched updates complete</span>
       </li>
     </ul>
 
@@ -424,10 +502,24 @@
     <h2>Performance</h2>
     <ul>
       <li>
-        <a href="stress-test.html">Stress Test</a>
-        <span class="description"
-          >Large lists, rapid updates, deep nesting</span
-        >
+        <a href="stress-large-list.html">Large List</a>
+        <span class="description">Rendering a keyed 100 item list</span>
+      </li>
+      <li>
+        <a href="stress-rapid-rerender.html">Rapid Re-render</a>
+        <span class="description">Running 50 quick render cycles on one element</span>
+      </li>
+      <li>
+        <a href="stress-many-elements.html">Many Elements</a>
+        <span class="description">Creating 20 custom element instances on one page</span>
+      </li>
+      <li>
+        <a href="stress-list-updates.html">List Updates</a>
+        <span class="description">Adding and removing keyed list items</span>
+      </li>
+      <li>
+        <a href="stress-many-interpolations.html">Many Interpolations</a>
+        <span class="description">Rendering templates with 20 interpolation points</span>
       </li>
     </ul>
 

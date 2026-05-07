@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>computed() - Lazy Evaluation - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+          body {
+            font-family: sans-serif;
+            padding: 2rem;
+          }
+          section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+          }
+          section[data-test-result='pass'] {
+            border-color: green;
+            background: #f0fff0;
+          }
+          section[data-test-result='fail'] {
+            border-color: red;
+            background: #fff0f0;
+          }
+          h1 {
+            border-bottom: 2px solid #333;
+          }
+          h2 {
+            margin-top: 0;
+          }
+          pre {
+            background: #f5f5f5;
+            padding: 1rem;
+            overflow-x: auto;
+          }
+        </style>
+  </head>
+  <body>
+    <h1>computed() - Lazy Evaluation</h1>
+
+    <section data-test="computed-lazy" data-test-result="pending">
+          <h2>computed() - Lazy Evaluation</h2>
+          <p>Tests that computed values are lazily evaluated.</p>
+          <pre><code>(function () {
+      const section = document.querySelector('[data-test="computed-lazy"]');
+      try {
+        let computeCount = 0;
+        const val = signal(1);
+        const doubled = computed(() => {
+          computeCount++;
+          return val.value * 2;
+        });
+
+        // Not accessed yet - should not compute
+        const countBefore = computeCount;
+
+        // Access - should compute once
+        const first = doubled.value;
+        const countAfter1 = computeCount;
+
+        // Access again without change - should use cached
+        const second = doubled.value;
+        const countAfter2 = computeCount;
+
+        // Change signal
+        val.value = 5;
+        // Access - should recompute
+        const third = doubled.value;
+        const countAfter3 = computeCount;
+
+        const pass =
+          countBefore === 0 &&
+          first === 2 &&
+          countAfter1 === 1 &&
+          second === 2 &&
+          countAfter2 === 1 &&
+          third === 10 &&
+          countAfter3 === 2;
+        section.dataset.testResult = pass ? 'pass' : 'fail';
+        document.getElementById('computed-lazy-output').textContent =
+          `before=${countBefore}, after1=${countAfter1}, after2=${countAfter2}, after3=${countAfter3}`;
+      } catch (e) {
+        section.dataset.testResult = 'fail';
+        document.getElementById('computed-lazy-output').textContent = e.message;
+      }
+    })();</code></pre>
+          <div id="computed-lazy-output"></div>
+          <script type="module">
+            await window.hyperElementReady;
+
+            const code = document.querySelector('[data-test="computed-lazy"] pre code').textContent;
+
+            eval(code);
+
+            const expected = '<div id="computed-lazy-output">before=0, after1=1, after2=1, after3=2</div>';
+
+            setTimeout(() => {
+
+              const sec = document.querySelector('[data-test="computed-lazy"]');
+
+              if (sec.dataset.testResult === 'fail') return;
+
+              window.assertSnapshot('computed-lazy', document.getElementById('computed-lazy-output'), expected);
+
+            }, 500);
+           </script>
+        </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

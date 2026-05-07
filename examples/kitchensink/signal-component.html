@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>signal() in hyperElement Component - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+          body {
+            font-family: sans-serif;
+            padding: 2rem;
+          }
+          section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+          }
+          section[data-test-result='pass'] {
+            border-color: green;
+            background: #f0fff0;
+          }
+          section[data-test-result='fail'] {
+            border-color: red;
+            background: #fff0f0;
+          }
+          h1 {
+            border-bottom: 2px solid #333;
+          }
+          h2 {
+            margin-top: 0;
+          }
+          pre {
+            background: #f5f5f5;
+            padding: 1rem;
+            overflow-x: auto;
+          }
+        </style>
+  </head>
+  <body>
+    <h1>signal() in hyperElement Component</h1>
+
+    <section data-test="signal-component" data-test-result="pending">
+          <h2>signal() in hyperElement Component</h2>
+          <p>Tests using signals within a hyperElement component.</p>
+          <pre><code>(function () {
+      const section = document.querySelector('[data-test="signal-component"]');
+
+      customElements.define(
+        'signal-counter',
+        class extends hyperElement {
+          setup(attachStore) {
+            this.count = signal(0);
+            this.trigger = attachStore();
+          }
+          render(Html) {
+            Html`&lt;div&gt;
+              &lt;span id="signal-counter-value"&gt;${this.count.value}&lt;/span&gt;
+              &lt;button id="signal-counter-btn" onclick=${() => this.increment()}&gt;+&lt;/button&gt;
+            &lt;/div&gt;`;
+          }
+          increment() {
+            this.count.value++;
+            this.trigger();
+          }
+        }
+      );
+
+      const elem = document.createElement('signal-counter');
+      document.getElementById('signal-component-output').appendChild(elem);
+
+      setTimeout(() => {
+        const valueSpan = document.getElementById('signal-counter-value');
+        const btn = document.getElementById('signal-counter-btn');
+
+        const initial = valueSpan?.textContent;
+
+        // Click button
+        btn?.click();
+
+        setTimeout(() => {
+          const after = valueSpan?.textContent;
+          const pass = initial === '0' && after === '1';
+          section.dataset.testResult = pass ? 'pass' : 'fail';
+        }, 50);
+      }, 100);
+    })();</code></pre>
+          <div id="signal-component-output"></div>
+          <script type="module">
+            await window.hyperElementReady;
+
+            const code = document.querySelector('[data-test="signal-component"] pre code').textContent;
+
+            eval(code);
+
+            const expected = '<div id="signal-component-output"><signal-counter><div>\n          <span id="signal-counter-value">1</span>\n          <button id="signal-counter-btn">+</button>\n        </div></signal-counter></div>';
+
+            setTimeout(() => {
+
+              const sec = document.querySelector('[data-test="signal-component"]');
+
+              if (sec.dataset.testResult === 'fail') return;
+
+              window.assertSnapshot('signal-component', document.getElementById('signal-component-output'), expected);
+
+            }, 500);
+           </script>
+        </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Internal Event Handler Array Replacement - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Internal Event Handler Array Replacement</h1>
+    <p>Hidden render-core compatibility coverage for replacing legacy event handler arrays.</p>
+
+    <!-- Test: Event handler array replacement -->
+    <section data-test="event-handler-array-replace" data-test-result="pending" data-internal="render-core" hidden>
+      <h2>Event Handler Array Replacement</h2>
+      <p>
+        Tests that event handler arrays can be replaced (removes old, adds new).
+      </p>
+      <pre><code>let handlerAClicks = 0;
+let handlerBClicks = 0;
+
+customElements.define(
+  'event-replace-elem',
+  class extends hyperElement {
+    setup(attachStore) {
+      this.element._useHandlerA = true;
+      this.element._trigger = attachStore();
+    }
+
+    handlerA() {
+      handlerAClicks++;
+    }
+
+    handlerB() {
+      handlerBClicks++;
+    }
+
+    render(Html) {
+      const handler = this.element._useHandlerA
+        ? [() => this.handlerA(), { capture: true }]
+        : [() => this.handlerB(), { capture: false }];
+      Html`&lt;button id="replace-btn" &#64;click=${handler}&gt;Click&lt;/button&gt;`;
+    }
+  }
+);
+
+const replaceSection = document.querySelector('[data-test="event-handler-array-replace"]');
+const replaceElem = document.createElement('event-replace-elem');
+document.getElementById('event-handler-array-replace-output').appendChild(replaceElem);
+
+setTimeout(() => {
+  const btn = document.getElementById('replace-btn');
+
+  btn?.click();
+  const afterA = handlerAClicks;
+
+  replaceElem._useHandlerA = false;
+  replaceElem._trigger();
+
+  setTimeout(() => {
+    btn?.click();
+
+    setTimeout(() => {
+      const pass = afterA === 1 && handlerAClicks === 1 && handlerBClicks === 1;
+      replaceSection.dataset.testResult = pass ? 'pass' : 'fail';
+    }, 50);
+  }, 50);
+}, 100);</code></pre>
+      <div id="event-handler-array-replace-output"></div>
+      <script type="module">
+        await window.hyperElementReady;
+
+        const code = document.querySelector(
+          '[data-test="event-handler-array-replace"] pre code'
+        ).textContent;
+
+        eval(code);
+
+        const expected =
+          '<div id="event-handler-array-replace-output"><event-replace-elem><button id="replace-btn">Click</button></event-replace-elem></div>';
+
+        setTimeout(() => {
+          const sec = document.querySelector(
+            '[data-test="event-handler-array-replace"]'
+          );
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot(
+            'event-handler-array-replace',
+            document.getElementById('event-handler-array-replace-output'),
+            expected
+          );
+        }, 500);
+      </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

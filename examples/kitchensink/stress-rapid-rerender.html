@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rapid Re-render Stress Test - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+      .metrics {
+        font-family: monospace;
+        background: #f5f5f5;
+        padding: 0.5rem;
+        margin: 0.5rem 0;
+      }
+      .list-container {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Rapid Re-render Stress Test</h1>
+    <p>Performance coverage for many quick render cycles on one element.</p>
+
+    <!-- Test: Rapid re-renders (50 quick updates) -->
+    <section data-test="rapid-rerender" data-test-result="pending">
+      <h2>Rapid Re-renders (50 Updates)</h2>
+      <p>Tests 50 rapid render cycles.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="rapid-rerender"]');
+
+  const state = { count: 0 };
+
+  customElements.define(
+    'rapid-rerender-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.state = state;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="rapid-rerender-result"&gt;count=${this.state.count}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('rapid-rerender-elem');
+  document.getElementById('rapid-rerender-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    for (let i = 1; i &lt;= 50; i++) {
+      state.count = i;
+      elem.render();
+    }
+
+    setTimeout(() =&gt; {
+      const result = document.getElementById('rapid-rerender-result');
+      if (result?.textContent === 'count=50') {
+        section.dataset.testResult = 'pass';
+      } else {
+        section.dataset.testResult = 'fail';
+      }
+    }, 50);
+  }, 100);
+})();</code></pre>
+      <div id="rapid-rerender-output"></div>
+      <script type="module">
+        await window.hyperElementReady;
+
+        const code = document.querySelector('[data-test="rapid-rerender"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="rapid-rerender-output"><rapid-rerender-elem><div id="rapid-rerender-result">count=50</div></rapid-rerender-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="rapid-rerender"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('rapid-rerender', document.getElementById('rapid-rerender-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

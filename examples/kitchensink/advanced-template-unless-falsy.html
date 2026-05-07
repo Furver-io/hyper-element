@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unless Conditional (Falsy) - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+          body {
+            font-family: sans-serif;
+            padding: 2rem;
+          }
+          section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+          }
+          section[data-test-result='pass'] {
+            border-color: green;
+            background: #f0fff0;
+          }
+          section[data-test-result='fail'] {
+            border-color: red;
+            background: #fff0f0;
+          }
+          h1 {
+            border-bottom: 2px solid #333;
+          }
+          h2 {
+            margin-top: 0;
+          }
+          pre {
+            background: #f5f5f5;
+            padding: 1rem;
+            overflow-x: auto;
+          }
+        </style>
+  </head>
+  <body>
+    <h1>Unless Conditional (Falsy)</h1>
+
+    <section data-test="unless" data-test-result="pending">
+          <h2>Unless Conditional (Falsy)</h2>
+          <p>
+            {#unless condition}...{/unless} should render when condition is falsy
+            (opposite of #if).
+          </p>
+          <pre><code>customElements.define(
+      'unless-elem',
+      class extends hyperElement {
+        render(Html) {
+          Html`${Html.template({ hidden: false })}`;
+        }
+      }
+    );</code></pre>
+          <unless-elem template>{+unless hidden}SHOWN{-unless}</unless-elem>
+          <script type="module">
+            await window.hyperElementReady;
+            const code = document.querySelector('[data-test="unless"] pre code').textContent;
+            eval(code);
+            const expected = '<unless-elem template=""><!--<>--><!--<>-->SHOWN<!--</>--><!--</>--></unless-elem>';
+            requestAnimationFrame(() => {
+              window.assertSnapshot('unless', document.querySelector('unless-elem'), expected);
+            });
+          </script>
+        </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

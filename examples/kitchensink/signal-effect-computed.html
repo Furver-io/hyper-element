@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>effect() with computed() - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+          body {
+            font-family: sans-serif;
+            padding: 2rem;
+          }
+          section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+          }
+          section[data-test-result='pass'] {
+            border-color: green;
+            background: #f0fff0;
+          }
+          section[data-test-result='fail'] {
+            border-color: red;
+            background: #fff0f0;
+          }
+          h1 {
+            border-bottom: 2px solid #333;
+          }
+          h2 {
+            margin-top: 0;
+          }
+          pre {
+            background: #f5f5f5;
+            padding: 1rem;
+            overflow-x: auto;
+          }
+        </style>
+  </head>
+  <body>
+    <h1>effect() with computed()</h1>
+
+    <section data-test="effect-computed" data-test-result="pending">
+          <h2>effect() with computed()</h2>
+          <p>Tests effects that depend on computed values.</p>
+          <pre><code>(function () {
+      const section = document.querySelector('[data-test="effect-computed"]');
+      try {
+        const count = signal(1);
+        const doubled = computed(() => count.value * 2);
+        let effectValue = null;
+        let effectRuns = 0;
+
+        effect(() => {
+          effectRuns++;
+          effectValue = doubled.value;
+        });
+
+        const afterInit = effectRuns;
+        const valueInit = effectValue;
+
+        count.value = 5;
+        const afterChange = effectRuns;
+        const valueChange = effectValue;
+
+        const pass =
+          afterInit === 1 &&
+          valueInit === 2 &&
+          afterChange === 2 &&
+          valueChange === 10;
+        section.dataset.testResult = pass ? 'pass' : 'fail';
+        document.getElementById('effect-computed-output').textContent =
+          `init: runs=${afterInit} value=${valueInit}, change: runs=${afterChange} value=${valueChange}`;
+      } catch (e) {
+        section.dataset.testResult = 'fail';
+        document.getElementById('effect-computed-output').textContent = e.message;
+      }
+    })();</code></pre>
+          <div id="effect-computed-output"></div>
+          <script type="module">
+            await window.hyperElementReady;
+
+            const code = document.querySelector('[data-test="effect-computed"] pre code').textContent;
+
+            eval(code);
+
+            const expected = '<div id="effect-computed-output">init: runs=1 value=2, change: runs=2 value=10</div>';
+
+            setTimeout(() => {
+
+              const sec = document.querySelector('[data-test="effect-computed"]');
+
+              if (sec.dataset.testResult === 'fail') return;
+
+              window.assertSnapshot('effect-computed', document.getElementById('effect-computed-output'), expected);
+
+            }, 500);
+           </script>
+        </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

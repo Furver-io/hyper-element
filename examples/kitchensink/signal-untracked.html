@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>untracked() - Read Without Tracking - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+          body {
+            font-family: sans-serif;
+            padding: 2rem;
+          }
+          section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+          }
+          section[data-test-result='pass'] {
+            border-color: green;
+            background: #f0fff0;
+          }
+          section[data-test-result='fail'] {
+            border-color: red;
+            background: #fff0f0;
+          }
+          h1 {
+            border-bottom: 2px solid #333;
+          }
+          h2 {
+            margin-top: 0;
+          }
+          pre {
+            background: #f5f5f5;
+            padding: 1rem;
+            overflow-x: auto;
+          }
+        </style>
+  </head>
+  <body>
+    <h1>untracked() - Read Without Tracking</h1>
+
+    <section data-test="untracked" data-test-result="pending">
+          <h2>untracked() - Read Without Tracking</h2>
+          <p>Tests that untracked reads don't create dependencies.</p>
+          <pre><code>(function () {
+      const section = document.querySelector('[data-test="untracked"]');
+      try {
+        const tracked = signal(1);
+        const notTracked = signal(100);
+        let effectRuns = 0;
+
+        effect(() => {
+          effectRuns++;
+          const t = tracked.value; // This creates dependency
+          const n = untracked(() => notTracked.value); // This doesn't
+        });
+
+        // Initial run
+        const afterInit = effectRuns;
+
+        // Change tracked - should trigger effect
+        tracked.value = 2;
+        const afterTracked = effectRuns;
+
+        // Change not tracked - should NOT trigger effect
+        notTracked.value = 200;
+        const afterNotTracked = effectRuns;
+
+        const pass =
+          afterInit === 1 &&
+          afterTracked === 2 &&
+          afterNotTracked === 2;
+        section.dataset.testResult = pass ? 'pass' : 'fail';
+        document.getElementById('untracked-output').textContent =
+          `init=${afterInit}, afterTracked=${afterTracked}, afterNotTracked=${afterNotTracked}`;
+      } catch (e) {
+        section.dataset.testResult = 'fail';
+        document.getElementById('untracked-output').textContent = e.message;
+      }
+    })();</code></pre>
+          <div id="untracked-output"></div>
+          <script type="module">
+            await window.hyperElementReady;
+
+            const code = document.querySelector('[data-test="untracked"] pre code').textContent;
+
+            eval(code);
+
+            const expected = '<div id="untracked-output">init=1, afterTracked=2, afterNotTracked=2</div>';
+
+            setTimeout(() => {
+
+              const sec = document.querySelector('[data-test="untracked"]');
+
+              if (sec.dataset.testResult === 'fail') return;
+
+              window.assertSnapshot('untracked', document.getElementById('untracked-output'), expected);
+
+            }, 500);
+           </script>
+        </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

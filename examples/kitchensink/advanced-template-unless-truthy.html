@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unless Conditional (Truthy) - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+          body {
+            font-family: sans-serif;
+            padding: 2rem;
+          }
+          section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+          }
+          section[data-test-result='pass'] {
+            border-color: green;
+            background: #f0fff0;
+          }
+          section[data-test-result='fail'] {
+            border-color: red;
+            background: #fff0f0;
+          }
+          h1 {
+            border-bottom: 2px solid #333;
+          }
+          h2 {
+            margin-top: 0;
+          }
+          pre {
+            background: #f5f5f5;
+            padding: 1rem;
+            overflow-x: auto;
+          }
+        </style>
+  </head>
+  <body>
+    <h1>Unless Conditional (Truthy)</h1>
+
+    <section data-test="unless-truthy" data-test-result="pending">
+          <h2>Unless Conditional (Truthy)</h2>
+          <p>
+            {#unless condition}...{/unless} should NOT render when condition is truthy.
+          </p>
+          <pre><code>customElements.define(
+      'unless-truthy-elem',
+      class extends hyperElement {
+        render(Html) {
+          Html`${Html.template({ visible: true })}`;
+        }
+      }
+    );</code></pre>
+          <unless-truthy-elem template>{+unless visible}HIDDEN{-unless}</unless-truthy-elem>
+          <script type="module">
+            await window.hyperElementReady;
+            const code = document.querySelector('[data-test="unless-truthy"] pre code').textContent;
+            eval(code);
+            const expected = '<unless-truthy-elem template=""><!--<>--><!--<>--><!--</>--><!--</>--></unless-truthy-elem>';
+            requestAnimationFrame(() => {
+              window.assertSnapshot('unless-truthy', document.querySelector('unless-truthy-elem'), expected);
+            });
+          </script>
+        </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

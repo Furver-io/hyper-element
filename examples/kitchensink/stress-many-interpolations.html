@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Many Interpolations Stress Test - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+      .metrics {
+        font-family: monospace;
+        background: #f5f5f5;
+        padding: 0.5rem;
+        margin: 0.5rem 0;
+      }
+      .list-container {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Many Interpolations Stress Test</h1>
+    <p>Performance coverage for templates with many interpolation points.</p>
+
+    <!-- Test: Multiple interpolations -->
+    <section data-test="many-interpolations" data-test-result="pending">
+      <h2>Multiple Interpolations (20)</h2>
+      <p>Tests template with 20 interpolation points.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="many-interpolations"]');
+
+  customElements.define(
+    'many-interp-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.values = Array.from({ length: 20 }, (_, i) =&gt; 'v' + i);
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;div id="many-interp-result"&gt;${this.values.map(
+          (v, i) =&gt; Html.wire({ i }, ':v')`&lt;span class="v"&gt;${v}&lt;/span&gt;`
+        )}&lt;/div&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('many-interp-elem');
+  document.getElementById('many-interpolations-output').appendChild(elem);
+
+  setTimeout(() =&gt; {
+    const spans = document.querySelectorAll('#many-interp-result .v');
+    if (
+      spans.length === 20 &&
+      spans[0].textContent === 'v0' &&
+      spans[19].textContent === 'v19'
+    ) {
+      section.dataset.testResult = 'pass';
+    } else {
+      section.dataset.testResult = 'fail';
+    }
+  }, 200);
+})();</code></pre>
+      <div id="many-interpolations-output"></div>
+      <script type="module">
+        await window.hyperElementReady;
+
+        const code = document.querySelector('[data-test="many-interpolations"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="many-interpolations-output"><many-interp-elem><div id="many-interp-result"><span class="v">v0</span><span class="v">v1</span><span class="v">v2</span><span class="v">v3</span><span class="v">v4</span><span class="v">v5</span><span class="v">v6</span><span class="v">v7</span><span class="v">v8</span><span class="v">v9</span><span class="v">v10</span><span class="v">v11</span><span class="v">v12</span><span class="v">v13</span><span class="v">v14</span><span class="v">v15</span><span class="v">v16</span><span class="v">v17</span><span class="v">v18</span><span class="v">v19</span><!--◦--></div></many-interp-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="many-interpolations"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('many-interpolations', document.getElementById('many-interpolations-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

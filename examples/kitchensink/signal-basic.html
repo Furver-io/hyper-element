@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>signal() - Basic Usage - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+          body {
+            font-family: sans-serif;
+            padding: 2rem;
+          }
+          section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+          }
+          section[data-test-result='pass'] {
+            border-color: green;
+            background: #f0fff0;
+          }
+          section[data-test-result='fail'] {
+            border-color: red;
+            background: #fff0f0;
+          }
+          h1 {
+            border-bottom: 2px solid #333;
+          }
+          h2 {
+            margin-top: 0;
+          }
+          pre {
+            background: #f5f5f5;
+            padding: 1rem;
+            overflow-x: auto;
+          }
+        </style>
+  </head>
+  <body>
+    <h1>signal() - Basic Usage</h1>
+
+    <section data-test="signal-basic" data-test-result="pending">
+          <h2>signal() - Basic Usage</h2>
+          <p>Tests creating a signal, reading and writing its value.</p>
+          <pre><code>(function () {
+      const section = document.querySelector('[data-test="signal-basic"]');
+      try {
+        const count = signal(0);
+
+        // Read initial value
+        const initial = count.value;
+
+        // Write new value
+        count.value = 42;
+        const updated = count.value;
+
+        // Peek without tracking
+        const peeked = count.peek();
+
+        const pass =
+          initial === 0 && updated === 42 && peeked === 42;
+        section.dataset.testResult = pass ? 'pass' : 'fail';
+        document.getElementById('signal-basic-output').textContent =
+          `initial=${initial}, updated=${updated}, peeked=${peeked}`;
+      } catch (e) {
+        section.dataset.testResult = 'fail';
+        document.getElementById('signal-basic-output').textContent = e.message;
+      }
+    })();</code></pre>
+          <div id="signal-basic-output"></div>
+          <script type="module">
+            await window.hyperElementReady;
+
+            const code = document.querySelector('[data-test="signal-basic"] pre code').textContent;
+
+            eval(code);
+
+            const expected = '<div id="signal-basic-output">initial=0, updated=42, peeked=42</div>';
+
+            setTimeout(() => {
+
+              const sec = document.querySelector('[data-test="signal-basic"]');
+
+              if (sec.dataset.testResult === 'fail') return;
+
+              window.assertSnapshot('signal-basic', document.getElementById('signal-basic-output'), expected);
+
+            }, 500);
+           </script>
+        </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>

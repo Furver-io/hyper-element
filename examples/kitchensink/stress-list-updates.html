@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>List Updates Stress Test - hyper-element Kitchen Sink</title>
+    <script src="test-loader.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      section[data-test-result='pass'] {
+        border-color: green;
+        background: #f0fff0;
+      }
+      section[data-test-result='fail'] {
+        border-color: red;
+        background: #fff0f0;
+      }
+      h1 {
+        border-bottom: 2px solid #333;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+      .metrics {
+        font-family: monospace;
+        background: #f5f5f5;
+        padding: 0.5rem;
+        margin: 0.5rem 0;
+      }
+      .list-container {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>List Updates Stress Test</h1>
+    <p>Performance coverage for keyed list additions and removals.</p>
+
+    <!-- Test: List updates (add/remove) -->
+    <section data-test="list-updates" data-test-result="pending">
+      <h2>List Updates (Add/Remove)</h2>
+      <p>Tests dynamic list modifications.</p>
+      <pre><code>(function () {
+  const section = document.querySelector('[data-test="list-updates"]');
+
+  const state = {
+    items: [
+      { id: 1, name: 'A' },
+      { id: 2, name: 'B' },
+      { id: 3, name: 'C' },
+    ],
+  };
+
+  customElements.define(
+    'list-updates-elem',
+    class extends hyperElement {
+      setup(onNext) {
+        this.state = state;
+        onNext();
+      }
+      render(Html) {
+        Html`&lt;ul id="list-updates-result"&gt;${this.state.items.map(
+          (item) =&gt; Html.wire(item, ':item')`&lt;li&gt;${item.name}&lt;/li&gt;`
+        )}&lt;/ul&gt;`;
+      }
+    }
+  );
+
+  const elem = document.createElement('list-updates-elem');
+  document.getElementById('list-updates-output').appendChild(elem);
+
+  let passed = true;
+
+  setTimeout(() =&gt; {
+    state.items.push({ id: 4, name: 'D' });
+    elem.render();
+
+    setTimeout(() =&gt; {
+      let lis = document.querySelectorAll('#list-updates-result li');
+      if (lis.length !== 4 || lis[3].textContent !== 'D') {
+        passed = false;
+      }
+
+      state.items = state.items.filter((i) =&gt; i.id !== 2);
+      elem.render();
+
+      setTimeout(() =&gt; {
+        lis = document.querySelectorAll('#list-updates-result li');
+        if (lis.length !== 3) {
+          passed = false;
+        }
+
+        section.dataset.testResult = passed ? 'pass' : 'fail';
+      }, 50);
+    }, 50);
+  }, 100);
+})();</code></pre>
+      <div id="list-updates-output"></div>
+      <script type="module">
+        await window.hyperElementReady;
+
+        const code = document.querySelector('[data-test="list-updates"] pre code').textContent;
+
+        eval(code);
+
+        const expected = '<div id="list-updates-output"><list-updates-elem><ul id="list-updates-result"><li>A</li><li>C</li><li>D</li><!--◦--></ul></list-updates-elem></div>';
+
+        setTimeout(() => {
+
+          const sec = document.querySelector('[data-test="list-updates"]');
+
+          if (sec.dataset.testResult === 'fail') return;
+
+          window.assertSnapshot('list-updates', document.getElementById('list-updates-output'), expected);
+
+        }, 500);
+       </script>
+    </section>
+
+    <a href="index.html">&larr; Back to Kitchen Sink</a>
+  </body>
+</html>
