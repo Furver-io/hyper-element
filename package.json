@@ -100,8 +100,5 @@
     "source-map": "^0.7.6",
     "union-value": "^2.0.1",
     "v8-to-istanbul": "^9.3.0"
-  },
-  "dependencies": {
-    "get-shit-done-cc": "^1.11.1"
   }
 }
